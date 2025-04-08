@@ -21,11 +21,31 @@
         <div class="auth-card">
           <div class="auth-header">
             <div class="logo-svg auth-logo" role="img" aria-label="SecureVote"></div>
-            <h2 class="auth-title">Login to SecureVote</h2>
-            <p class="auth-subtitle">Secure, transparent, and intelligent voting</p>
+            <h2 class="auth-title">Secure Blockchain Voting</h2>
+            <p class="auth-subtitle">Biometric verification + Ethereum wallet authentication</p>
           </div>
           
           <div class="auth-body">
+            <!-- Progress Indicator -->
+            <div class="auth-progress">
+              <div class="progress-step" id="step-credentials">
+                <div class="step-number">1</div>
+                <div class="step-label">Credentials</div>
+              </div>
+              <div class="progress-step" id="step-otp">
+                <div class="step-number">2</div>
+                <div class="step-label">OTP</div>
+              </div>
+              <div class="progress-step" id="step-facial">
+                <div class="step-number">3</div>
+                <div class="step-label">AI Facial</div>
+              </div>
+              <div class="progress-step" id="step-wallet">
+                <div class="step-number">4</div>
+                <div class="step-label">Wallet</div>
+              </div>
+            </div>
+          
             <!-- Step 1: Enter Details -->
             <div id="details-form">
               <form id="voter-details-form">
@@ -65,9 +85,9 @@
               </form>
             </div>
 
-            <!-- Step 3: Facial Authentication -->
+            <!-- Step 3: AI Facial Authentication -->
             <div id="facial-auth-form" style="display: none;">
-              <p class="text-center">OTP Verified. Please proceed with facial recognition.</p>
+              <p class="text-center">OTP Verified. Please proceed with AI facial verification.</p>
               <div class="face-auth-container">
                 <div class="camera-placeholder" id="camera-container">
                   <div class="face-outline"></div>
@@ -78,7 +98,7 @@
                   <div id="faceOverlay" class="face-overlay" style="display: none;"><div class="face-target"></div></div>
                 </div>
                 
-                <p class="face-auth-status" id="auth-status">Ready for facial verification.</p>
+                <p class="face-auth-status" id="auth-status">Ready for AI facial verification.</p>
                 
                 <p class="face-auth-instructions">Position your face within the outline and click "Capture".</p>
                 
@@ -92,10 +112,44 @@
                 </div>
               </div>
             </div>
+            
+            <!-- Step 4: Wallet Connection -->
+            <div id="wallet-connection-form" style="display: none;">
+              <div class="verification-success">
+                <div class="success-icon">
+                  <i class="icon-check-circle"></i>
+                </div>
+                <h3>Biometric Verification Successful</h3>
+                <p>Your identity has been verified using secure AI facial recognition.</p>
+              </div>
+              
+              <div class="wallet-connection-section">
+                <h3>Connect Your Ethereum Wallet</h3>
+                <p>To securely cast your vote on the blockchain, you need to connect your Ethereum wallet (like MetaMask).</p>
+                
+                <div class="wallet-status-container" id="wallet-status-container">
+                  <div id="wallet-status" class="wallet-status not-connected">
+                    <i class="icon-wallet"></i>
+                    <span>Wallet not connected</span>
+                  </div>
+                  <button type="button" id="connect-wallet-button" class="button primary-button">Connect Wallet</button>
+                </div>
+                
+                <p class="text-small text-muted mt-2">Your vote transaction will be signed using this wallet, creating an immutable record on the blockchain.</p>
+              </div>
+              
+              <div class="form-group mt-4">
+                <button type="button" id="proceed-to-voting-button" class="button primary-button w-100" disabled>Proceed to Voting</button>
+              </div>
+              
+              <div class="form-group mb-0 text-center">
+                <button type="button" id="back-to-facial-button" class="button text-button">Back to Facial Verification</button>
+              </div>
+            </div>
           </div>
           
           <div class="auth-footer">
-            <p>Don't have an account? <a href="#">Contact your administrator</a></p>
+            <p>Secured by AI biometrics and blockchain technology</p>
             <p class="text-small text-muted mt-2">By logging in, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
           </div>
         </div>
@@ -109,6 +163,7 @@
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js"></script>
   <script src="/production-config.js"></script>
+  <script src="/ai-voter-authentication.js"></script>
   <script src="/facial-auth.js"></script> 
   
   <!-- Component Loader Script & Multi-Factor Auth Logic -->
@@ -146,6 +201,7 @@
       const detailsForm = document.getElementById('details-form');
       const otpForm = document.getElementById('otp-form');
       const facialAuthForm = document.getElementById('facial-auth-form');
+      const walletConnectionForm = document.getElementById('wallet-connection-form');
 
       const aadharInput = document.getElementById('aadhar-number');
       const voterIdInput = document.getElementById('voter-id');
@@ -165,6 +221,48 @@
       const videoElement = document.getElementById('facialAuthVideo');
       const canvasElement = document.getElementById('facialAuthCanvas');
       const faceOverlay = document.getElementById('faceOverlay');
+      
+      const connectWalletButton = document.getElementById('connect-wallet-button');
+      const proceedToVotingButton = document.getElementById('proceed-to-voting-button');
+      const walletStatus = document.getElementById('wallet-status');
+      const backToFacialButton = document.getElementById('back-to-facial-button');
+      
+      // Progress steps
+      const stepCredentials = document.getElementById('step-credentials');
+      const stepOtp = document.getElementById('step-otp');
+      const stepFacial = document.getElementById('step-facial');
+      const stepWallet = document.getElementById('step-wallet');
+      
+      // Set initial active step
+      stepCredentials.classList.add('active');
+      
+      // Helper function to update progress steps
+      function updateProgressSteps(step) {
+        // Remove active class from all steps
+        [stepCredentials, stepOtp, stepFacial, stepWallet].forEach(s => s.classList.remove('active'));
+        
+        // Add active class to current and previous steps
+        switch(step) {
+          case 'credentials':
+            stepCredentials.classList.add('active');
+            break;
+          case 'otp':
+            stepCredentials.classList.add('active');
+            stepOtp.classList.add('active');
+            break;
+          case 'facial':
+            stepCredentials.classList.add('active');
+            stepOtp.classList.add('active');
+            stepFacial.classList.add('active');
+            break;
+          case 'wallet':
+            stepCredentials.classList.add('active');
+            stepOtp.classList.add('active');
+            stepFacial.classList.add('active');
+            stepWallet.classList.add('active');
+            break;
+        }
+      }
 
       // --- Event Listeners ---
 
@@ -205,6 +303,7 @@
                 if (result.success) {
                   detailsForm.style.display = 'none';
                   otpForm.style.display = 'block';
+                  updateProgressSteps('otp');
                   otpStatus.textContent = `OTP sent to ${mobile.slice(0, 3)}***${mobile.slice(-4)}`;
                   otpStatus.style.color = '';
                   
@@ -263,6 +362,7 @@
                   // Show facial authentication form
                   otpForm.style.display = 'none';
                   facialAuthForm.style.display = 'block';
+                  updateProgressSteps('facial');
                   authStatus.textContent = 'OTP Verified. Ready for facial recognition.';
                   authStatus.style.color = '';
                 } else {
@@ -294,6 +394,7 @@
               
               otpForm.style.display = 'none';
               facialAuthForm.style.display = 'block';
+              updateProgressSteps('facial');
               authStatus.textContent = 'OTP Verified (TEST MODE). Ready for facial recognition.';
               authStatus.style.color = '';
             } else {
@@ -312,6 +413,7 @@
           backToDetailsButton.addEventListener('click', () => {
               otpForm.style.display = 'none';
               detailsForm.style.display = 'block';
+              updateProgressSteps('credentials');
               otpStatus.textContent = ''; // Clear status
           });
       }
@@ -319,28 +421,62 @@
       // Step 3: Facial Recognition - Start Camera
       if (startCameraBtn) {
         startCameraBtn.addEventListener('click', function() {
-          if (window.facialAuth && typeof window.facialAuth.startCamera === 'function') {
-            startCameraBtn.disabled = true;
-            authStatus.textContent = 'Starting camera...';
-            cameraContainer.querySelector('p').style.display = 'none'; // Hide "Initializing" text
+          // Try AI-powered verification first
+          const useAI = typeof window.aiVoterAuthentication !== 'undefined';
+          
+          if (useAI) {
+            console.log("Using AI-powered facial verification");
+            authStatus.textContent = 'Starting AI facial recognition...';
             
-            window.facialAuth.startCamera(videoElement, canvasElement, faceOverlay)
+            // Initialize AI module
+            window.aiVoterAuthentication.initialize()
+              .then(() => {
+                startCameraBtn.disabled = true;
+                cameraContainer.querySelector('p').style.display = 'none'; // Hide "Initializing" text
+                
+                return window.aiVoterAuthentication.startCamera(videoElement);
+              })
               .then(() => {
                 videoElement.style.display = 'block';
                 faceOverlay.style.display = 'block';
                 captureBtn.disabled = false;
-                authStatus.textContent = 'Camera active. Position face and click Capture.';
+                authStatus.textContent = 'AI ready. Position face and click Capture.';
               })
               .catch(error => {
-                authStatus.textContent = `Error starting camera: ${error.message}`;
-                authStatus.style.color = 'red';
-                startCameraBtn.disabled = false;
-                cameraContainer.querySelector('p').style.display = 'block'; // Show text again
-                cameraContainer.querySelector('p').textContent = 'Camera Error';
+                console.error("AI camera initialization failed, falling back to standard verification", error);
+                // Fall back to standard facial auth
+                startStandardCamera();
               });
           } else {
-            authStatus.textContent = 'Error: Facial authentication script not loaded correctly.';
-            authStatus.style.color = 'red';
+            // Use standard facial authentication
+            startStandardCamera();
+          }
+          
+          // Standard camera initialization function
+          function startStandardCamera() {
+            if (window.facialAuth && typeof window.facialAuth.startCamera === 'function') {
+              startCameraBtn.disabled = true;
+              authStatus.textContent = 'Starting camera...';
+              cameraContainer.querySelector('p').style.display = 'none'; // Hide "Initializing" text
+              
+              window.facialAuth.startCamera(videoElement, canvasElement, faceOverlay)
+                .then(() => {
+                  videoElement.style.display = 'block';
+                  faceOverlay.style.display = 'block';
+                  captureBtn.disabled = false;
+                  authStatus.textContent = 'Camera active. Position face and click Capture.';
+                })
+                .catch(error => {
+                  authStatus.textContent = `Error starting camera: ${error.message}`;
+                  authStatus.style.color = 'red';
+                  startCameraBtn.disabled = false;
+                  cameraContainer.querySelector('p').style.display = 'block'; // Show text again
+                  cameraContainer.querySelector('p').textContent = 'Camera Error';
+                });
+            } else {
+              authStatus.textContent = 'Error: Facial authentication script not loaded correctly.';
+              authStatus.style.color = 'red';
+            }
           }
         });
       }
@@ -348,64 +484,278 @@
       // Step 3: Facial Recognition - Capture & Verify
       if (captureBtn) {
         captureBtn.addEventListener('click', function() {
-          if (window.facialAuth && typeof window.facialAuth.captureAndVerify === 'function') {
-            captureBtn.disabled = true;
-            authStatus.textContent = 'Capturing and verifying...';
+          // Try AI-powered verification first
+          const useAI = typeof window.aiVoterAuthentication !== 'undefined' && 
+                         typeof window.aiVoterAuthentication.isInitialized === 'function' && 
+                         window.aiVoterAuthentication.isInitialized();
+          
+          captureBtn.disabled = true;
+          authStatus.textContent = 'Performing AI facial analysis...';
+          
+          if (useAI) {
+            // Use AI module for verification
+            const aadhar = aadharInput.value.trim();
+            const voterId = voterIdInput.value.trim();
+            const mobile = mobileInput.value.trim();
             
-            // Get credentials - they should be in the facial auth module already
-            window.facialAuth.captureAndVerify()
-              .then(result => {
-                if (result.success) {
-                  authStatus.textContent = result.newlyRegistered ? 
-                    'New user registered successfully! Redirecting...' : 
-                    'Facial Verification Successful! Redirecting...';
-                  authStatus.style.color = 'green';
-                  
-                  // Store final authentication state
-                  sessionStorage.setItem('authenticated', 'true');
-                  sessionStorage.setItem('userId', result.userId);
-                  
-                  // Redirect to the voting page (or dashboard)
-                  setTimeout(() => {
-                    window.location.href = '/pages/voting.html';
-                  }, 2000);
-                } else {
-                  authStatus.textContent = `Verification Failed: ${result.message || 'Face not recognized.'}. Please try again.`;
+            window.aiVoterAuthentication.completeVerification(
+              videoElement, 
+              canvasElement, 
+              aadhar,
+              voterId,
+              mobile
+            ).then(result => {
+              if (result.success) {
+                // AI verification succeeded
+                authStatus.textContent = 'AI facial verification successful!';
+                authStatus.style.color = 'green';
+                
+                // Store biometric verification
+                sessionStorage.setItem('biometricVerified', 'true');
+                sessionStorage.setItem('userId', result.user.voterId || voterId);
+                
+                // Clean up and proceed to wallet connection
+                if (window.aiVoterAuthentication.stopCamera) {
+                  window.aiVoterAuthentication.stopCamera();
+                } else if (window.facialAuth.stopCamera) {
+                  window.facialAuth.stopCamera();
+                }
+                
+                // Show wallet connection form
+                facialAuthForm.style.display = 'none';
+                walletConnectionForm.style.display = 'block';
+                updateProgressSteps('wallet');
+              } else {
+                authStatus.textContent = `AI verification failed: ${result.message}. Please try again.`;
+                authStatus.style.color = 'red';
+                captureBtn.disabled = false;
+              }
+            }).catch(error => {
+              console.error("AI verification error:", error);
+              authStatus.textContent = `AI verification error: ${error.message}`;
+              authStatus.style.color = 'red';
+              captureBtn.disabled = false;
+              
+              // Fall back to standard facial auth if AI fails
+              fallbackToStandardVerification();
+            });
+          } else {
+            // Use standard facial auth
+            fallbackToStandardVerification();
+          }
+          
+          // Standard facial verification fallback
+          function fallbackToStandardVerification() {
+            if (window.facialAuth && typeof window.facialAuth.captureAndVerify === 'function') {
+              authStatus.textContent = 'Capturing and verifying...';
+              
+              // Get credentials - they should be in the facial auth module already
+              window.facialAuth.captureAndVerify()
+                .then(result => {
+                  if (result.success) {
+                    authStatus.textContent = result.newlyRegistered ? 
+                      'New user registered successfully!' : 
+                      'Facial Verification Successful!';
+                    authStatus.style.color = 'green';
+                    
+                    // Store biometric verification
+                    sessionStorage.setItem('biometricVerified', 'true');
+                    sessionStorage.setItem('userId', result.userId);
+                    
+                    // Stop camera
+                    window.facialAuth.stopCamera();
+                    
+                    // Show wallet connection form
+                    facialAuthForm.style.display = 'none';
+                    walletConnectionForm.style.display = 'block';
+                    updateProgressSteps('wallet');
+                  } else {
+                    authStatus.textContent = `Verification Failed: ${result.message || 'Face not recognized.'}. Please try again.`;
+                    authStatus.style.color = 'red';
+                    captureBtn.disabled = false; // Re-enable button
+                  }
+                })
+                .catch(error => {
+                  authStatus.textContent = `Error during verification: ${error.message}`;
                   authStatus.style.color = 'red';
                   captureBtn.disabled = false; // Re-enable button
-                }
-              })
-              .catch(error => {
-                authStatus.textContent = `Error during verification: ${error.message}`;
-                authStatus.style.color = 'red';
-                captureBtn.disabled = false; // Re-enable button
-              });
-          } else {
-             authStatus.textContent = 'Error: Facial verification function not available.';
-             authStatus.style.color = 'red';
-             captureBtn.disabled = false;
+                });
+            } else {
+               authStatus.textContent = 'Error: Facial verification function not available.';
+               authStatus.style.color = 'red';
+               captureBtn.disabled = false;
+            }
           }
         });
       }
       
       // Back button: Facial Auth -> OTP
       if (backToOtpButton) {
-          backToOtpButton.addEventListener('click', () => {
-              facialAuthForm.style.display = 'none';
-              otpForm.style.display = 'block';
-              authStatus.textContent = 'Ready for facial verification.'; // Reset status
-              authStatus.style.color = ''; // Reset color
-              // Stop camera if running
-              if (window.facialAuth && typeof window.facialAuth.stopCamera === 'function') {
-                  window.facialAuth.stopCamera();
+        backToOtpButton.addEventListener('click', () => {
+          facialAuthForm.style.display = 'none';
+          otpForm.style.display = 'block';
+          updateProgressSteps('otp');
+          authStatus.textContent = 'Ready for facial verification.'; // Reset status
+          authStatus.style.color = ''; // Reset color
+            
+          // Stop camera if running
+          if (window.aiVoterAuthentication && typeof window.aiVoterAuthentication.stopCamera === 'function') {
+            window.aiVoterAuthentication.stopCamera();
+          } else if (window.facialAuth && typeof window.facialAuth.stopCamera === 'function') {
+            window.facialAuth.stopCamera();
+          }
+            
+          startCameraBtn.disabled = false;
+          captureBtn.disabled = true;
+          videoElement.style.display = 'none';
+          faceOverlay.style.display = 'none';
+          cameraContainer.querySelector('p').style.display = 'block';
+          cameraContainer.querySelector('p').textContent = 'Initializing Camera...';
+        });
+      }
+      
+      // Back button: Wallet Connection -> Facial Auth
+      if (backToFacialButton) {
+        backToFacialButton.addEventListener('click', () => {
+          walletConnectionForm.style.display = 'none';
+          facialAuthForm.style.display = 'block';
+          updateProgressSteps('facial');
+          
+          // Reset wallet connection
+          walletStatus.className = 'wallet-status not-connected';
+          walletStatus.innerHTML = '<i class="icon-wallet"></i><span>Wallet not connected</span>';
+          connectWalletButton.disabled = false;
+          connectWalletButton.textContent = 'Connect Wallet';
+          proceedToVotingButton.disabled = true;
+        });
+      }
+      
+      // Step 4: Wallet Connection
+      if (connectWalletButton) {
+        connectWalletButton.addEventListener('click', async function() {
+          if (typeof window.ethereum !== 'undefined') {
+            try {
+              // Show connecting status
+              walletStatus.className = 'wallet-status connecting';
+              walletStatus.innerHTML = '<i class="icon-loading"></i><span>Connecting...</span>';
+              this.disabled = true;
+              
+              // Request wallet connection
+              await window.ethereum.request({ method: 'eth_requestAccounts' });
+              
+              // Use ethers.js to connect
+              const provider = new ethers.BrowserProvider(window.ethereum);
+              const signer = await provider.getSigner();
+              const userAddress = await signer.getAddress();
+              
+              // Update wallet status
+              walletStatus.className = 'wallet-status connected';
+              walletStatus.innerHTML = `
+                <i class="icon-check-circle"></i>
+                <span>Connected: ${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}</span>
+              `;
+              
+              // Store wallet info in session
+              sessionStorage.setItem('walletConnected', 'true');
+              sessionStorage.setItem('walletAddress', userAddress);
+              
+              // Enable proceed button
+              proceedToVotingButton.disabled = false;
+              
+              // Update button
+              this.textContent = 'Wallet Connected';
+              this.disabled = true;
+              
+              console.log("Wallet connected:", userAddress);
+            } catch (error) {
+              console.error("Failed to connect wallet:", error);
+              
+              // Show error in wallet status
+              walletStatus.className = 'wallet-status error';
+              walletStatus.innerHTML = '<i class="icon-error"></i><span>Connection failed</span>';
+              
+              // Reset button
+              this.textContent = 'Connect Wallet';
+              this.disabled = false;
+            }
+          } else {
+            // No wallet available
+            alert('No Ethereum wallet detected. Please install MetaMask or another wallet provider.');
+            
+            // Update wallet status
+            walletStatus.className = 'wallet-status not-found';
+            walletStatus.innerHTML = '<i class="icon-error"></i><span>No wallet found</span>';
+          }
+        });
+      }
+      
+      // Proceed to Voting Button
+      if (proceedToVotingButton) {
+        proceedToVotingButton.addEventListener('click', function() {
+          // Final verification before proceeding
+          if (sessionStorage.getItem('biometricVerified') === 'true' && 
+              sessionStorage.getItem('walletConnected') === 'true') {
+            
+            // Set complete authentication
+            sessionStorage.setItem('authenticated', 'true');
+            
+            // If blockchain verification data is needed, prepare it
+            try {
+              if (window.facialAuth && typeof window.facialAuth.prepareBlockchainVerification === 'function') {
+                const verification = window.facialAuth.prepareBlockchainVerification();
+                sessionStorage.setItem('blockchainVerification', JSON.stringify(verification));
+              } else if (window.aiVoterAuthentication && typeof window.aiVoterAuthentication.createVerificationSession === 'function') {
+                const session = window.aiVoterAuthentication.createVerificationSession();
+                sessionStorage.setItem('blockchainVerification', JSON.stringify(session));
               }
-              startCameraBtn.disabled = false;
-              captureBtn.disabled = true;
-              videoElement.style.display = 'none';
-              faceOverlay.style.display = 'none';
-              cameraContainer.querySelector('p').style.display = 'block';
-              cameraContainer.querySelector('p').textContent = 'Initializing Camera...';
-          });
+            } catch (e) {
+              console.warn("Could not prepare blockchain verification:", e);
+            }
+            
+            // Redirect to voting page
+            window.location.href = '/pages/voting.html';
+          } else {
+            alert('Both facial verification and wallet connection are required before voting.');
+          }
+        });
+      }
+      
+      // Check if already authenticated and wallet connected
+      if (sessionStorage.getItem('authenticated') === 'true' && 
+          sessionStorage.getItem('walletConnected') === 'true') {
+        // Redirect directly to voting page
+        window.location.href = '/pages/voting.html';
+      } else if (sessionStorage.getItem('biometricVerified') === 'true') {
+        // Show wallet connection step if biometric is already verified
+        detailsForm.style.display = 'none';
+        otpForm.style.display = 'none';
+        facialAuthForm.style.display = 'none';
+        walletConnectionForm.style.display = 'block';
+        updateProgressSteps('wallet');
+        
+        // Check if wallet was previously connected
+        if (sessionStorage.getItem('walletConnected') === 'true') {
+          const walletAddress = sessionStorage.getItem('walletAddress');
+          
+          if (walletStatus && walletAddress) {
+            walletStatus.className = 'wallet-status connected';
+            walletStatus.innerHTML = `
+              <i class="icon-check-circle"></i>
+              <span>Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}</span>
+            `;
+            
+            // Enable proceed button
+            if (proceedToVotingButton) {
+              proceedToVotingButton.disabled = false;
+            }
+            
+            // Update connect button
+            if (connectWalletButton) {
+              connectWalletButton.textContent = 'Wallet Connected';
+              connectWalletButton.disabled = true;
+            }
+          }
+        }
       }
       
       // For development/testing - Show random voter info button (hidden by default)
@@ -452,8 +802,205 @@
         detailsForm.appendChild(showTestVoterButton);
         showTestVoterButton.style.display = 'block';
       }
-
     });
   </script>
+  
+  <style>
+    /* Progress indicator */
+    .auth-progress {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    .auth-progress::before {
+      content: '';
+      position: absolute;
+      top: 1.25rem;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: #e0e0e0;
+      z-index: 1;
+    }
+    
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .step-number {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background-color: #f5f5f5;
+      border: 2px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .step-label {
+      font-size: 0.75rem;
+      color: #757575;
+    }
+    
+    .progress-step.active .step-number {
+      background-color: #3f51b5;
+      border-color: #3f51b5;
+      color: white;
+    }
+    
+    .progress-step.active .step-label {
+      color: #3f51b5;
+      font-weight: 600;
+    }
+    
+    /* Face authentication styles */
+    .face-auth-container {
+      text-align: center;
+    }
+    
+    .camera-placeholder {
+      width: 100%;
+      height: 240px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    
+    .face-outline {
+      width: 160px;
+      height: 160px;
+      border: 2px dashed #3f51b5;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+    
+    .facescan-animation {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 10px;
+      background: linear-gradient(to right, transparent, rgba(63, 81, 181, 0.5), transparent);
+      animation: scanning 2s linear infinite;
+      z-index: 3;
+    }
+    
+    @keyframes scanning {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+    
+    .face-auth-status {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+    
+    .face-auth-instructions {
+      color: #757575;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+    
+    /* Wallet connection styles */
+    .verification-success {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .success-icon {
+      font-size: 3rem;
+      color: #4caf50;
+      margin-bottom: 1rem;
+    }
+    
+    .wallet-connection-section {
+      padding: 1.25rem;
+      background-color: #f7f9fc;
+      border-radius: 8px;
+      border-left: 4px solid #3f51b5;
+      margin-bottom: 1.5rem;
+    }
+    
+    .wallet-connection-section h3 {
+      color: #3f51b5;
+      margin-top: 0;
+    }
+    
+    .wallet-status-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .wallet-status {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      border-radius: 16px;
+      font-size: 0.875rem;
+    }
+    
+    .wallet-status i {
+      margin-right: 0.5rem;
+    }
+    
+    .wallet-status.not-connected {
+      background-color: #ffebee;
+      color: #f44336;
+    }
+    
+    .wallet-status.connecting {
+      background-color: #fff8e1;
+      color: #ff9800;
+    }
+    
+    .wallet-status.connected {
+      background-color: #e8f5e9;
+      color: #4caf50;
+    }
+    
+    .wallet-status.error, .wallet-status.not-found {
+      background-color: #ffebee;
+      color: #f44336;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .icon-loading:before {
+      content: "⟳";
+      display: inline-block;
+      animation: spin 1s linear infinite;
+    }
+    
+    /* Helper classes */
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
+    .w-100 { width: 100%; }
+  </style>
 </body>
 </html>
