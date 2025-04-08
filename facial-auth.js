@@ -219,11 +219,26 @@ window.facialAuth = (function() {
      * @param {HTMLElement} [faceOverlay] - Optional overlay element to show feedback.
      */
     async function startCamera(videoElement, canvasElement, faceOverlay = null) {
-        if (!videoElement || !canvasElement) {
-            throw new Error("Video and Canvas elements are required.");
+        // Find elements if not provided directly
+        if (!videoElement) {
+            videoElement = document.getElementById('facialAuthVideo');
+            if (!videoElement) {
+                const errorMsg = "Video element not found. Make sure there's an element with id 'facialAuthVideo' in the DOM.";
+                log.error(errorMsg);
+                throw new Error(errorMsg);
+            }
         }
         
-        // Ensure models are ready (loads TF and FaceNet if needed)
+        if (!canvasElement) {
+            canvasElement = document.getElementById('facialAuthCanvas');
+            if (!canvasElement) {
+                const errorMsg = "Canvas element not found. Make sure there's an element with id 'facialAuthCanvas' in the DOM.";
+                log.error(errorMsg);
+                throw new Error(errorMsg);
+            }
+        }
+        
+        // Ensure models are ready (uses backend API instead)
         await ensureModelsLoaded(); 
 
         log.debug("Starting camera...");
@@ -235,6 +250,11 @@ window.facialAuth = (function() {
         stopCamera(); 
 
         try {
+            // Check if mediaDevices is available
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Camera access is not supported in this browser. Please try a modern browser like Chrome, Firefox, or Edge.");
+            }
+            
             // Access the user's camera
             activeMediaStream = await navigator.mediaDevices.getUserMedia({
                 video: {
@@ -244,9 +264,31 @@ window.facialAuth = (function() {
                 }
             });
             
+            // Double-check activeVideoElement is valid before setting srcObject
+            if (!activeVideoElement) {
+                throw new Error("Video element was lost during camera initialization.");
+            }
+            
             // Connect the camera to the video element
             activeVideoElement.srcObject = activeMediaStream;
-            await activeVideoElement.play();
+            
+            // Wait for video to be ready to play
+            if (activeVideoElement.readyState >= 2) { // HAVE_CURRENT_DATA or better
+                log.debug("Video already has data, playing immediately");
+            } else {
+                log.debug("Waiting for video to be ready to play");
+                await new Promise((resolve) => {
+                    activeVideoElement.onloadeddata = resolve;
+                    // Fallback in case loadeddata never fires
+                    setTimeout(resolve, 1000);
+                });
+            }
+            
+            // Start playing the video
+            await activeVideoElement.play().catch(err => {
+                log.warn("Error playing video:", err.message);
+                // Continue anyway, might still work for capturing frames
+            });
             
             // Adjust canvas dimensions to match video once metadata is loaded
             activeVideoElement.onloadedmetadata = () => {
