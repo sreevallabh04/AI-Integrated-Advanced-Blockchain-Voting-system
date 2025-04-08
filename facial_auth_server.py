@@ -902,6 +902,24 @@ if __name__ == "__main__":
     # Load sample data for development
     load_sample_data()
     
+    # Import and register authentication endpoints
+    try:
+        import auth_handlers
+        app = auth_handlers.register_endpoints(
+            app, 
+            api_auth_required, 
+            voter_database, 
+            get_voter_key,
+            extract_face_from_image, 
+            verify_voter_by_face, 
+            get_face_embedding, 
+            register_voter,
+            TEMP_DIR
+        )
+        logger.info("Successfully registered authentication endpoints")
+    except Exception as e:
+        logger.error(f"Error registering authentication endpoints: {str(e)}")
+    
     # Start the server
     port = int(os.environ.get("PORT", 5001)) # Changed port to 5001 to avoid potential conflicts
     logger.info(f"Starting Facial Auth Server on port {port}")
