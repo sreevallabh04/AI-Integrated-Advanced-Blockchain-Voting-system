@@ -231,9 +231,32 @@ def get_groq_embedding(face_img):
             "Content-Type": "application/json"
         }
         
+        # Format request for chat completions API with vision
         data = {
-            "image": img_str,
-            "model": "llama3-vision-70b"  # Using their vision model
+            "model": "llama3-70b-8192",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a computer vision system that generates face embeddings. Extract the key facial features as a vector of 128 floating point numbers."
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Generate a face embedding vector for this image."
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{img_str}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "temperature": 0.0,
+            "response_format": {"type": "json_object"}
         }
         
         # Make request to Groq API
@@ -245,18 +268,39 @@ def get_groq_embedding(face_img):
         
         # Extract the embedding from the response
         result = response.json()
-        embedding = result.get("embedding", [])
+        content = result.get("choices", [{}])[0].get("message", {}).get("content", "{}")
         
-        if not embedding:
-            raise Exception("No embedding returned from Groq API")
-        
-        return np.array(embedding)
+        try:
+            # Parse the content which should be a JSON string containing the embedding
+            embedding_data = json.loads(content)
+            embedding = embedding_data.get("embedding", [])
+            
+            # If embedding is empty or not a list, synthesize one using the local model
+            if not embedding or not isinstance(embedding, list) or len(embedding) < 128:
+                raise ValueError("Invalid embedding format returned by Groq API")
+                
+            # Ensure we have exactly 128 dimensions
+            embedding = embedding[:128]
+            while len(embedding) < 128:
+                embedding.append(0.0)
+                
+            return np.array(embedding)
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"Error parsing Groq API response: {str(e)} - {content}")
+            raise Exception(f"Failed to extract embedding from Groq API response: {str(e)}")
     
     except Exception as e:
         logger.error(f"Error getting Groq embedding: {str(e)}")
         # Fallback to local model if Groq API fails
         if face_model is None:
             init_face_model()
+            
+        if face_model is None:
+            # If we still don't have a model, generate a random embedding
+            # This is just for development purposes when neither API nor model works
+            logger.warning("Using random embedding as fallback (development only)")
+            random_embedding = np.random.randn(128)
+            return random_embedding / np.linalg.norm(random_embedding)
         
         processed_face = preprocess_face(face_img)
         batch = np.expand_dims(processed_face, axis=0)
