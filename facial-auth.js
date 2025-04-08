@@ -218,33 +218,84 @@ window.facialAuth = (function() {
      * @param {HTMLCanvasElement} canvasElement - The canvas element for capturing frames.
      * @param {HTMLElement} [faceOverlay] - Optional overlay element to show feedback.
      */
-    async function startCamera(videoElement, canvasElement, faceOverlay = null) {
-        // Find elements if not provided directly
+    /**
+     * Ensures HTML video and canvas elements exist in the DOM, creating them if necessary
+     * @param {HTMLVideoElement} videoElement - Optional video element to use
+     * @param {HTMLCanvasElement} canvasElement - Optional canvas element to use
+     * @returns {Object} - Contains the video and canvas elements
+     */
+    function ensureMediaElements(videoElement, canvasElement) {
+        // Try to find elements by ID if not provided directly
         if (!videoElement) {
             videoElement = document.getElementById('facialAuthVideo');
+            
+            // If still not found, create it dynamically
             if (!videoElement) {
-                const errorMsg = "Video element not found. Make sure there's an element with id 'facialAuthVideo' in the DOM.";
-                log.error(errorMsg);
-                throw new Error(errorMsg);
+                log.debug("Video element not found, creating dynamically");
+                videoElement = document.createElement('video');
+                videoElement.id = 'facialAuthVideo';
+                videoElement.className = 'facial-auth-video';
+                videoElement.width = 640;
+                videoElement.height = 480;
+                videoElement.autoplay = true;
+                videoElement.muted = true;
+                videoElement.playsInline = true; // Important for iOS
+                videoElement.style.display = 'none'; // Hide by default
+                
+                // Add to DOM - preferably to a container if it exists
+                const container = document.getElementById('facialAuthContainer') || 
+                                  document.getElementById('videoContainer') || 
+                                  document.body;
+                container.appendChild(videoElement);
             }
         }
         
         if (!canvasElement) {
             canvasElement = document.getElementById('facialAuthCanvas');
+            
+            // If still not found, create it dynamically
             if (!canvasElement) {
-                const errorMsg = "Canvas element not found. Make sure there's an element with id 'facialAuthCanvas' in the DOM.";
-                log.error(errorMsg);
-                throw new Error(errorMsg);
+                log.debug("Canvas element not found, creating dynamically");
+                canvasElement = document.createElement('canvas');
+                canvasElement.id = 'facialAuthCanvas';
+                canvasElement.className = 'facial-auth-canvas';
+                canvasElement.width = 640;
+                canvasElement.height = 480;
+                canvasElement.style.display = 'none'; // Hide by default
+                
+                // Add to DOM - same container as video
+                const container = document.getElementById('facialAuthContainer') || 
+                                  document.getElementById('videoContainer') || 
+                                  document.body;
+                container.appendChild(canvasElement);
             }
+        }
+        
+        return { video: videoElement, canvas: canvasElement };
+    }
+
+    async function startCamera(videoElement, canvasElement, faceOverlay = null) {
+        // Ensure browser elements exist
+        const elements = ensureMediaElements(videoElement, canvasElement);
+        videoElement = elements.video;
+        canvasElement = elements.canvas;
+        
+        // Verify elements are available
+        if (!videoElement || !canvasElement) {
+            const errorMsg = "Failed to create or find video/canvas elements in the DOM";
+            log.error(errorMsg);
+            throw new Error(errorMsg);
         }
         
         // Ensure models are ready (uses backend API instead)
         await ensureModelsLoaded(); 
 
         log.debug("Starting camera...");
+        
+        // Store elements in module variables
         activeVideoElement = videoElement;
         activeCanvasElement = canvasElement;
-        activeFaceOverlay = faceOverlay; // Store reference if provided
+        activeFaceOverlay = faceOverlay;
 
         // Stop any existing stream first
         stopCamera(); 
@@ -264,50 +315,107 @@ window.facialAuth = (function() {
                 }
             });
             
-            // Double-check activeVideoElement is valid before setting srcObject
-            if (!activeVideoElement) {
-                throw new Error("Video element was lost during camera initialization.");
+            // Make sure video element is still valid after async operation
+            if (!videoElement || !document.body.contains(videoElement)) {
+                // Try to re-acquire or recreate the element
+                log.warn("Video element was removed from DOM, re-creating");
+                const newElements = ensureMediaElements(null, null);
+                videoElement = newElements.video;
+                canvasElement = newElements.canvas;
+                activeVideoElement = videoElement;
+                activeCanvasElement = canvasElement;
+            }
+            
+            // Show the video element if it's hidden
+            if (videoElement.style.display === 'none') {
+                videoElement.style.display = 'block';
             }
             
             // Connect the camera to the video element
-            activeVideoElement.srcObject = activeMediaStream;
+            videoElement.srcObject = activeMediaStream;
             
-            // Wait for video to be ready to play
-            if (activeVideoElement.readyState >= 2) { // HAVE_CURRENT_DATA or better
+            // Wait for video to be ready to play with better error handling
+            if (videoElement.readyState >= 2) { // HAVE_CURRENT_DATA or better
                 log.debug("Video already has data, playing immediately");
             } else {
                 log.debug("Waiting for video to be ready to play");
-                await new Promise((resolve) => {
-                    activeVideoElement.onloadeddata = resolve;
-                    // Fallback in case loadeddata never fires
-                    setTimeout(resolve, 1000);
-                });
+                try {
+                    await new Promise((resolve, reject) => {
+                        // Set up event listeners
+                        const onLoad = () => {
+                            cleanup();
+                            resolve();
+                        };
+                        
+                        const onError = (err) => {
+                            cleanup();
+                            reject(new Error(`Video failed to load: ${err.message || 'Unknown error'}`));
+                        };
+                        
+                        // Cleanup function to remove event listeners
+                        const cleanup = () => {
+                            videoElement.removeEventListener('loadeddata', onLoad);
+                            videoElement.removeEventListener('error', onError);
+                        };
+                        
+                        // Add event listeners
+                        videoElement.addEventListener('loadeddata', onLoad);
+                        videoElement.addEventListener('error', onError);
+                        
+                        // Fallback timeout
+                        setTimeout(() => {
+                            cleanup();
+                            // Resolve anyway after timeout, we'll try to continue
+                            log.warn("Video loadeddata event timed out, continuing anyway");
+                            resolve();
+                        }, 3000);
+                    });
+                } catch (loadError) {
+                    log.warn("Error waiting for video to load:", loadError.message);
+                    // Continue anyway
+                }
             }
             
-            // Start playing the video
-            await activeVideoElement.play().catch(err => {
-                log.warn("Error playing video:", err.message);
+            // Start playing the video with better error handling
+            try {
+                await videoElement.play();
+                log.debug("Video playback started");
+            } catch (playError) {
+                log.warn("Error playing video:", playError.message);
                 // Continue anyway, might still work for capturing frames
-            });
+            }
             
             // Adjust canvas dimensions to match video once metadata is loaded
-            activeVideoElement.onloadedmetadata = () => {
-                if (activeCanvasElement && activeVideoElement) {
-                    activeCanvasElement.width = activeVideoElement.videoWidth;
-                    activeCanvasElement.height = activeVideoElement.videoHeight;
-                    log.debug("Canvas dimensions set:", { w: activeCanvasElement.width, h: activeCanvasElement.height });
+            const setCanvasDimensions = () => {
+                if (canvasElement && videoElement && videoElement.videoWidth) {
+                    canvasElement.width = videoElement.videoWidth;
+                    canvasElement.height = videoElement.videoHeight;
+                    log.debug("Canvas dimensions set:", { 
+                        w: canvasElement.width, 
+                        h: canvasElement.height 
+                    });
                 }
             };
+            
+            // Set dimensions immediately if already available
+            if (videoElement.videoWidth) {
+                setCanvasDimensions();
+            }
+            
+            // Otherwise wait for metadata
+            videoElement.onloadedmetadata = setCanvasDimensions;
 
             log.info("Camera started successfully.");
+            
             // Optional: Show overlay if provided
             if (activeFaceOverlay) {
-                activeFaceOverlay.style.display = 'block'; // Or other logic to show it
+                activeFaceOverlay.style.display = 'block';
             }
 
         } catch (cameraError) {
             log.error(cameraError, { context: 'startCamera' });
             stopCamera(); // Clean up on error
+            
             if (cameraError.name === 'NotAllowedError' || cameraError.name === 'PermissionDeniedError') {
                 throw new Error("Camera access denied. Please allow camera access in your browser settings and try again.");
             } else if (cameraError.name === 'NotFoundError' || cameraError.name === 'DevicesNotFoundError') {
