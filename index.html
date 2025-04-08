@@ -1,645 +1,700 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web3 Voting DApp</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js"></script>
-    <script type="module">
-      import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
-      window.ethers = ethers; // Expose ethers globally
-    </script>
-
-    <link rel="stylesheet" href="styles.css" />
-    <style>
-      .research-panel {
-        margin-top: 20px;
-        border: 1px solid #ccc;
-        padding: 15px;
-        background-color: #f9f9f9;
-      }
-      .research-section {
-        margin-bottom: 15px;
-      }
-      .analysis-item {
-        margin: 10px 0;
-        padding: 10px;
-        background-color: #fff;
-        border-radius: 5px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      }
-      .analysis-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-        font-weight: bold;
-      }
-      .quality-score {
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 3px;
-        color: white;
-        background-color: #4caf50;
-      }
-      .bias-tag {
-        display: inline-block;
-        margin-right: 5px;
-        margin-bottom: 5px;
-        padding: 2px 6px;
-        border-radius: 3px;
-        background-color: #ff9800;
-        color: white;
-        font-size: 0.8em;
-      }
-      .consensus-map {
-        margin-top: 15px;
-        padding: 10px;
-        background-color: #e0f7fa;
-        border-radius: 5px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Decentralized Voting DApp</h1>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecureVote - Decentralized Voting with AI and Blockchain</title>
+  <meta name="description" content="Next-generation decentralized voting platform combining blockchain security, zero-knowledge proofs, and AI-powered analysis for transparent, secure elections.">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-container">
+  <!-- Header will be loaded here -->
+  <div id="header-container"></div>
+  
+  <main class="main-content">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <h1 class="hero-title">Secure Voting for the Modern World</h1>
+            <p class="hero-subtitle">Combining blockchain, zero-knowledge proofs, and AI to create the most secure, transparent, and intelligent voting platform.</p>
+            <div class="hero-buttons">
+              <a href="/pages/login.html" class="button primary-button button-lg">Get Started</a>
+              <a href="#features" class="button outline-button button-lg">Learn More</a>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="hero-image">
+              <img src="/assets/images/hero-illustration.svg" alt="SecureVote Platform Illustration" onerror="this.src='/assets/images/hero-fallback.png'; this.onerror=null;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     
-    <!-- Facial Authentication Login Section -->
-    <div id="loginSection" class="auth-section">
-      <div class="section-header">
-        <h2>Facial Authentication Login</h2>
-        <p>Please verify your identity before voting</p>
-      </div>
-      
-      <div id="facialLoginContainer">
-        <div class="login-instructions">
-          <p><strong>For security purposes, you must verify your identity using facial recognition before voting.</strong></p>
-          <p>Your reference image should be stored in the <code>images/users</code> directory.</p>
-          <p>Look directly at the camera and position your face within the guide.</p>
+    <!-- Partners Section -->
+    <section class="partners-section">
+      <div class="container">
+        <div class="partners-wrapper">
+          <p class="partners-text">Trusted by leading organizations</p>
+          <div class="partners-logos">
+            <img src="/assets/images/partner1.svg" alt="Partner" onerror="this.src='/assets/images/partner1-fallback.png'; this.onerror=null;">
+            <img src="/assets/images/partner2.svg" alt="Partner" onerror="this.src='/assets/images/partner2-fallback.png'; this.onerror=null;">
+            <img src="/assets/images/partner3.svg" alt="Partner" onerror="this.src='/assets/images/partner3-fallback.png'; this.onerror=null;">
+            <img src="/assets/images/partner4.svg" alt="Partner" onerror="this.src='/assets/images/partner4-fallback.png'; this.onerror=null;">
+            <img src="/assets/images/partner5.svg" alt="Partner" onerror="this.src='/assets/images/partner5-fallback.png'; this.onerror=null;">
+          </div>
         </div>
-        
-        <div class="user-id-input-container">
-          <label for="userIdInput">User ID:</label>
-          <input type="text" id="userIdInput" placeholder="Enter your user ID">
-        </div>
-        
-        <button id="beginAuthButton" class="primary-button">Begin Authentication</button>
       </div>
-    </div>
+    </section>
     
-    <!-- Voting Section - Will be hidden until authenticated -->
-    <div id="votingContainer" class="voting-section" style="display: none;">
-      <div id="researchNotice" style="background-color: #e3f2fd; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
-        <p><strong>Research Mode Active:</strong> This voting application is enhanced with Groq-powered AI analysis. All vote justifications will be analyzed for argument quality, cognitive biases, and research insights.</p>
-      </div>
-      
-      <div id="zkpNotice" style="background-color: #fff8e1; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
-      <p><strong>🔒 Zero-Knowledge Proof (ZKP) Available:</strong> This voting application now supports private voting through zero-knowledge proofs. Your vote choices remain confidential while maintaining verifiability.</p>
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <button id="toggleZkpMode" style="background-color: #ff9800; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Enable Private Voting (ZKP)</button>
-        <button id="runZkpDemo" style="background-color: #8d6e63; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Run ZKP Demo</button>
-      </div>
-    </div>
-
-      <h2>Select Hardhat Account</h2>
-<select id="accountSelect">
-  <option value="0">Account 1</option>
-  <option value="1">Account 2</option>
-  <option value="2">Account 3</option>
-  <option value="3">Account 4</option>
-  <option value="4">Account 5</option>
-  <option value="5">Account 6</option>
-  <option value="6">Account 7</option>
-  <option value="7">Account 8</option>
-  <option value="8">Account 9</option>
-  <option value="9">Account 10</option>
-  <option value="10">Account 11</option>
-  <option value="11">Account 12</option>
-  <option value="12">Account 13</option>
-  <option value="13">Account 14</option>
-  <option value="14">Account 15</option>
-  <option value="15">Account 16</option>
-  <option value="16">Account 17</option>
-  <option value="17">Account 18</option>
-  <option value="18">Account 19</option>
-</select>
-<button id="selectAccount">Use This Account</button>
-
-      <h2>Vote for a Candidate</h2>
-    <select id="candidateSelect">
-      <option value="0">Candidate A</option>
-      <option value="1">Candidate B</option>
-      <option value="2">Candidate C</option>
-    </select>
-    <br /><br />
-    <label for="justification">Reason for your vote (optional):</label><br />
-    <textarea id="justification" rows="3" cols="50"></textarea><br />
-    <div id="zkpVotingStatus" style="display: none; background-color: #fff8e1; padding: 10px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #ff9800;">
-      <p><strong>🔒 Private Voting Enabled:</strong> Your vote will be submitted with a zero-knowledge proof. Your choice will remain private while the vote is still counted.</p>
-    </div>
-    
-      <button id="voteButton" disabled>Vote</button>
-    </div> <!-- End of voting container -->
-
-    <h2>Voting Results</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Candidate</th>
-          <th>Votes</th>
-        </tr>
-      </thead>
-      <tbody id="voteTable"></tbody>
-    </table>
-    
-    <div id="zkpResultsSection" style="display: none; margin-top: 20px; border: 1px solid #ff9800; padding: 15px; border-radius: 5px; background-color: #fff8e1;">
-      <h3>Zero-Knowledge Proof Verification</h3>
-      <p>These votes have been cryptographically verified without revealing the voter's identity or choice:</p>
-      <div id="zkpVerifications" style="margin-top: 10px;">
-        <div style="padding: 10px; background-color: white; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #4caf50;">
-          <div style="font-weight: bold; color: #4caf50;">✓ Proof Verified</div>
-          <div>Nullifier Hash: 0x123...abc</div>
-          <div style="font-size: 0.8em; color: #757575;">Verified at: 12:34:56</div>
-        </div>
-      </div>
-    </div>
-
-    <h2>Voter Details</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Voter Address</th>
-          <th> Candidate Voted</th>
-        </tr>
-      </thead>
-      <tbody id="voterTable"></tbody>
-    </table>
-
-    <h2>Justifications</h2>
-    <div id="justificationsList">
-      <p>Justifications will appear here after votes are cast.</p>
-    </div>
-
-    <h2>AI Research Analysis</h2>
-    <div class="research-panel">
-      <div class="research-section">
-        <h3>Argument Quality Analysis</h3>
-        <div id="argumentAnalysis">
-          <p>AI analysis will appear here after votes with justifications are cast.</p>
-        </div>
-      </div>
-      
-      <div class="research-section">
-        <h3>Cognitive Bias Detection</h3>
-        <div id="biasAnalysis">
-          <p>Bias analysis will appear here after votes with justifications are cast.</p>
-        </div>
-      </div>
-      
-      <div class="research-section">
-        <h3>Research Insights</h3>
-        <div id="researchInsights">
-          <p>Research insights will appear here after votes with justifications are cast.</p>
-        </div>
-      </div>
-      
-      <div class="research-section">
-        <h3>Consensus Map</h3>
-        <div id="consensusMap" class="consensus-map">
-          <p>Consensus analysis will appear after multiple votes with justifications are cast.</p>
-        </div>
-      </div>
-      
-      <div class="research-section">
-        <h3>Deliberative Metrics</h3>
-        <div id="deliberativeMetrics">
-          <p>Metrics will be calculated after multiple votes with justifications are cast.</p>
-        </div>
-      </div>
-    </div>
-    
-    <h2>Multi-Agent Deliberative Democracy</h2>
-    <div id="maddSystemNotice" style="background-color: #e8eaf6; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
-      <p><strong>Advanced Research Mode:</strong> This voting application implements a Multi-Agent Deliberative Democracy (MADD) framework. Your vote justifications will be analyzed by AI agents with different reasoning styles to simulate deliberative democracy.</p>
-    </div>
-    
-    <div class="madd-container">
-      <div class="agent-profiles">
-        <h3>Deliberative Agents</h3>
-        <p>These AI agents represent different reasoning frameworks and will analyze vote justifications:</p>
-        <div id="agentProfilesList" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
-          <!-- Agent profiles will be populated by JavaScript -->
-        </div>
-      </div>
-      
-      <div id="deliberationProcess">
-        <h3>Deliberation Process</h3>
-        <p>The multi-agent deliberation will appear here after votes with justifications are cast.</p>
-      </div>
-      
-      <div id="deliberationConsensusMap">
-        <h3>Dynamic Consensus Map</h3>
-        <p>The evolving consensus map will appear here after multiple votes with justifications are cast.</p>
-      </div>
-      
-      <div class="research-metrics">
-        <h3>Research Metrics</h3>
-        <div id="deliberationMetrics">
-          <p>Deliberation metrics will be calculated after multiple votes with justifications are cast.</p>
-        </div>
-        <div class="metrics-grid" id="metricsGrid">
-          <!-- Metrics will be populated by JavaScript -->
-        </div>
-      </div>
-    </div>
-
-    <script src="groq-integration.js"></script>
-    <script src="madd-system.js"></script>
-    <script src="demo-mode.js"></script>
-    <script src="zkp-integration.js"></script>
-    <script src="facial-auth.js"></script>
-    <script src="app.js"></script>
-    <script src="ai-voter-authentication.js"></script>
-    <script src="ai-vote-analysis.js"></script>
-    <script src="ai-predictive-analytics.js"></script>
-    <script src="ai-audit-processes.js"></script>
-    <script src="ai-smart-contracts.js"></script>
-    
-    <style>
-      /* Multi-Agent Deliberative Democracy (MADD) System Styles */
-      .madd-container {
-        margin-top: 30px;
-        border: 1px solid #3f51b5;
-        border-radius: 5px;
-        padding: 15px;
-        background-color: #f5f7ff;
-      }
-      
-      .deliberation-header {
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #ddd;
-      }
-      
-      .deliberation-round {
-        margin-bottom: 20px;
-        padding: 10px;
-        background-color: #fff;
-        border-radius: 5px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      }
-      
-      .agent-responses {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 10px;
-      }
-      
-      .agent-response {
-        flex: 1 1 250px;
-        padding: 10px;
-        border-radius: 5px;
-        background-color: #f9f9f9;
-        margin-bottom: 10px;
-      }
-      
-      .agent-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-        padding-bottom: 5px;
-        border-bottom: 1px solid #eee;
-      }
-      
-      .agent-name {
-        font-weight: bold;
-      }
-      
-      .agent-type {
-        font-size: 0.8em;
-        padding: 2px 6px;
-        background-color: #eee;
-        border-radius: 3px;
-      }
-      
-      .consequentialist { border-left: 4px solid #4CAF50; }
-      .deontological { border-left: 4px solid #2196F3; }
-      .rights-based { border-left: 4px solid #9C27B0; }
-      .communitarian { border-left: 4px solid #FF9800; }
-      .empirical { border-left: 4px solid #795548; }
-      .future-oriented { border-left: 4px solid #00BCD4; }
-      .critical { border-left: 4px solid #F44336; }
-      
-      .main-argument {
-        font-weight: bold;
-        margin-bottom: 10px;
-      }
-      
-      .key-points, .agreements, .disagreements, .bridge-proposal {
-        margin-top: 8px;
-        font-size: 0.9em;
-      }
-      
-      .deliberation-synthesis {
-        background-color: #e8f5e9;
-        padding: 15px;
-        border-radius: 5px;
-        margin-top: 20px;
-      }
-      
-      .synthesis-section {
-        margin-bottom: 15px;
-      }
-      
-      .synthesis-section h5 {
-        margin-bottom: 5px;
-        color: #2e7d32;
-      }
-      
-      .synthesis-columns {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 15px;
-      }
-      
-      .synthesis-column {
-        flex: 1;
-      }
-      
-      .consensus-header {
-        margin-bottom: 15px;
-      }
-      
-      .consensus-columns {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 20px;
-      }
-      
-      .consensus-column {
-        flex: 1;
-        padding: 10px;
-        border-radius: 5px;
-      }
-      
-      .agreements {
-        background-color: #e8f5e9;
-      }
-      
-      .disagreements {
-        background-color: #ffebee;
-      }
-      
-      .consensus-row {
-        margin-bottom: 15px;
-        padding: 10px;
-        background-color: #e3f2fd;
-        border-radius: 5px;
-      }
-      
-      .research-metrics {
-        margin-top: 20px;
-        padding: 15px;
-        background-color: #f5f5f5;
-        border-radius: 5px;
-      }
-      
-      .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 15px;
-        margin-top: 10px;
-      }
-      
-      .metric-card {
-        padding: 10px;
-        background-color: #fff;
-        border-radius: 5px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        text-align: center;
-      }
-      
-      .metric-value {
-        font-size: 1.5em;
-        font-weight: bold;
-        color: #3f51b5;
-      }
-      
-      /* Facial Authentication Styles */
-      .auth-section {
-        background-color: #f0f8ff;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 30px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        border-left: 4px solid #3f51b5;
-      }
-      
-      .section-header {
-        margin-bottom: 20px;
-        border-bottom: 1px solid #e0e0e0;
-        padding-bottom: 10px;
-      }
-      
-      .section-header h2 {
-        color: #3f51b5;
-        margin-top: 0;
-        margin-bottom: 5px;
-      }
-      
-      .section-header p {
-        color: #666;
-        margin: 0;
-      }
-      
-      .login-instructions {
-        background-color: #e3f2fd;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        border-left: 4px solid #2196f3;
-      }
-      
-      .user-id-input-container {
-        margin-bottom: 20px;
-      }
-      
-      .user-id-input-container label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-      }
-      
-      .user-id-input-container input {
-        width: 100%;
-        max-width: 300px;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 16px;
-      }
-      
-      .primary-button {
-        background-color: #3f51b5;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 4px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-      }
-      
-      .primary-button:hover {
-        background-color: #303f9f;
-      }
-      
-      .primary-button:disabled {
-        background-color: #bdbdbd;
-        cursor: not-allowed;
-      }
-      
-      .voting-section {
-        background-color: #fff;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 30px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        border-left: 4px solid #4caf50;
-      }
-      
-      /* Authentication success/error styles */
-      .auth-success {
-        background-color: #e8f5e9;
-        padding: 20px;
-        border-radius: 8px;
-        text-align: center;
-        margin: 20px 0;
-        border-left: 4px solid #4caf50;
-      }
-      
-      .auth-error {
-        background-color: #ffebee;
-        padding: 20px;
-        border-radius: 8px;
-        text-align: center;
-        margin: 20px 0;
-        border-left: 4px solid #f44336;
-      }
-      
-      .success-icon {
-        background-color: #4caf50;
-        color: white;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 30px;
-        margin: 0 auto 15px;
-      }
-    </style>
-    <div id="documentation" class="research-panel" style="margin-top: 40px;">
-      <h2>AI Integration Documentation</h2>
-      
-      <div class="research-section">
-        <h3>About This Application</h3>
-        <p>This decentralized voting application integrates advanced AI capabilities powered by the Groq API to create a research-grade platform for studying deliberative democracy on the blockchain.</p>
-        <p>The application demonstrates how AI can enhance democratic processes by providing analysis of vote justifications, simulating multi-agent deliberation, and tracking consensus patterns over time.</p>
-        <p>Additionally, it implements zero-knowledge proofs (ZKP) to enable private voting, allowing users to cast verifiable votes without revealing their choices.</p>
-      </div>
-      
-      <div class="research-section">
-        <h3>AI Features</h3>
-        <div class="analysis-item">
-          <h4>1. Voter Authentication and Identity Verification</h4>
-          <p>AI enhances voter authentication by analyzing biometric data and verifying identities against blockchain records, streamlining the registration process and reducing fraud risks.</p>
+    <!-- Features Section -->
+    <section id="features" class="features-section section-lg">
+      <div class="container">
+        <div class="section-header text-center">
+          <h2>Revolutionary Voting Technology</h2>
+          <p class="section-description">Our platform combines cutting-edge technologies to reinvent the voting experience</p>
         </div>
         
-        <div class="analysis-item">
-          <h4>2. Vote Analysis and Real-Time Monitoring</h4>
-          <p>AI processes voting data in real-time, providing insights into voter behavior and detecting anomalies or irregularities that might require investigation.</p>
-        </div>
-        
-        <div class="analysis-item">
-          <h4>3. Predictive Analytics for Voter Engagement</h4>
-          <p>Historical voting data and demographic information are used to develop predictive models that identify patterns in voter engagement, helping tailor outreach efforts.</p>
-        </div>
-        
-        <div class="analysis-item">
-          <h4>4. Enhanced Audit Processes</h4>
-          <p>AI streamlines post-election audits by automating the comparison of blockchain records with physical ballots, identifying discrepancies and generating comprehensive reports.</p>
-        </div>
-        
-        <div class="analysis-item">
-          <h4>5. Smart Contracts for Automated Processes</h4>
-          <p>AI enhances smart contracts with dynamic decision-making capabilities, triggering outreach initiatives when participation thresholds are met and adapting voting parameters based on trends.</p>
-        </div>
-        
-        <div class="analysis-item">
-          <h4>6. Vote Justification Analysis</h4>
-          <p>Each vote justification is analyzed to extract its argument structure, detect cognitive biases, and generate research insights.</p>
-        </div>
-        
-        <div class="analysis-item">
-          <h4>7. Multi-Agent Deliberative Democracy (MADD)</h4>
-          <p>A framework of AI agents with different reasoning styles (consequentialist, deontological, rights-based, etc.) deliberate about vote justifications, simulating democratic discussion.</p>
-        </div>
-        
-        <div class="analysis-item">
-          <h4>8. Dynamic Consensus Mapping</h4>
-          <p>As deliberation progresses, the system tracks areas of agreement, disagreement, and potential bridge positions across the voting population.</p>
-        </div>
-        
-        <div class="analysis-item">
-          <h4>9. Research Metrics</h4>
-          <p>The application calculates and displays research metrics about deliberative quality, consensus formation, and reasoning patterns.</p>
-        </div>
-      </div>
-      
-      <div class="research-section">
-        <h3>Using This Application</h3>
-        <ol>
-          <li><strong>Select an account</strong> - Choose from the available Hardhat accounts</li>
-          <li><strong>Choose privacy mode</strong> - Toggle ZKP mode for private voting if desired</li>
-          <li><strong>Choose a candidate</strong> - Select from Candidates A, B, or C</li>
-          <li><strong>Provide justification</strong> - Enter your reasoning for your vote (this will be analyzed by AI)</li>
-          <li><strong>Cast your vote</strong> - Submit your vote to the blockchain (with or without privacy protection)</li>
-          <li><strong>View AI analysis</strong> - Explore the argument structure, bias detection, and research insights</li>
-          <li><strong>Examine deliberation</strong> - See how different reasoning perspectives engage with your justification</li>
-        </ol>
-        <p><strong>Note:</strong> You can also use Demo Mode to see the AI features without blockchain connectivity.</p>
-      </div>
-      
-      <div class="research-section">
-        <h3>Technical Information</h3>
-        <p>This application uses:</p>
-        <ul>
-          <li><strong>Blockchain:</strong> Ethereum (Hardhat development node)</li>
-          <li><strong>Smart Contract:</strong> Solidity voting contract with justification support</li>
-          <li><strong>AI Integration:</strong> Groq API for ultra-fast LLM inference</li>
-          <li><strong>Frontend:</strong> HTML, CSS, JavaScript with ethers.js</li>
-          <li><strong>Privacy:</strong> Zero-knowledge proofs for private, verifiable voting</li>
-          <li><strong>ZKP Implementation:</strong> Circom circuits for cryptographic proofs</li>
-        </ul>
-        <p>The application is designed for research purposes to explore how AI and ZKP can enhance deliberative processes in blockchain governance.</p>
-      </div>
-      
-      <div class="research-section">
-        <h3>Zero-Knowledge Proof Voting</h3>
-        <div class="analysis-item">
-          <h4>How ZKP Voting Works</h4>
-          <p>When you enable ZKP mode, your vote choice is never directly shared on the blockchain. Instead, a cryptographic proof is generated that validates your vote is legitimate without revealing your candidate choice.</p>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="icon-lock"></i>
+            </div>
+            <h3 class="feature-title">Blockchain Security</h3>
+            <p>Every vote is recorded on the Ethereum blockchain, ensuring immutable, verifiable records that cannot be tampered with.</p>
+          </div>
           
-          <h4>Privacy Benefits</h4>
-          <ul>
-            <li><strong>Vote Privacy:</strong> Your voting choice remains confidential</li>
-            <li><strong>Coercion Resistance:</strong> No one can verify how you voted, even with access to the blockchain</li> 
-            <li><strong>Voter Anonymity:</strong> The connection between your identity and vote is cryptographically protected</li>
-            <li><strong>Public Verifiability:</strong> Despite the privacy, anyone can verify the vote count is accurate</li>
-          </ul>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="icon-user"></i>
+            </div>
+            <h3 class="feature-title">Biometric Authentication</h3>
+            <p>Advanced facial recognition ensures that only authorized individuals can cast their votes, eliminating fraud.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="icon-vote"></i>
+            </div>
+            <h3 class="feature-title">Zero-Knowledge Proofs</h3>
+            <p>Cast private, verifiable votes using cryptographic zero-knowledge proofs that maintain your voting privacy.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="icon-chart"></i>
+            </div>
+            <h3 class="feature-title">AI-Powered Analysis</h3>
+            <p>Real-time vote analysis provides insights into voting patterns and detects anomalies for enhanced security.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="icon-dashboard"></i>
+            </div>
+            <h3 class="feature-title">Real-time Results</h3>
+            <p>View election results as they happen with interactive dashboards and comprehensive data visualization.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="icon-settings"></i>
+            </div>
+            <h3 class="feature-title">Smart Contract Automation</h3>
+            <p>Automate the entire election process with customizable smart contracts that enforce election rules.</p>
+          </div>
         </div>
       </div>
-    </div>
-  </body>
+    </section>
+    
+    <!-- How It Works Section -->
+    <section class="how-it-works-section section">
+      <div class="container">
+        <div class="section-header text-center">
+          <h2>How SecureVote Works</h2>
+          <p class="section-description">A seamless process from registration to results</p>
+        </div>
+        
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Secure Authentication</h3>
+              <p>Verify your identity using our AI-powered facial recognition system to ensure only authorized voters participate.</p>
+            </div>
+          </div>
+          
+          <div class="process-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Cast Your Vote</h3>
+              <p>Vote securely using our intuitive interface. Choose to vote publicly or privately using zero-knowledge proofs.</p>
+            </div>
+          </div>
+          
+          <div class="process-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Blockchain Verification</h3>
+              <p>Your vote is recorded on the Ethereum blockchain, creating an immutable and transparent record.</p>
+            </div>
+          </div>
+          
+          <div class="process-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h3>AI Analysis</h3>
+              <p>Our AI algorithms analyze justifications, detect biases, and generate research insights from voting data.</p>
+            </div>
+          </div>
+          
+          <div class="process-step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+              <h3>View Results</h3>
+              <p>Access comprehensive dashboards with real-time results, analytics, and visualization of voting patterns.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- MADD Section -->
+    <section class="madd-section section bg-light">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <div class="madd-image">
+              <img src="/assets/images/madd-illustration.svg" alt="Multi-Agent Deliberative Democracy" onerror="this.src='/assets/images/madd-fallback.png'; this.onerror=null;">
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="madd-content">
+              <h2>Multi-Agent Deliberative Democracy</h2>
+              <p class="lead">Our revolutionary MADD system uses AI to simulate democratic deliberation across different reasoning perspectives.</p>
+              
+              <div class="madd-features">
+                <div class="madd-feature">
+                  <h4>Diverse AI Agents</h4>
+                  <p>Automated agents represent different reasoning frameworks including consequentialist, deontological, and rights-based perspectives.</p>
+                </div>
+                
+                <div class="madd-feature">
+                  <h4>Dynamic Consensus Mapping</h4>
+                  <p>Visualize areas of agreement, disagreement, and potential bridge positions as deliberation progresses.</p>
+                </div>
+                
+                <div class="madd-feature">
+                  <h4>Research Metrics</h4>
+                  <p>Quantitative analysis of deliberation quality, consensus formation, and reasoning patterns.</p>
+                </div>
+              </div>
+              
+              <a href="/pages/deliberative.html" class="button primary-button">Explore MADD</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- ZKP Section -->
+    <section class="zkp-section section">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <div class="zkp-content">
+              <h2>Private Voting with Zero-Knowledge Proofs</h2>
+              <p class="lead">Cast confidential votes that remain verifiable without revealing your choices.</p>
+              
+              <div class="zkp-features">
+                <div class="zkp-feature">
+                  <h4>Complete Privacy</h4>
+                  <p>Your vote remains private while still being counted in the total - not even the system administrators can see your choice.</p>
+                </div>
+                
+                <div class="zkp-feature">
+                  <h4>Cryptographic Verification</h4>
+                  <p>Zero-knowledge proofs mathematically verify that your vote is legitimate without revealing its content.</p>
+                </div>
+                
+                <div class="zkp-feature">
+                  <h4>Coercion Resistance</h4>
+                  <p>Prevent vote buying and coercion by making it impossible for anyone to verify how you voted.</p>
+                </div>
+              </div>
+              
+              <a href="/pages/zkp.html" class="button primary-button">Learn About ZKP</a>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="zkp-image">
+              <img src="/assets/images/zkp-illustration.svg" alt="Zero-Knowledge Proofs" onerror="this.src='/assets/images/zkp-fallback.png'; this.onerror=null;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Testimonials Section -->
+    <section class="testimonials-section section bg-light">
+      <div class="container">
+        <div class="section-header text-center">
+          <h2>What Our Users Say</h2>
+          <p class="section-description">Organizations and individuals that trust SecureVote for their electoral needs</p>
+        </div>
+        
+        <div class="testimonials-slider">
+          <div class="testimonial-card">
+            <div class="testimonial-content">
+              <p>"SecureVote transformed our organizational elections with unparalleled security and transparency. The AI analysis provided insights we never had access to before."</p>
+            </div>
+            <div class="testimonial-author">
+              <img src="/assets/images/testimonial1.jpg" alt="Testimonial Author" class="author-image" onerror="this.src='/assets/images/testimonial-fallback.png'; this.onerror=null;">
+              <div class="author-details">
+                <h4>Sarah Johnson</h4>
+                <p>Election Commissioner, Tech Association</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="testimonial-card">
+            <div class="testimonial-content">
+              <p>"The zero-knowledge proof feature gave our members confidence that their votes remained private while still being counted correctly. It's revolutionary."</p>
+            </div>
+            <div class="testimonial-author">
+              <img src="/assets/images/testimonial2.jpg" alt="Testimonial Author" class="author-image" onerror="this.src='/assets/images/testimonial-fallback.png'; this.onerror=null;">
+              <div class="author-details">
+                <h4>Michael Chen</h4>
+                <p>Board President, Community Foundation</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="testimonial-card">
+            <div class="testimonial-content">
+              <p>"The facial authentication system eliminated voter fraud concerns completely, and the blockchain verification gave everyone confidence in the results."</p>
+            </div>
+            <div class="testimonial-author">
+              <img src="/assets/images/testimonial3.jpg" alt="Testimonial Author" class="author-image" onerror="this.src='/assets/images/testimonial-fallback.png'; this.onerror=null;">
+              <div class="author-details">
+                <h4>Dr. Amelia Rodriguez</h4>
+                <p>University Governance Chair</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="cta-section">
+      <div class="container">
+        <div class="cta-content text-center">
+          <h2>Ready to Transform Your Voting Process?</h2>
+          <p>Join thousands of organizations using SecureVote for secure, transparent, and intelligent elections.</p>
+          <div class="cta-buttons">
+            <a href="/pages/login.html" class="button primary-button button-lg">Get Started</a>
+            <a href="/pages/contact.html" class="button outline-button button-lg">Contact Sales</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <!-- Footer will be loaded here -->
+  <div id="footer-container"></div>
+  
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js"></script>
+  <script src="/production-config.js"></script>
+  
+  <!-- Component Loader Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load header component
+      fetch('/components/header.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('header-container').innerHTML = html;
+          
+          // Execute any scripts in the header
+          const headerScripts = document.getElementById('header-container').querySelectorAll('script');
+          headerScripts.forEach(script => {
+            const newScript = document.createElement('script');
+            if (script.src) {
+              newScript.src = script.src;
+            } else {
+              newScript.textContent = script.textContent;
+            }
+            document.head.appendChild(newScript);
+          });
+          
+          // Update active navigation item
+          const navLinks = document.querySelectorAll('.nav-link');
+          navLinks.forEach(link => {
+            if (link.getAttribute('href') === '/' || link.getAttribute('href') === '/index.html') {
+              link.parentElement.classList.add('active');
+            }
+          });
+        })
+        .catch(error => console.error('Error loading header:', error));
+      
+      // Load footer component
+      fetch('/components/footer.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('footer-container').innerHTML = html;
+          
+          // Execute any scripts in the footer
+          const footerScripts = document.getElementById('footer-container').querySelectorAll('script');
+          footerScripts.forEach(script => {
+            const newScript = document.createElement('script');
+            if (script.src) {
+              newScript.src = script.src;
+            } else {
+              newScript.textContent = script.textContent;
+            }
+            document.head.appendChild(newScript);
+          });
+        })
+        .catch(error => console.error('Error loading footer:', error));
+      
+      // Check if user is already authenticated
+      const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+      if (isAuthenticated) {
+        // Redirect authenticated users to dashboard
+        const getStartedButtons = document.querySelectorAll('a[href="/pages/login.html"]');
+        getStartedButtons.forEach(button => {
+          button.setAttribute('href', '/pages/dashboard.html');
+          button.textContent = 'Go to Dashboard';
+        });
+      }
+      
+      // Handle testimonials slider
+      const testimonialCards = document.querySelectorAll('.testimonial-card');
+      let currentIndex = 0;
+      
+      function showTestimonial(index) {
+        testimonialCards.forEach((card, i) => {
+          card.style.display = i === index ? 'block' : 'none';
+        });
+      }
+      
+      // Initialize the slider
+      if (testimonialCards.length > 0) {
+        showTestimonial(currentIndex);
+        
+        // Change testimonial every 5 seconds
+        setInterval(() => {
+          currentIndex = (currentIndex + 1) % testimonialCards.length;
+          showTestimonial(currentIndex);
+        }, 5000);
+      }
+    });
+  </script>
+  
+  <!-- Additional Styles -->
+  <style>
+    /* Hero Section Styles */
+    .hero-section {
+      padding: 120px 0;
+      background: linear-gradient(135deg, #f5f7ff 0%, #e8eafd 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--gray-900);
+    }
+    
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--gray-700);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .hero-image {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .hero-image img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Partners Section */
+    .partners-section {
+      padding: 2rem 0;
+      background-color: white;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .partners-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .partners-text {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .partners-logos {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 3rem;
+    }
+    
+    .partners-logos img {
+      height: 40px;
+      opacity: 0.7;
+      transition: opacity var(--transition-fast);
+    }
+    
+    .partners-logos img:hover {
+      opacity: 1;
+    }
+    
+    /* Features Section */
+    .features-section {
+      background-color: white;
+    }
+    
+    .section-header {
+      margin-bottom: 4rem;
+    }
+    
+    .section-description {
+      font-size: 1.25rem;
+      color: var(--gray-600);
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    
+    /* How It Works Section */
+    .process-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .process-step {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    
+    .step-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    
+    .step-content h3 {
+      margin-bottom: 0.5rem;
+    }
+    
+    /* MADD and ZKP Sections */
+    .bg-light {
+      background-color: var(--gray-100);
+    }
+    
+    .madd-section, .zkp-section {
+      padding: 100px 0;
+    }
+    
+    .madd-image, .zkp-image {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    
+    .madd-image img, .zkp-image img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .madd-features, .zkp-features {
+      margin: 2rem 0;
+    }
+    
+    .madd-feature, .zkp-feature {
+      margin-bottom: 1.5rem;
+    }
+    
+    .madd-feature h4, .zkp-feature h4 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Testimonials Section */
+    .testimonials-slider {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .testimonial-card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 2rem;
+      margin-bottom: 1rem;
+    }
+    
+    .testimonial-content {
+      font-size: 1.125rem;
+      color: var(--gray-700);
+      font-style: italic;
+      margin-bottom: 1.5rem;
+    }
+    
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+    }
+    
+    .author-image {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin-right: 1rem;
+    }
+    
+    .author-details h4 {
+      margin-bottom: 0.25rem;
+    }
+    
+    .author-details p {
+      color: var(--gray-600);
+      margin-bottom: 0;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      color: white;
+      padding: 80px 0;
+    }
+    
+    .cta-content h2 {
+      color: white;
+      margin-bottom: 1rem;
+    }
+    
+    .cta-content p {
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+    
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+    
+    .cta-buttons .outline-button {
+      color: white;
+      border-color: white;
+    }
+    
+    .cta-buttons .outline-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-color: white;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 991px) {
+      .hero-section {
+        padding: 80px 0;
+      }
+      
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      
+      .hero-image {
+        margin-top: 3rem;
+      }
+      
+      .process-step {
+        flex-direction: column;
+      }
+      
+      .step-number {
+        margin-bottom: 1rem;
+      }
+      
+      .cta-buttons {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .cta-buttons .button {
+        width: 100%;
+      }
+    }
+    
+    @media (max-width: 767px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+      
+      .hero-buttons {
+        flex-direction: column;
+      }
+      
+      .hero-buttons .button {
+        width: 100%;
+      }
+      
+      .partners-logos {
+        gap: 1.5rem;
+      }
+      
+      .partners-logos img {
+        height: 30px;
+      }
+    }
+  </style>
+</body>
 </html>
