@@ -13,9 +13,18 @@ const productionConfig = (() => {
                 !window.location.hostname.includes('127.0.0.1') &&
                 !window.location.hostname.includes('.local');
   
-  // Try to load deployed contract address from environment or localStorage
+  // Try to load deployed contract address from environment, localStorage, or env variables
   const getDeployedContractAddress = (network) => {
-    // Check for a stored contract address (updated after deployment)
+    // First check environment variables if available (server-side rendered)
+    if (typeof process !== 'undefined' && process.env) {
+      if (network === 'mainnet' && process.env.MAINNET_CONTRACT_ADDRESS) {
+        return process.env.MAINNET_CONTRACT_ADDRESS;
+      } else if (network === 'sepolia' && process.env.VOTING_CONTRACT_ADDRESS) {
+        return process.env.VOTING_CONTRACT_ADDRESS;
+      }
+    }
+    
+    // Then check for a stored contract address (updated after deployment)
     const storedAddress = localStorage.getItem(`CONTRACT_ADDRESS_${network.toUpperCase()}`);
     if (storedAddress) return storedAddress;
     
@@ -28,34 +37,54 @@ const productionConfig = (() => {
     // Ethereum Mainnet
     mainnet: {
       name: 'Ethereum Mainnet',
-      rpcUrl: '', // Will be fetched from wallet provider or .env in backend
+      rpcUrl: '', // Will be fetched from wallet provider
       chainId: '0x1',
       contractAddress: getDeployedContractAddress('mainnet'),
-      blockExplorer: 'https://etherscan.io'
+      blockExplorer: 'https://etherscan.io',
+      nativeCurrency: {
+        name: 'Ether',
+        symbol: 'ETH',
+        decimals: 18
+      }
     },
     // Goerli Testnet
     goerli: {
       name: 'Goerli Testnet',
-      rpcUrl: '', // Will be fetched from wallet provider or .env in backend
+      rpcUrl: '', // Will be fetched from wallet provider
       chainId: '0x5',
       contractAddress: getDeployedContractAddress('goerli'),
-      blockExplorer: 'https://goerli.etherscan.io'
+      blockExplorer: 'https://goerli.etherscan.io',
+      nativeCurrency: {
+        name: 'Goerli Ether',
+        symbol: 'ETH',
+        decimals: 18
+      }
     },
     // Sepolia Testnet
     sepolia: {
       name: 'Sepolia Testnet',
-      rpcUrl: '', // Will be fetched from wallet provider or .env in backend
+      rpcUrl: '', // Will be fetched from wallet provider
       chainId: '0xaa36a7',
       contractAddress: getDeployedContractAddress('sepolia'),
-      blockExplorer: 'https://sepolia.etherscan.io'
+      blockExplorer: 'https://sepolia.etherscan.io',
+      nativeCurrency: {
+        name: 'Sepolia Ether',
+        symbol: 'ETH',
+        decimals: 18
+      }
     },
     // Local development (Hardhat)
     localhost: {
       name: 'Local Hardhat Node',
       rpcUrl: 'http://127.0.0.1:8545',
       chainId: '0x539',
-      contractAddress: '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9', // Local deployment address
-      blockExplorer: ''
+      contractAddress: '0x5fbdb2315678afecb367f032d93f642f64180aa3', // Default local deployment address
+      blockExplorer: '',
+      nativeCurrency: {
+        name: 'Ether',
+        symbol: 'ETH',
+        decimals: 18
+      }
     }
   };
   
@@ -274,10 +303,19 @@ const productionConfig = (() => {
             // Update current network
             currentNetwork = key;
             log.info(`Detected network from wallet: ${network.name}`);
+            
+            // If we have a stored contract address for this network, update it 
+            const storedAddress = localStorage.getItem(`CONTRACT_ADDRESS_${key.toUpperCase()}`);
+            if (storedAddress && storedAddress !== network.contractAddress) {
+              networks[key].contractAddress = storedAddress;
+              log.info(`Using stored contract address for ${network.name}: ${storedAddress}`);
+            }
+            
             return key;
           }
         }
         
+        // Unknown network - store the information for debugging
         log.warn(`Unknown network detected with chainId: ${chainId}`);
         return null;
       } catch (error) {
@@ -387,7 +425,7 @@ const productionConfig = (() => {
     }
     
     if (!window.ethereum) {
-      throw new Error('No wallet provider detected');
+      throw new Error('No wallet provider detected. Please install MetaMask or a compatible Ethereum wallet.');
     }
     
     try {
@@ -400,9 +438,19 @@ const productionConfig = (() => {
       } catch (switchError) {
         // This error code indicates that the chain has not been added to MetaMask
         if (switchError.code === 4902) {
-          // For adding networks, we would need more details (currency, rpc urls, etc.)
-          // This is simplified - in production you'd want complete network details
-          throw new Error(`Network ${networks[networkKey].name} needs to be added to your wallet first`);
+          // Try to add the network to the wallet
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: networks[networkKey].chainId,
+                chainName: networks[networkKey].name,
+                nativeCurrency: networks[networkKey].nativeCurrency,
+                rpcUrls: [networks[networkKey].rpcUrl || getDefaultRpcUrl(networkKey)],
+                blockExplorerUrls: [networks[networkKey].blockExplorer]
+              }
+            ]
+          });
         } else {
           // Other errors
           throw switchError;
@@ -415,6 +463,23 @@ const productionConfig = (() => {
     } catch (error) {
       log.error(error, { context: 'requestNetworkSwitch' });
       throw error;
+    }
+  };
+  
+  /**
+   * Get default RPC URL for a network (fallback for wallet_addEthereumChain)
+   */
+  const getDefaultRpcUrl = (networkKey) => {
+    // These are public endpoints - in production you'd use your own Infura/Alchemy/etc keys
+    switch (networkKey) {
+      case 'mainnet':
+        return 'https://ethereum.publicnode.com';
+      case 'sepolia':
+        return 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'; // Public Infura key
+      case 'goerli':
+        return 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'; // Public Infura key
+      default:
+        return 'http://127.0.0.1:8545';
     }
   };
   
@@ -441,6 +506,19 @@ window.productionConfig = productionConfig;
 
 console.log("Production configuration module loaded");
 
+// Add a method to check if wallet is connected
+productionConfig.isWalletConnected = async () => {
+  if (!window.ethereum) return false;
+  
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+    return accounts && accounts.length > 0;
+  } catch (error) {
+    console.error("Error checking wallet connection:", error);
+    return false;
+  }
+};
+
 // Try to detect network from wallet on load if wallet is available
 if (window.ethereum) {
   window.ethereum.request({ method: 'eth_accounts' })
@@ -448,6 +526,15 @@ if (window.ethereum) {
       if (accounts && accounts.length > 0) {
         // Wallet is already connected, detect network
         productionConfig.detectNetworkFromWallet()
+          .then(network => {
+            if (network) {
+              console.log(`Connected to network: ${productionConfig.getNetwork().name}`);
+              // Dispatch an event that the wallet is connected and network detected
+              window.dispatchEvent(new CustomEvent('walletNetworkReady', { 
+                detail: { network, address: accounts[0] }
+              }));
+            }
+          })
           .catch(err => console.error("Error detecting network:", err));
       }
     })
