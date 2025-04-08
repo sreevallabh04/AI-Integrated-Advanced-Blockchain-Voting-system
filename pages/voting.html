@@ -501,6 +501,79 @@
         document.getElementById('cast-vote-btn').disabled = true;
       });
       
+      // Load Voting contract ABI and address
+      let votingContract;
+      let provider;
+      let signer;
+      
+      // Initialize contract when wallet is connected
+      async function initializeContract() {
+        try {
+          if (typeof window.ethereum === 'undefined') {
+            console.error("Ethereum provider not found");
+            return false;
+          }
+          
+          provider = new ethers.BrowserProvider(window.ethereum);
+          signer = await provider.getSigner();
+          
+          // Get contract address from production config or environment
+          const networkConfig = window.ProductionConfig?.getNetworkConfig();
+          let contractAddress = networkConfig?.votingContractAddress;
+          
+          // Fallback if not found in config
+          if (!contractAddress) {
+            console.warn("Contract address not found in config, checking for deployed address");
+            const deployedAddress = sessionStorage.getItem('votingContractAddress');
+            if (!deployedAddress) {
+              throw new Error("Voting contract address not found. Please deploy the contract first.");
+            }
+            contractAddress = deployedAddress;
+          }
+          
+          // Contract ABI - minimal version for the vote function
+          const votingAbi = [
+            "function vote(uint256 candidateId, string memory justification) external",
+            "function hasVoted(address voter) external view returns (bool)",
+            "function castSecureVote(uint256 candidateId, string memory justification, bytes memory zkProof) external",
+            "event VoteCast(address indexed voter, uint256 candidateId, string justification)"
+          ];
+          
+          votingContract = new ethers.Contract(contractAddress, votingAbi, signer);
+          console.log("Voting contract initialized at:", contractAddress);
+          
+          // Check if user has already voted
+          try {
+            const userAddress = await signer.getAddress();
+            const hasVoted = await votingContract.hasVoted(userAddress);
+            
+            if (hasVoted) {
+              // User already voted
+              document.getElementById('submission-status').innerHTML = `
+                <div class="status-message info">
+                  <i class="icon-info"></i>
+                  <p>You have already cast your vote for this election.</p>
+                </div>
+              `;
+              document.getElementById('cast-vote-btn').disabled = true;
+            }
+          } catch (error) {
+            console.warn("Error checking vote status:", error);
+          }
+          
+          return true;
+        } catch (error) {
+          console.error("Error initializing contract:", error);
+          document.getElementById('submission-status').innerHTML = `
+            <div class="status-message error">
+              <i class="icon-error"></i>
+              <p>Error connecting to voting contract: ${error.message}</p>
+            </div>
+          `;
+          return false;
+        }
+      }
+      
       // Cast vote functionality
       document.getElementById('cast-vote-btn').addEventListener('click', async function() {
         const selectedCandidate = document.querySelector('input[name="candidate"]:checked');
@@ -514,20 +587,31 @@
           return;
         }
         
-        const justification = document.getElementById('justification-input').value;
+        const candidateValue = selectedCandidate.value;
+        // Convert selection to candidate ID (0=A, 1=B, 2=C)
+        const candidateId = candidateValue === 'A' ? 0 : (candidateValue === 'B' ? 1 : 2);
+        
+        const justification = document.getElementById('justification-input').value || "No justification provided";
         const privacyMode = document.querySelector('input[name="privacy"]:checked').value;
         const submissionStatus = document.getElementById('submission-status');
         
         submissionStatus.innerHTML = `
           <div class="status-message loading">
             <div class="spinner"></div>
-            <p>Processing your vote...</p>
+            <p>Processing your vote transaction...</p>
           </div>
         `;
         
         try {
-          // Simulate vote processing
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // Make sure we're connected to the contract
+          if (!votingContract) {
+            const initialized = await initializeContract();
+            if (!initialized) {
+              throw new Error("Could not initialize voting contract");
+            }
+          }
+          
+          let tx;
           
           if (privacyMode === 'private') {
             const secret = document.getElementById('zkp-secret').value;
@@ -541,15 +625,64 @@
               return;
             }
             
-            // Here would be the actual ZKP logic
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Generate ZKP
+            submissionStatus.innerHTML = `
+              <div class="status-message loading">
+                <div class="spinner"></div>
+                <p>Generating zero-knowledge proof...</p>
+              </div>
+            `;
+            
+            let zkProof;
+            try {
+              if (typeof window.zkpIntegration === 'object' && typeof window.zkpIntegration.generateProof === 'function') {
+                zkProof = await window.zkpIntegration.generateProof(candidateId, secret);
+              } else {
+                throw new Error("ZKP module not available");
+              }
+            } catch (zkpError) {
+              console.error("Error generating ZKP:", zkpError);
+              throw new Error(`ZKP Error: ${zkpError.message || 'Could not generate zero-knowledge proof'}`);
+            }
+            
+            // Submit private vote with ZKP
+            submissionStatus.innerHTML = `
+              <div class="status-message loading">
+                <div class="spinner"></div>
+                <p>Submitting encrypted vote to blockchain...</p>
+              </div>
+            `;
+            
+            tx = await votingContract.castSecureVote(candidateId, justification, zkProof);
+          } else {
+            // Submit regular public vote
+            submissionStatus.innerHTML = `
+              <div class="status-message loading">
+                <div class="spinner"></div>
+                <p>Submitting vote to blockchain...</p>
+              </div>
+            `;
+            
+            // Call the vote function on the smart contract
+            tx = await votingContract.vote(candidateId, justification);
           }
           
-          // Simulate successful vote
+          // Wait for transaction confirmation
+          submissionStatus.innerHTML = `
+            <div class="status-message loading">
+              <div class="spinner"></div>
+              <p>Waiting for blockchain confirmation...</p>
+            </div>
+          `;
+          
+          await tx.wait();
+          
+          // Vote successfully recorded on the blockchain
           submissionStatus.innerHTML = `
             <div class="status-message success">
               <i class="icon-check-circle"></i>
               <p>Vote successfully cast! Transaction has been confirmed on the blockchain.</p>
+              <p class="text-small">Transaction hash: ${tx.hash}</p>
             </div>
           `;
           
@@ -562,6 +695,10 @@
             radio.disabled = true;
           });
           document.getElementById('justification-input').disabled = true;
+          
+          // Store vote info in session
+          sessionStorage.setItem('userHasVoted', 'true');
+          sessionStorage.setItem('voteTxHash', tx.hash);
           
           // Add redirect notification
           setTimeout(function() {
@@ -580,14 +717,29 @@
           
         } catch (error) {
           console.error("Error casting vote:", error);
+          let errorMessage = error.message || "Unknown error";
+          
+          // Check if it's a wallet rejection
+          if (errorMessage.includes("user rejected") || errorMessage.includes("User denied")) {
+            errorMessage = "Transaction was rejected in your wallet. Please approve the transaction to cast your vote.";
+          }
+          
+          // Check if it's a network error
+          if (errorMessage.includes("network") || errorMessage.includes("connection")) {
+            errorMessage = "Network error. Please check your internet connection and try again.";
+          }
+          
           submissionStatus.innerHTML = `
             <div class="status-message error">
               <i class="icon-error"></i>
-              <p>Failed to cast vote: ${error.message}</p>
+              <p>Failed to cast vote: ${errorMessage}</p>
             </div>
           `;
         }
       });
+      
+      // Initialize contract when wallet is connected
+      document.addEventListener('walletConnected', initializeContract);
     });
   </script>
   
