@@ -1,10 +1,14 @@
 /**
  * Facial Authentication Module
  * 
- * This module provides facial recognition authentication using CNN (Convolutional Neural Networks)
- * via TensorFlow.js. It captures images from the user's camera, extracts facial features,
- * and compares them with stored reference images to authenticate users before voting.
+ * This module provides facial recognition authentication for the secure voting system.
+ * It integrates with AI-powered facial verification to ensure only legitimate voters can cast votes.
+ * The system verifies Aadhar, Voter ID, mobile number with OTP, and performs facial recognition
+ * before allowing blockchain transactions.
  */
+
+// Use the enhanced AI voter authentication module if available
+const hasAiVoterAuthentication = typeof window.aiVoterAuthentication !== 'undefined';
 
 // Load configuration safely
 const config = window.productionConfig || {};
@@ -48,6 +52,12 @@ const log = (function() {
 // Determine environment
 const isProd = config?.isProd || (window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1'));
 
+// Log module initialization
+log.info("Initializing Facial Authentication Module", { 
+    useAI: hasAiVoterAuthentication,
+    environment: isProd ? "production" : "development"
+});
+
 // Feature flags and configuration
 const isFacialAuthEnabled = config?.featureFlags?.enableFacialAuth !== false;
 const facialAuthConfig = {
@@ -74,7 +84,7 @@ log.info("Loading Facial Authentication Module", {
     usingLocalModels: facialAuthConfig.modelPath.startsWith('/')
 });
 
-// Facial Authentication namespace - Refactored for Login Flow
+// Facial Authentication namespace - Enhanced for blockchain voting integration
 window.facialAuth = (function() {
     // --- Private variables ---
     let isInitialized = false;
@@ -330,6 +340,12 @@ window.facialAuth = (function() {
             if (videoElement.style.display === 'none') {
                 videoElement.style.display = 'block';
             }
+
+            // *** Added Check: Ensure video element is still valid before assigning stream ***
+            if (!videoElement || !document.body.contains(videoElement)) {
+                stopCamera(); // Clean up the obtained stream
+                throw new Error("Video element was lost before stream assignment.");
+            }
             
             // Connect the camera to the video element
             videoElement.srcObject = activeMediaStream;
@@ -455,16 +471,76 @@ window.facialAuth = (function() {
 
     /**
      * Captures a frame from the active video stream, extracts features, 
-     * and sends data to the backend for verification.
+     * and verifies identity using AI or backend API.
      * @param {string} aadhar - The verified Aadhar number.
      * @param {string} voterId - The verified Voter ID.
      * @returns {Promise<object>} - Promise resolving with { success: boolean, message: string, userId: string? }
      */
     async function captureAndVerify(aadhar, voterId) {
+        // First try to use AI-powered authentication if available
+        if (hasAiVoterAuthentication) {
+            try {
+                log.info("Using AI-powered facial verification");
+                
+                // Use stored credentials if not provided
+                const effectiveAadhar = aadhar || currentAadhar || sessionStorage.getItem('verifiedAadhar');
+                const effectiveVoterId = voterId || currentVoterId || sessionStorage.getItem('verifiedVoterId');
+                const effectiveMobile = currentMobile || sessionStorage.getItem('verifiedMobile');
+                
+                if (!effectiveAadhar || !effectiveVoterId) {
+                    throw new Error("Aadhar number and Voter ID are required for verification.");
+                }
+                
+                if (!activeVideoElement || !activeCanvasElement) {
+                    throw new Error("Camera not initialized properly.");
+                }
+                
+                // Use the AI verification module
+                const result = await window.aiVoterAuthentication.completeVerification(
+                    activeVideoElement, 
+                    activeCanvasElement, 
+                    effectiveAadhar, 
+                    effectiveVoterId,
+                    effectiveMobile
+                );
+                
+                if (result.success) {
+                    // Create blockchain-ready verification session
+                    const session = window.aiVoterAuthentication.createVerificationSession();
+                    
+                    // Store in session storage and set authenticated flag
+                    sessionStorage.setItem('authenticated', 'true');
+                    sessionStorage.setItem('authMethod', 'ai-facial');
+                    sessionStorage.setItem('verifiedVoterId', effectiveVoterId);
+                    
+                    // Dispatch an event that facial verification is complete
+                    window.dispatchEvent(new CustomEvent('facialVerificationComplete', { 
+                        detail: { success: true, userId: effectiveVoterId } 
+                    }));
+                    
+                    log.info("AI facial verification successful", { userId: effectiveVoterId });
+                }
+                
+                return {
+                    success: result.success,
+                    userId: effectiveVoterId,
+                    details: result.details || {},
+                    message: result.message || (result.success ? 
+                        "Facial verification successful" : 
+                        "Facial verification failed")
+                };
+            } catch (aiError) {
+                log.error(aiError, { context: 'aiVoterAuthentication' });
+                log.warn("AI authentication failed, falling back to backend API");
+                // Fall back to legacy implementation
+            }
+        }
+        
+        // Legacy implementation (fallback if AI module not available or fails)
         if (!activeVideoElement || !activeCanvasElement || !activeMediaStream) {
             // Try to re-acquire elements if they became null but stream might exist
-            if (!activeVideoElement) activeVideoElement = document.getElementById('facialAuthVideo'); // Assuming ID from login.html
-            if (!activeCanvasElement) activeCanvasElement = document.getElementById('facialAuthCanvas'); // Assuming ID from login.html
+            if (!activeVideoElement) activeVideoElement = document.getElementById('facialAuthVideo');
+            if (!activeCanvasElement) activeCanvasElement = document.getElementById('facialAuthCanvas');
             if (!activeVideoElement || !activeCanvasElement) {
                  throw new Error("Camera elements not found.");
             }
@@ -481,13 +557,10 @@ window.facialAuth = (function() {
              throw new Error("Aadhar number and Voter ID are required for verification.");
         }
         
-        // Ensure models are loaded before proceeding
+        // Ensure models are loaded before proceeding (or backend API is ready)
         await ensureModelsLoaded();
-        if (!faceNetModel) {
-             throw new Error("FaceNet model failed to load. Cannot verify.");
-        }
 
-        log.info("Capturing frame for verification...", { aadhar: effectiveAadhar.slice(-4), voterId: effectiveVoterId }); // Log partial Aadhar
+        log.info("Capturing frame for verification...", { aadhar: effectiveAadhar.slice(-4), voterId: effectiveVoterId });
 
         try {
             // Draw current video frame to the hidden canvas
@@ -550,6 +623,18 @@ window.facialAuth = (function() {
                 verified: result.verified, 
                 newlyRegistered: result.details?.newly_registered || false 
             });
+            
+            // If successful, store authentication state in session storage
+            if (result.verified) {
+                sessionStorage.setItem('authenticated', 'true');
+                sessionStorage.setItem('authMethod', 'backend-api');
+                sessionStorage.setItem('verifiedVoterId', effectiveVoterId);
+                
+                // Dispatch an event that verification is complete
+                window.dispatchEvent(new CustomEvent('facialVerificationComplete', { 
+                    detail: { success: true, userId: effectiveVoterId } 
+                }));
+            }
             
             // Return standardized result
             return {
@@ -853,8 +938,77 @@ window.facialAuth = (function() {
         isDestroying = false; 
     }
     
+    /**
+     * Initialize AI-powered authentication if available
+     */
+    async function initializeAI() {
+        if (hasAiVoterAuthentication) {
+            try {
+                log.info("Initializing AI-powered facial authentication");
+                await window.aiVoterAuthentication.initialize({
+                    productionMode: isProd,
+                    enableLivenessDetection: true,
+                    enableAuditLogging: true
+                });
+                return true;
+            } catch (error) {
+                log.error("Failed to initialize AI authentication", error);
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    // Try to initialize AI authentication on module load
+    initializeAI().catch(err => log.warn("Background AI initialization failed", err));
+    
+    /**
+     * Check if the user has been authenticated through facial verification
+     * @returns {boolean} - True if user is authenticated
+     */
+    function isUserAuthenticated() {
+        // First check AI authentication if available
+        if (hasAiVoterAuthentication && window.aiVoterAuthentication.isUserVerified()) {
+            return true;
+        }
+        
+        // Then check session storage
+        return sessionStorage.getItem('authenticated') === 'true';
+    }
+    
+    /**
+     * Prepare blockchain integration by generating necessary verification
+     * @returns {Object} - Object containing verification data for blockchain
+     */
+    function prepareBlockchainVerification() {
+        if (!isUserAuthenticated()) {
+            throw new Error("User must be authenticated before blockchain verification");
+        }
+        
+        const verifiedVoterId = sessionStorage.getItem('verifiedVoterId');
+        const authMethod = sessionStorage.getItem('authMethod');
+        
+        if (!verifiedVoterId) {
+            throw new Error("Missing verification data");
+        }
+        
+        // Create a verification token that can be used with the blockchain
+        // In production, this would be a properly signed JWT or similar
+        const verificationData = {
+            voterId: verifiedVoterId,
+            timestamp: Date.now(),
+            method: authMethod || 'unknown',
+            expiresAt: Date.now() + (30 * 60 * 1000) // 30 minutes
+        };
+        
+        // Store for validation
+        sessionStorage.setItem('blockchainVerification', JSON.stringify(verificationData));
+        
+        return verificationData;
+    }
+
     // --- Public API ---
-    // Expose the functions needed by the login page script
+    // Expose the functions needed by the login and voting flow
     return {
         // Camera functions
         startCamera,
@@ -863,13 +1017,20 @@ window.facialAuth = (function() {
         destroy,
         
         // Multi-factor authentication
-        verifyCredentials, // NEW: Send Aadhar, Voter ID, mobile, get OTP
-        verifyOtp,         // NEW: Verify the OTP
+        verifyCredentials,
+        verifyOtp,
         
         // Credential management
         setCredentials,
         setOtpVerified,
         isOtpVerified,
+        
+        // Blockchain integration
+        isUserAuthenticated,
+        prepareBlockchainVerification,
+        
+        // AI-powered authentication
+        initializeAI,
         
         // Development helpers
         getRandomVoter
