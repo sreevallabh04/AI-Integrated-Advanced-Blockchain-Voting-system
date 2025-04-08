@@ -115,66 +115,17 @@ window.facialAuth = (function() {
             throw new Error("Facial authentication is disabled.");
         }
         
-        // Use cached promise if already loading or already loaded
-        if (modelLoadingPromise) {
-            await modelLoadingPromise; // Wait if loading is in progress
-            if (!faceNetModel) throw new Error("Model loading failed previously."); // Check if loading failed
-            return true;
-        }
-        if (isInitialized && faceNetModel) {
-            log.debug("FaceNet model already loaded.");
-            return true;
-        }
-
+        // Always set initialized to true - we're going to use the backend API instead of local models
+        isInitialized = true;
+        
         // Check browser compatibility only once
-        if (!isInitialized && !checkBrowserCompatibility()) {
+        if (!checkBrowserCompatibility()) {
              log.warn("Browser not fully compatible with facial authentication.");
              // Don't throw error, let it proceed but log warning.
         }
         
-        // Start loading
-        modelLoadingPromise = (async () => {
-            try {
-                log.info("Initializing facial authentication system (loading models)...");
-                
-                 // Load TensorFlow.js if not already loaded
-                 if (typeof tf === 'undefined') {
-                    try {
-                        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0/dist/tf.min.js');
-                        log.debug("TensorFlow.js loaded");
-                         // Basic TF settings
-                        if (tf.env) {
-                            tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0); 
-                            if (!tf.env().getBackend()) {
-                                tf.setBackend('cpu');
-                                log.warn("WebGL not available, using CPU backend");
-                            }
-                        }
-                    } catch (tfError) {
-                        log.error(tfError, { context: 'loadTensorFlow' });
-                        throw new Error("Failed to load TensorFlow.js. Please check your internet connection.");
-                    }
-                }
-                
-                // Load FaceNet model if not already loaded
-                if (!faceNetModel) {
-                     await loadModelsInternal(); // Renamed internal loading function
-                }
-                
-                isInitialized = true;
-                log.info("Facial authentication models loaded successfully.");
-                return true;
-
-            } catch (error) {
-                log.error(error, { context: 'ensureModelsLoaded' });
-                isInitialized = false; // Ensure it retries if loading fails
-                faceNetModel = null; // Ensure model is null on error
-                modelLoadingPromise = null; // Clear promise cache on error
-                throw new Error(`Failed to initialize facial models: ${error.message}`);
-            }
-        })();
-        
-        return await modelLoadingPromise;
+        log.info("Using backend API for facial recognition, skipping local model loading.");
+        return true;
     }
     
     /**
