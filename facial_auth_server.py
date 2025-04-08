@@ -59,7 +59,7 @@ VERIFICATION_THRESHOLD = 0.6  # Adjust this threshold based on testing
 
 # Groq API configuration
 GROQ_API_KEY = "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"
-GROQ_API_URL = "https://api.groq.com/v1/vision/embeddings"
+GROQ_API_URL = "https://api.groq.com/v1/chat/completions"  # Endpoint for LLM with vision capabilities
 USE_GROQ_API = True  # Set to False to use local model, True to use Groq API
 
 # Ensure directories exist
