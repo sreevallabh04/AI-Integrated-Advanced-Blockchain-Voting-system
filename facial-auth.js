@@ -74,105 +74,101 @@ log.info("Loading Facial Authentication Module", {
     usingLocalModels: facialAuthConfig.modelPath.startsWith('/')
 });
 
-// Facial Authentication namespace
+// Facial Authentication namespace - Refactored for Login Flow
 window.facialAuth = (function() {
-    // Private variables
+    // --- Private variables ---
     let isInitialized = false;
-    let faceDetectionModel = null;
-    let faceNetModel = null;
-    let videoElement = null;
-    let canvasElement = null;
-    let mediaStream = null;
-    let currentUser = null;
-    let authAttempts = 0;
-    let authListeners = [];
-    let detectionTimer = null;
-    let activeTensors = []; // Track tensors for proper cleanup
-    let modelLoadingPromise = null; // Cache model loading promise
-    let tensorMemoryUsage = 0; // Track tensor memory usage
-    let isDestroyed = false; // Track if module has been destroyed
+    let faceNetModel = null; // FaceNet model for embeddings, loaded on demand
     
+    // Active stream/elements for the current operation
+    let activeVideoElement = null;
+    let activeCanvasElement = null;
+    let activeMediaStream = null;
+    let activeFaceOverlay = null; // Optional overlay element passed from caller
+
+    let modelLoadingPromise = null; // Cache model loading promise
+    let isDestroying = false; // Flag to prevent operations during cleanup
+
+    // --- Constants ---
+    // Backend endpoints for facial verification during login
+    const LOGIN_VERIFY_API_ENDPOINT = '/api/auth/verify-face';
+    const VOTER_VERIFY_API_ENDPOINT = '/api/auth/verify-voter';
+
+    // Authentication state
+    let currentAadhar = '';
+    let currentVoterId = '';
+    let currentMobile = '';
+    let otpVerified = false;
+
     /**
-     * Initialize the facial authentication system
+     * Ensures TensorFlow.js and FaceNet model are loaded.
      */
-    async function initialize() {
+    async function ensureModelsLoaded() {
         if (!isFacialAuthEnabled) {
-            log.info("Facial authentication is disabled via configuration");
-            return false;
+            log.info("Facial authentication is disabled via configuration.");
+            throw new Error("Facial authentication is disabled.");
         }
         
-        if (isInitialized) {
-            log.debug("Facial authentication already initialized");
+        // Use cached promise if already loading or already loaded
+        if (modelLoadingPromise) {
+            await modelLoadingPromise; // Wait if loading is in progress
+            if (!faceNetModel) throw new Error("Model loading failed previously."); // Check if loading failed
             return true;
         }
-        
-        // Check browser compatibility
-        if (!checkBrowserCompatibility()) {
-            log.warn("Browser not fully compatible with facial authentication");
-            showError("Your browser may not fully support facial authentication. Some features may not work correctly.");
-            // Continue anyway but user is warned
+        if (isInitialized && faceNetModel) {
+            log.debug("FaceNet model already loaded.");
+            return true;
+        }
+
+        // Check browser compatibility only once
+        if (!isInitialized && !checkBrowserCompatibility()) {
+             log.warn("Browser not fully compatible with facial authentication.");
+             // Don't throw error, let it proceed but log warning.
         }
         
-        try {
-            log.info("Initializing facial authentication system");
-            
-            // Create UI elements if they don't exist
-            await createUIElements();
-            
-            // Load TensorFlow.js if not already loaded
-            if (typeof tf === 'undefined') {
-                try {
-                    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0/dist/tf.min.js');
-                    log.debug("TensorFlow.js loaded");
-                    
-                    // Set memory management options
-                    if (tf.env) {
-                        tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0); // Aggressive cleanup
-                        tf.env().set('WEBGL_FORCE_F16_TEXTURES', true); // Use smaller textures
-                        tf.env().set('WEBGL_RENDER_FLOAT32_CAPABLE', true);
-                        
-                        // Check WebGL capabilities
-                        if (!tf.env().getBackend()) {
-                            tf.setBackend('cpu');
-                            log.warn("WebGL not available, using CPU backend");
-                        }
-                    }
-                } catch (tfError) {
-                    log.error(tfError, { context: 'loadTensorFlow' });
-                    showError("Failed to load TensorFlow.js. Please check your internet connection and try again.");
-                    return false;
-                }
-            }
-            
-            // Load TensorFlow.js models with caching and fallbacks
+        // Start loading
+        modelLoadingPromise = (async () => {
             try {
-                await loadModels();
-            } catch (modelError) {
-                log.error(modelError, { context: 'loadModels' });
-                showError("Failed to load facial recognition models. Please try again later.");
-                return false;
-            }
-            
-            isInitialized = true;
-            log.info("Facial authentication initialized successfully");
-            
-            // Set up periodic memory management
-            if (typeof tf !== 'undefined') {
-                setInterval(() => {
-                    if (tensorMemoryUsage > facialAuthConfig.tensorMemoryLimit) {
-                        disposeTensors();
-                        tf.tidy(() => {}); // Force garbage collection
-                        tensorMemoryUsage = 0;
+                log.info("Initializing facial authentication system (loading models)...");
+                
+                 // Load TensorFlow.js if not already loaded
+                 if (typeof tf === 'undefined') {
+                    try {
+                        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0/dist/tf.min.js');
+                        log.debug("TensorFlow.js loaded");
+                         // Basic TF settings
+                        if (tf.env) {
+                            tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0); 
+                            if (!tf.env().getBackend()) {
+                                tf.setBackend('cpu');
+                                log.warn("WebGL not available, using CPU backend");
+                            }
+                        }
+                    } catch (tfError) {
+                        log.error(tfError, { context: 'loadTensorFlow' });
+                        throw new Error("Failed to load TensorFlow.js. Please check your internet connection.");
                     }
-                }, 30000); // Check every 30 seconds
+                }
+                
+                // Load FaceNet model if not already loaded
+                if (!faceNetModel) {
+                     await loadModelsInternal(); // Renamed internal loading function
+                }
+                
+                isInitialized = true;
+                log.info("Facial authentication models loaded successfully.");
+                return true;
+
+            } catch (error) {
+                log.error(error, { context: 'ensureModelsLoaded' });
+                isInitialized = false; // Ensure it retries if loading fails
+                faceNetModel = null; // Ensure model is null on error
+                modelLoadingPromise = null; // Clear promise cache on error
+                throw new Error(`Failed to initialize facial models: ${error.message}`);
             }
-            
-            return true;
-        } catch (error) {
-            log.error(error, { context: 'facialAuthInitialization' });
-            showError("Failed to initialize facial authentication. Please try again later.");
-            return false;
-        }
+        })();
+        
+        return await modelLoadingPromise;
     }
     
     /**
@@ -227,1132 +223,373 @@ window.facialAuth = (function() {
     }
     
     /**
-     * Load models with caching and fallbacks
+     * Load only the FaceNet model internally.
      */
-    async function loadModels() {
-        // Only load models once
-        if (faceDetectionModel && faceNetModel) {
-            return;
-        }
-        
-        // Use cached promise if already loading
-        if (modelLoadingPromise) {
-            return modelLoadingPromise;
-        }
-        
-        // Create and cache the loading promise
-        modelLoadingPromise = (async () => {
-            try {
-                // Set up model loading
-                const loadDetectionModel = async () => {
-                    try {
-                        log.debug("Attempting to load face detection model from local path");
-                        return await tf.loadGraphModel(facialAuthConfig.modelPath);
-                    } catch (localError) {
-                        log.warn("Failed to load local face detection model, using CDN fallback", { error: localError.message });
-                        return await tf.loadGraphModel(facialAuthConfig.fallbackModelPath, {
-                            fromTFHub: true
-                        });
-                    }
-                };
-                
-                const loadFaceNetModel = async () => {
-                    try {
-                        log.debug("Attempting to load FaceNet model from local path");
-                        return await tf.loadGraphModel(facialAuthConfig.faceNetPath);
-                    } catch (localError) {
-                        log.warn("Failed to load local FaceNet model, using CDN fallback", { error: localError.message });
-                        return await tf.loadGraphModel(facialAuthConfig.fallbackFaceNetPath, {
-                            fromTFHub: true
-                        });
-                    }
-                };
-                
-                // Load models concurrently
-                [faceDetectionModel, faceNetModel] = await Promise.all([
-                    loadDetectionModel(),
-                    loadFaceNetModel()
-                ]);
-                
-                // Warm up models with a blank tensor
-                const dummyTensor = tf.zeros([1, 160, 160, 3]);
-                await faceDetectionModel.executeAsync(dummyTensor);
-                await faceNetModel.predict(dummyTensor);
-                dummyTensor.dispose();
-                
-                log.info("Facial recognition models loaded successfully");
-            } catch (error) {
-                modelLoadingPromise = null; // Clear cache on error
-                throw error;
-            }
-        })();
-        
-        return modelLoadingPromise;
-    }
-    
-    /**
-     * Create UI elements for facial authentication
-     */
-    async function createUIElements() {
+    async function loadModelsInternal() {
+        // This function is now only called by ensureModelsLoaded which handles caching.
         try {
-            // Check if elements already exist
-            if (document.getElementById('facialAuthContainer')) {
-                return;
-            }
-            
-            // Create the container
-            const container = document.createElement('div');
-            container.id = 'facialAuthContainer';
-            container.className = 'facial-auth-container';
-            
-            // Create HTML structure
-            container.innerHTML = `
-                <div class="auth-header">
-                    <h3>Facial Recognition Authentication</h3>
-                    <p class="auth-description">Please look at the camera to verify your identity before voting.</p>
-                </div>
-                
-                <div class="camera-container">
-                    <video id="facialAuthVideo" playsinline autoplay muted></video>
-                    <canvas id="facialAuthCanvas" style="display: none;"></canvas>
-                    <div id="faceOverlay" class="face-overlay">
-                        <div class="face-target"></div>
-                    </div>
-                </div>
-                
-                <div class="auth-status" id="authStatus">
-                    <div class="status-icon"></div>
-                    <div class="status-message">Waiting for camera access</div>
-                </div>
-                
-                <div class="auth-controls">
-                    <button id="startAuthButton" class="auth-button">Start Authentication</button>
-                    <button id="captureButton" class="auth-button" disabled>Capture Image</button>
-                    <button id="cancelAuthButton" class="auth-button secondary">Cancel</button>
-                </div>
-                
-                <div class="auth-error" id="authError" style="display: none;"></div>
-            `;
-            
-            // Add to page before the voting section
-            const votingSection = document.querySelector('.voting-section') || 
-                                document.getElementById('votingContainer');
-            
-            if (votingSection) {
-                votingSection.parentNode.insertBefore(container, votingSection);
-            } else {
-                // Fallback: add to the main container
-                const mainContainer = document.querySelector('main') || document.querySelector('body');
-                mainContainer.insertBefore(container, mainContainer.firstChild);
-            }
-            
-            // Store references to elements
-            videoElement = document.getElementById('facialAuthVideo');
-            canvasElement = document.getElementById('facialAuthCanvas');
-            
-            // Add event listeners
-            document.getElementById('startAuthButton').addEventListener('click', startAuthentication);
-            document.getElementById('captureButton').addEventListener('click', captureAndAuthenticate);
-            document.getElementById('cancelAuthButton').addEventListener('click', cancelAuthentication);
-            
-            // Add CSS styles
-            addStyles();
-            
-            log.debug("Facial authentication UI elements created");
-        } catch (error) {
-            log.error(error, { context: 'createUIElements' });
-            throw new Error("Failed to create UI elements: " + error.message);
-        }
-    }
-    
-    /**
-     * Start the facial authentication process
-     */
-    async function startAuthentication() {
-        try {
-            if (!isInitialized) {
-                await initialize();
-            }
-            
-            // Update UI
-            document.getElementById('startAuthButton').disabled = true;
-            document.getElementById('captureButton').disabled = false;
-            updateStatus("Starting camera...", "in-progress");
-            
-            // Check for camera permissions
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error("Your browser doesn't support camera access");
-            }
-            
-            try {
-                // Access the user's camera
-                mediaStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'user',
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    }
-                });
-                
-                // Connect the camera to the video element
-                videoElement.srcObject = mediaStream;
-                await videoElement.play();
-                
-                // Adjust canvas dimensions to match video
-                canvasElement.width = videoElement.videoWidth;
-                canvasElement.height = videoElement.videoHeight;
-                
-                // Show face overlay
-                document.getElementById('faceOverlay').style.opacity = '1';
-                
-                // Update UI
-                updateStatus("Position your face in the center", "in-progress");
-                
-                // Start face detection
-                startFaceDetection();
-            } catch (cameraError) {
-                if (cameraError.name === 'NotAllowedError') {
-                    throw new Error("Camera access denied. Please allow camera access and try again.");
-                } else {
-                    throw new Error("Failed to access camera: " + cameraError.message);
-                }
-            }
-        } catch (error) {
-            log.error(error, { context: 'startAuthentication' });
-            showError(error.message);
-            document.getElementById('startAuthButton').disabled = false;
-            document.getElementById('captureButton').disabled = true;
-            updateStatus("Authentication failed", "error");
-        }
-    }
-    
-    /**
-     * Start continuous face detection with throttling and memory management
-     */
-    function startFaceDetection() {
-        if (!faceDetectionModel || !videoElement) return;
-        
-        // Clear any existing timer
-        if (detectionTimer) {
-            clearInterval(detectionTimer);
-        }
-        
-        // Set up throttled detection
-        detectionTimer = setInterval(async () => {
-            if (!mediaStream || !mediaStream.active || isDestroyed) {
-                clearInterval(detectionTimer);
-                return;
-            }
-            
-            try {
-                await tf.tidy(() => {  // Use tidy for automatic tensor cleanup
-                    // Capture current frame from video
-                    const videoFrame = tf.browser.fromPixels(videoElement);
-                    
-                    // Process image for face detection
-                    const expandedFrame = videoFrame.expandDims(0);
-                    
-                    // Run face detection model
-                    return faceDetectionModel.executeAsync(expandedFrame).then(async predictions => {
-                        // Extract face detections
-                        const faces = extractFaceDetections(predictions);
-                        
-                        // Clean up prediction tensors
-                        predictions.forEach(tensor => tensor.dispose());
-                        
-                        // Update UI based on face detection
-                        updateFaceDetectionUI(faces);
-                    });
-                });
-                
-                // Track memory usage
-                if (typeof tf !== 'undefined' && tf.memory) {
-                    const memoryInfo = tf.memory();
-                    tensorMemoryUsage = memoryInfo.numBytes / (1024 * 1024); // Convert to MB
-                    
-                    // Cleanup if threshold exceeded
-                    if (tensorMemoryUsage > facialAuthConfig.tensorMemoryLimit) {
-                        disposeTensors();
-                    }
-                }
-            } catch (error) {
-                log.error(error, { context: 'faceDetection' });
-                updateStatus("Face detection error", "error");
-                
-                // If there's a critical error, pause and retry after delay
-                clearInterval(detectionTimer);
-                setTimeout(() => {
-                    if (!isDestroyed && mediaStream && mediaStream.active) {
-                        startFaceDetection();
-                    }
-                }, 5000);
-            }
-        }, facialAuthConfig.detectionInterval);
-    }
-    
-    /**
-     * Extract face detections from model predictions
-     */
-    function extractFaceDetections(predictions) {
-        // Use tf.tidy to automatically clean up tensors
-        return tf.tidy(() => {
-            // Extract faces from model output synchronously to avoid memory leaks
-            const boxes = predictions[0].arraySync();
-            const scores = predictions[1].arraySync();
-            
-            const faces = [];
-            for (let i = 0; i < scores[0].length; i++) {
-                if (scores[0][i] > 0.5) { // Confidence threshold
-                    const box = boxes[0][i];
-                    faces.push({
-                        yMin: box[0],
-                        xMin: box[1],
-                        yMax: box[2],
-                        xMax: box[3],
-                        score: scores[0][i]
-                    });
-                }
-            }
-            
-            return faces;
-        });
-    }
-    
-    /**
-     * Update UI based on face detection results
-     */
-    function updateFaceDetectionUI(faces) {
-        const overlay = document.getElementById('faceOverlay');
-        if (!overlay) return;
-        
-        const target = overlay.querySelector('.face-target');
-        if (!target) return;
-        
-        if (faces.length === 0) {
-            // No face detected
-            target.classList.remove('detected');
-            document.getElementById('captureButton').disabled = true;
-            updateStatus("No face detected. Please position your face in the center.", "warning");
-        } else if (faces.length === 1) {
-            // Single face detected
-            target.classList.add('detected');
-            document.getElementById('captureButton').disabled = false;
-            updateStatus("Face detected. Ready to authenticate.", "ready");
-        } else {
-            // Multiple faces detected
-            target.classList.remove('detected');
-            document.getElementById('captureButton').disabled = true;
-            updateStatus("Multiple faces detected. Please ensure only your face is visible.", "warning");
-        }
-    }
-    
-    /**
-     * Capture image and authenticate user
-     */
-    async function captureAndAuthenticate() {
-        try {
-            if (!videoElement || !canvasElement) {
-                throw new Error("Video or canvas element not found");
-            }
-            
-            // Update UI
-            updateStatus("Capturing image...", "in-progress");
-            document.getElementById('captureButton').disabled = true;
-            
-            // Temporarily pause face detection to free up resources
-            if (detectionTimer) {
-                clearInterval(detectionTimer);
-                detectionTimer = null;
-            }
-            
-            // Clean up any existing tensors
-            disposeTensors();
-            
-            await tf.tidy(async () => {
-                // Draw current video frame to canvas
-                const ctx = canvasElement.getContext('2d');
-                ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-                
-                // Get image data from canvas
-                const imageData = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
-                
-                // Extract face features
-                updateStatus("Analyzing facial features...", "in-progress");
-                const faceFeatures = await extractFaceFeatures(imageData);
-                
-                if (!faceFeatures) {
-                    throw new Error("Failed to extract facial features");
-                }
-                
-                // Authenticate user
-                updateStatus("Comparing with reference image...", "in-progress");
-                await authenticateUser(faceFeatures);
-            });
-        } catch (error) {
-            log.error(error, { context: 'captureAndAuthenticate' });
-            showError(error.message);
-            document.getElementById('captureButton').disabled = false;
-            updateStatus("Authentication failed", "error");
-            
-            // Increment failed attempts
-            authAttempts++;
-            
-            if (authAttempts >= facialAuthConfig.maxAttempts) {
-                showError("Maximum authentication attempts reached. Please try again later.");
-                cancelAuthentication();
-            } else {
-                document.getElementById('captureButton').disabled = false;
-                
-                // Resume face detection
-                startFaceDetection();
-            }
-        }
-    }
-    
-    /**
-     * Extract face features using FaceNet model
-     */
-    async function extractFaceFeatures(imageData) {
-        if (!faceNetModel) {
-            await loadModels();
-            if (!faceNetModel) {
-                throw new Error("Face feature extraction model not loaded");
-            }
-        }
-        
-        return tf.tidy(() => {
-            try {
-                // Convert image data to tensor
-                const imageTensor = tf.browser.fromPixels(imageData, 3);
-                
-                // Normalize and resize image for FaceNet (depends on model requirements)
-                const normalized = imageTensor.toFloat().div(tf.scalar(255))
-                    .expandDims(0).resizeBilinear([160, 160]); // FaceNet typically uses 160x160
-                
-                // Extract features
-                const features = faceNetModel.predict(normalized);
-                
-                // Get feature vector (embedding)
-                return features.dataSync();
-            } catch (error) {
-                log.error(error, { context: 'extractFaceFeatures' });
-                return null;
-            }
-        });
-    }
-    
-    /**
-     * Authenticate user by comparing face features
-     */
-    async function authenticateUser(faceFeatures) {
-        try {
-            // Get user ID from input or session
-            const userId = document.getElementById('userIdInput')?.value || 
-                          sessionStorage.getItem('userId') || 
-                          localStorage.getItem('userId') || 'default';
-            
-            let isAuthenticated = false;
-            
-            // In production, use backend API for secure comparison
-            if (facialAuthConfig.useBackendAPI) {
-                // Get image data from canvas in base64 format with compression
-                const imageData = canvasElement.toDataURL('image/jpeg', facialAuthConfig.compression);
-                
-                // Call backend API for verification
+            const loadFaceNetModel = async () => {
                 try {
-                    const apiEndpoint = facialAuthConfig.apiEndpoint;
-                    
-                    // Get API key from secure context (HTTP-only cookie is best practice)
-                    // Never expose API keys in client-side code or localStorage
-                    const apiKey = config?.facialAuth?.apiKey || 
-                                  document.cookie.split('; ')
-                                      .find(row => row.startsWith('facialAuthKey='))
-                                      ?.split('=')[1] || 
-                                  null;
-                    
-                    log.info("Sending authentication request to server", { 
-                        endpoint: apiEndpoint,
-                        userId 
+                    log.debug("Attempting to load FaceNet model from local path", { path: facialAuthConfig.faceNetPath });
+                    return await tf.loadGraphModel(facialAuthConfig.faceNetPath);
+                } catch (localError) {
+                    log.warn("Failed to load local FaceNet model, using CDN fallback", { error: localError.message, fallback: facialAuthConfig.fallbackFaceNetPath });
+                    // Ensure tfhub converter is available if needed, or load directly if path is tfjs compatible
+                    // await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter'); 
+                    return await tf.loadGraphModel(facialAuthConfig.fallbackFaceNetPath, {
+                        fromTFHub: facialAuthConfig.fallbackFaceNetPath.includes('tfhub.dev') // Assume TF Hub if URL matches
                     });
-                    
-                    const headers = {
-                        'Content-Type': 'application/json'
-                    };
-                    
-                    // Only add API key if available
-                    if (apiKey) {
-                        headers['Authorization'] = `Bearer ${apiKey}`;
-                    }
-                    
-                    // Add CSRF token if available
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                    if (csrfToken) {
-                        headers['X-CSRF-Token'] = csrfToken;
-                    }
-                    
-                    const response = await fetch(apiEndpoint, {
-                        method: 'POST',
-                        headers,
-                        credentials: 'same-origin', // Include cookies in the request
-                        body: JSON.stringify({
-                            userId: userId,
-                            imageData: imageData,
-                            timestamp: Date.now(), // Prevent replay attacks
-                            // Include faceFeatures for higher security implementations
-                            // where the server does the comparison
-                            faceFeatures: isProd ? faceFeatures : undefined
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Authentication API error: ${response.status} - ${errorText}`);
-                    }
-                    
-                    const result = await response.json();
-                    isAuthenticated = result.verified === true;
-                    
-                    log.info("Authentication response received", { 
-                        verified: isAuthenticated,
-                        details: { 
-                            userId: result.details?.userId,
-                            timestamp: result.details?.timestamp
-                        }
-                    });
-                    
-                    if (isAuthenticated) {
-                        currentUser = {
-                            id: userId,
-                            name: result.details?.userName || userId,
-                            similarity: result.details?.similarity || 0,
-                            authTime: new Date().toISOString()
-                        };
-                    }
-                } catch (apiError) {
-                    log.error(apiError, { context: 'authenticationAPI' });
-                    
-                    // In production, don't fall back to local authentication
-                    if (isProd) {
-                        throw new Error("Authentication service unavailable. Please try again later.");
-                    }
-                    
-                    // In development only, fall back to mock authentication
-                    log.warn("API authentication failed, falling back to mock authentication");
-                    isAuthenticated = mockAuthentication(userId);
                 }
-            } else {
-                // For development/demo only: use simulated authentication
-                if (isProd) {
-                    log.error(new Error("Mock authentication attempted in production"), { context: 'securityViolation' });
-                    throw new Error("Authentication configuration error");
-                }
-                isAuthenticated = mockAuthentication(userId);
-            }
-            
-            if (isAuthenticated) {
-                // Authentication successful
-                updateStatus("Authentication successful", "success");
-                
-                // Store authentication state
-                // Use more secure alternatives in production
-                if (isProd) {
-                    // In production, don't store sensitive auth state in client
-                    // The server should maintain the authenticated state via secure HTTP-only cookies
-                    sessionStorage.setItem('facialAuthComplete', 'true');
-                } else {
-                    // For development/testing only
-                    sessionStorage.setItem('authenticated', 'true');
-                    sessionStorage.setItem('userId', currentUser.id);
-                }
-                
-                // Notify listeners
-                notifyAuthListeners(true, currentUser);
-                
-                // Hide authentication UI or transition to voting
-                setTimeout(() => {
-                    document.getElementById('facialAuthContainer').classList.add('authenticated');
-                    displayAuthSuccess();
-                    
-                    // Enable voting section
-                    enableVotingSection();
-                }, 1000);
-            } else {
-                // Authentication failed
-                authAttempts++;
-                updateStatus(`Authentication failed (Attempt ${authAttempts}/${facialAuthConfig.maxAttempts})`, "error");
-                
-                // Notify listeners
-                notifyAuthListeners(false);
-                
-                if (authAttempts >= facialAuthConfig.maxAttempts) {
-                    showError("Maximum authentication attempts reached. Please try again later.");
-                    cancelAuthentication();
-                } else {
-                    // Enable retry
-                    document.getElementById('captureButton').disabled = false;
-                    
-                    // Resume face detection
-                    startFaceDetection();
-                }
-            }
-        } catch (error) {
-            log.error(error, { context: 'authenticateUser' });
-            throw error;
-        }
-    }
-    
-    /**
-     * Mock authentication for development/testing only
-     */
-    function mockAuthentication(userId) {
-        // Security check - never allow in production
-        if (isProd) {
-            log.error("Attempted to use mock authentication in production", { userId });
-            return false;
-        }
-        
-        // For development only, return true 80% of the time
-        const mockSuccess = Math.random() < 0.8;
-        
-        if (mockSuccess) {
-            currentUser = {
-                id: userId,
-                name: `Test User (${userId})`,
-                similarity: 0.85,
-                isMock: true,
-                authTime: new Date().toISOString()
             };
-        }
-        
-        log.debug("DEVELOPMENT MODE: Mock authentication", { success: mockSuccess, userId });
-        return mockSuccess;
-    }
-    
-    /**
-     * Display authentication success UI
-     */
-    function displayAuthSuccess() {
-        // Create success message
-        const successMessage = document.createElement('div');
-        successMessage.className = 'auth-success';
-        successMessage.innerHTML = `
-            <div class="success-icon">✓</div>
-            <div class="success-message">
-                <h4>Authentication Successful</h4>
-                <p>Welcome ${currentUser?.name || 'User'}!</p>
-                <p>You can now proceed to vote.</p>
-            </div>
-        `;
-        
-        // Replace camera container with success message
-        const cameraContainer = document.querySelector('.camera-container');
-        if (cameraContainer) {
-            cameraContainer.innerHTML = '';
-            cameraContainer.appendChild(successMessage);
-        }
-        
-        // Update controls
-        const authControls = document.querySelector('.auth-controls');
-        if (authControls) {
-            authControls.innerHTML = `
-                <button id="proceedToVoteButton" class="auth-button primary">Proceed to Vote</button>
-            `;
             
-            // Add event listener
-            document.getElementById('proceedToVoteButton').addEventListener('click', () => {
-                // Hide auth container and show voting section
-                document.getElementById('facialAuthContainer').style.display = 'none';
-                
-                // Show voting section
-                const votingSection = document.querySelector('.voting-section') || 
-                                    document.getElementById('votingContainer');
-                if (votingSection) {
-                    votingSection.style.display = 'block';
-                    // Scroll to voting section
-                    votingSection.scrollIntoView({ behavior: 'smooth' });
+            faceNetModel = await loadFaceNetModel();
+            
+            // Warm up model with a blank tensor
+            const dummyTensor = tf.zeros([1, 160, 160, 3]); // Assuming FaceNet input size
+            await faceNetModel.predict(dummyTensor);
+            dummyTensor.dispose();
+            
+            log.info("FaceNet model loaded and warmed up successfully");
+        } catch (error) {
+            faceNetModel = null; // Ensure model is null on error
+            throw error; // Re-throw for ensureModelsLoaded to catch
+        }
+    }
+    /**
+     * Starts the camera stream and links it to the provided video element.
+     * @param {HTMLVideoElement} videoElement - The video element to display the stream.
+     * @param {HTMLCanvasElement} canvasElement - The canvas element for capturing frames.
+     * @param {HTMLElement} [faceOverlay] - Optional overlay element to show feedback.
+     */
+    async function startCamera(videoElement, canvasElement, faceOverlay = null) {
+        if (!videoElement || !canvasElement) {
+            throw new Error("Video and Canvas elements are required.");
+        }
+        
+        // Ensure models are ready (loads TF and FaceNet if needed)
+        await ensureModelsLoaded(); 
+
+        log.debug("Starting camera...");
+        activeVideoElement = videoElement;
+        activeCanvasElement = canvasElement;
+        activeFaceOverlay = faceOverlay; // Store reference if provided
+
+        // Stop any existing stream first
+        stopCamera(); 
+
+        try {
+            // Access the user's camera
+            activeMediaStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
                 }
             });
+            
+            // Connect the camera to the video element
+            activeVideoElement.srcObject = activeMediaStream;
+            await activeVideoElement.play();
+            
+            // Adjust canvas dimensions to match video once metadata is loaded
+            activeVideoElement.onloadedmetadata = () => {
+                if (activeCanvasElement && activeVideoElement) {
+                    activeCanvasElement.width = activeVideoElement.videoWidth;
+                    activeCanvasElement.height = activeVideoElement.videoHeight;
+                    log.debug("Canvas dimensions set:", { w: activeCanvasElement.width, h: activeCanvasElement.height });
+                }
+            };
+
+            log.info("Camera started successfully.");
+            // Optional: Show overlay if provided
+            if (activeFaceOverlay) {
+                activeFaceOverlay.style.display = 'block'; // Or other logic to show it
+            }
+
+        } catch (cameraError) {
+            log.error(cameraError, { context: 'startCamera' });
+            stopCamera(); // Clean up on error
+            if (cameraError.name === 'NotAllowedError' || cameraError.name === 'PermissionDeniedError') {
+                throw new Error("Camera access denied. Please allow camera access in your browser settings and try again.");
+            } else if (cameraError.name === 'NotFoundError' || cameraError.name === 'DevicesNotFoundError') {
+                 throw new Error("No camera found. Please ensure a camera is connected and enabled.");
+            } else {
+                throw new Error(`Failed to access camera: ${cameraError.message}`);
+            }
         }
     }
-    
+
     /**
-     * Enable the voting section after successful authentication
+     * Stops the active camera stream and cleans up resources.
      */
-    function enableVotingSection() {
-        const votingSection = document.querySelector('.voting-section') || 
-                            document.getElementById('votingContainer');
+    function stopCamera() {
+        log.debug("Stopping camera...");
+        if (activeMediaStream) {
+            activeMediaStream.getTracks().forEach(track => track.stop());
+            activeMediaStream = null;
+        }
+        if (activeVideoElement) {
+            activeVideoElement.srcObject = null;
+            activeVideoElement.onloadedmetadata = null; // Remove listener
+        }
+         // Optional: Hide overlay if provided
+         if (activeFaceOverlay) {
+            activeFaceOverlay.style.display = 'none'; // Or other logic to hide it
+        }
+
+        // Reset active elements
+        activeVideoElement = null;
+        activeCanvasElement = null;
+        activeFaceOverlay = null;
         
-        if (votingSection) {
-            // Show voting section but keep it disabled until "Proceed to Vote" is clicked
-            votingSection.style.display = 'none';
+        // Clean up tensors (optional, but good practice)
+        disposeTensors(); 
+    }
+
+    /**
+     * Captures a frame from the active video stream, extracts features, 
+     * and sends data to the backend for verification.
+     * @param {string} aadhar - The verified Aadhar number.
+     * @param {string} voterId - The verified Voter ID.
+     * @returns {Promise<object>} - Promise resolving with { success: boolean, message: string, userId: string? }
+     */
+    async function captureAndVerify(aadhar, voterId) {
+        if (!activeVideoElement || !activeCanvasElement || !activeMediaStream) {
+            // Try to re-acquire elements if they became null but stream might exist
+            if (!activeVideoElement) activeVideoElement = document.getElementById('facialAuthVideo'); // Assuming ID from login.html
+            if (!activeCanvasElement) activeCanvasElement = document.getElementById('facialAuthCanvas'); // Assuming ID from login.html
+            if (!activeVideoElement || !activeCanvasElement) {
+                 throw new Error("Camera elements not found.");
+            }
+             if (!activeMediaStream || !activeMediaStream.active) {
+                 throw new Error("Camera not started or stream inactive.");
+             }
+        }
+        
+        // Use stored credentials if not provided
+        const effectiveAadhar = aadhar || currentAadhar || sessionStorage.getItem('verifiedAadhar');
+        const effectiveVoterId = voterId || currentVoterId || sessionStorage.getItem('verifiedVoterId');
+        
+        if (!effectiveAadhar || !effectiveVoterId) {
+             throw new Error("Aadhar number and Voter ID are required for verification.");
+        }
+        
+        // Ensure models are loaded before proceeding
+        await ensureModelsLoaded();
+        if (!faceNetModel) {
+             throw new Error("FaceNet model failed to load. Cannot verify.");
+        }
+
+        log.info("Capturing frame for verification...", { aadhar: effectiveAadhar.slice(-4), voterId: effectiveVoterId }); // Log partial Aadhar
+
+        try {
+            // Draw current video frame to the hidden canvas
+            const ctx = activeCanvasElement.getContext('2d');
+            // Ensure canvas dimensions are set
+            if (activeCanvasElement.width === 0 || activeCanvasElement.height === 0) {
+                 activeCanvasElement.width = activeVideoElement.videoWidth;
+                 activeCanvasElement.height = activeVideoElement.videoHeight;
+                 if (activeCanvasElement.width === 0) throw new Error("Video dimensions not available for capture.");
+            }
+            // Flip the image horizontally when drawing if the video feed is mirrored (transform: scaleX(-1))
+            ctx.translate(activeCanvasElement.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(activeVideoElement, 0, 0, activeCanvasElement.width, activeCanvasElement.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+
+            // Get image data as JPEG blob for potentially smaller size
+            const imageDataBlob = await new Promise(resolve => 
+                activeCanvasElement.toBlob(resolve, 'image/jpeg', facialAuthConfig.compression)
+            );
+
+            if (!imageDataBlob) {
+                throw new Error("Failed to capture image data from canvas.");
+            }
+
+            // Convert Blob to Base64 Data URL for sending
+            const imageDataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(imageDataBlob);
+            });
+
+            log.debug("Image captured, sending to backend for verification.");
+
+            // Call backend API for verification
+            const response = await fetch(VOTER_VERIFY_API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': 'dev_facial_auth_key'  // Use dev key for now
+                },
+                body: JSON.stringify({
+                    aadhar: effectiveAadhar,
+                    voterId: effectiveVoterId,
+                    imageData: imageDataUrl, // Send base64 image data
+                    timestamp: Date.now() // Optional: for replay prevention
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                 log.error("Verification API error", { status: response.status, response: result });
+                 // Use message from backend if available, otherwise provide generic error
+                 throw new Error(result.message || `Verification failed (Status: ${response.status})`);
+            }
             
-            // Remove disabled class/attribute from inputs
-            votingSection.querySelectorAll('button, input, select').forEach(element => {
-                element.disabled = false;
-                element.classList.remove('disabled');
+            log.info("Verification response received", { 
+                verified: result.verified, 
+                newlyRegistered: result.details?.newly_registered || false 
             });
             
-            // Add user info to voting form if applicable
-            const userIdField = votingSection.querySelector('.voter-id');
-            if (userIdField && currentUser) {
-                userIdField.value = currentUser.id;
-                userIdField.disabled = true;
-            }
+            // Return standardized result
+            return {
+                success: result.verified,
+                userId: effectiveVoterId, // Use Voter ID as the user identifier
+                details: result.details || {},
+                message: result.verified ? 
+                        "Facial verification successful" : 
+                        "Facial verification failed: Face did not match records",
+                newlyRegistered: result.details?.newly_registered || false
+            };
+
+        } catch (error) {
+            log.error(error, { context: 'captureAndVerify' });
+            // Return a failure object in the expected format
+            return { success: false, message: error.message || "An unexpected error occurred during verification." };
+        } finally {
+             // Clean up tensors after operation
+             disposeTensors();
         }
     }
     
     /**
-     * Cancel the authentication process and clean up resources
+     * Set authentication credentials for the verification process
      */
-    function cancelAuthentication() {
-        // Stop detection timer
-        if (detectionTimer) {
-            clearInterval(detectionTimer);
-            detectionTimer = null;
-        }
+    function setCredentials(aadhar, voterId, mobile) {
+        currentAadhar = aadhar;
+        currentVoterId = voterId;
+        currentMobile = mobile;
         
-        // Stop media stream
-        if (mediaStream) {
-            mediaStream.getTracks().forEach(track => track.stop());
-            mediaStream = null;
-        }
-        
-        // Reset video element
-        if (videoElement) {
-            videoElement.srcObject = null;
-        }
-        
-        // Clean up tensors
-        disposeTensors();
-        
-        // Reset UI
-        document.getElementById('startAuthButton').disabled = false;
-        document.getElementById('captureButton').disabled = true;
-        updateStatus("Authentication cancelled", "idle");
-        
-        // Hide face overlay
-        const overlay = document.getElementById('faceOverlay');
-        if (overlay) {
-            overlay.style.opacity = '0';
-        }
-        
-        // Reset attempts
-        authAttempts = 0;
-        
-        // Notify listeners
-        notifyAuthListeners(false);
-    }
-    
-    /**
-     * Update authentication status UI
-     */
-    function updateStatus(message, status = 'idle') {
-        const statusElement = document.getElementById('authStatus');
-        if (!statusElement) return;
-        
-        // Update status class
-        statusElement.className = 'auth-status ' + status;
-        
-        // Update message
-        const messageElement = statusElement.querySelector('.status-message');
-        if (messageElement) {
-            messageElement.textContent = message;
-        }
-    }
-    
-    /**
-     * Show error message
-     */
-    function showError(message) {
-        const errorElement = document.getElementById('authError');
-        if (!errorElement) return;
-        
-        errorElement.textContent = message;
-        errorElement.style.display = 'block';
-        
-        // Hide after 5 seconds
-        setTimeout(() => {
-            errorElement.style.display = 'none';
-        }, 5000);
-    }
-    
-    /**
-     * Register authentication listener
-     */
-    function registerAuthListener(callback) {
-        if (typeof callback === 'function') {
-            authListeners.push(callback);
-        }
-    }
-    
-    /**
-     * Notify all authentication listeners
-     */
-    function notifyAuthListeners(isAuthenticated, user = null) {
-        authListeners.forEach(listener => {
-            try {
-                listener(isAuthenticated, user);
-            } catch (error) {
-                log.error(error, { context: 'authListener' });
-            }
+        log.debug("Credentials set for verification", { 
+            aadhar: aadhar ? `${aadhar.substring(0, 4)}****${aadhar.substring(aadhar.length - 4)}` : null,
+            voterId: voterId,
+            mobile: mobile ? `${mobile.substring(0, 3)}****${mobile.substring(mobile.length - 3)}` : null
         });
+        
+        return true;
     }
     
     /**
-     * Clean up tensors to prevent memory leaks
+     * Set OTP verification status
+     */
+    function setOtpVerified(verified) {
+        otpVerified = verified;
+        
+        if (verified) {
+            // Store for session
+            sessionStorage.setItem('verifiedAadhar', currentAadhar);
+            sessionStorage.setItem('verifiedVoterId', currentVoterId);
+        }
+        
+        return otpVerified;
+    }
+    
+    /**
+     * Check if OTP is verified
+     */
+    function isOtpVerified() {
+        return otpVerified;
+    }
+    
+    /**
+     * Get a random voter for testing (development only)
+     */
+    async function getRandomVoter() {
+        if (isProd) {
+            log.error("Random voter data should not be used in production");
+            return null;
+        }
+        
+        try {
+            const response = await fetch('/api/voters/random', {
+                method: 'GET',
+                headers: {
+                    'X-API-Key': 'dev_facial_auth_key'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            log.error(error, { context: 'getRandomVoter' });
+            return null;
+        }
+    }
+    /**
+     * Clean up tensors to prevent memory leaks.
      */
     function disposeTensors() {
         try {
-            if (typeof tf !== 'undefined') {
-                // Dispose tracked tensors
-                activeTensors.forEach(tensor => {
-                    if (tensor && !tensor.isDisposed) {
-                        tensor.dispose();
-                    }
-                });
-                activeTensors = [];
-                
-                // Run garbage collection
-                tf.disposeVariables();
-                tf.tidy(() => {});
+            if (typeof tf !== 'undefined' && tf.memory) {
+                 const numTensors = tf.memory().numTensors;
+                 if (numTensors > 5) { // Only dispose if significant tensors exist
+                     tf.disposeVariables(); // Dispose variables
+                     log.debug(`Disposed tensors. Count before: ${numTensors}, After: ${tf.memory().numTensors}`);
+                 }
             }
         } catch (error) {
             log.warn("Error cleaning up tensors", { error: error.message });
         }
     }
-    
+
+    // Removed addStyles function - Styles should be handled in CSS files.
     /**
-     * Add CSS styles for facial authentication UI
-     */
-    function addStyles() {
-        // Check if styles already exist
-        if (document.getElementById('facialAuthStyles')) {
-            return;
-        }
-        
-        const styleElement = document.createElement('style');
-        styleElement.id = 'facialAuthStyles';
-        styleElement.textContent = `
-            .facial-auth-container {
-                background-color: #f8f9fa;
-                border-radius: 10px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                margin-bottom: 30px;
-                padding: 20px;
-                transition: all 0.3s ease;
-            }
-            
-            .facial-auth-container.authenticated {
-                background-color: #e8f5e9;
-                border-left: 4px solid #4caf50;
-            }
-            
-            .auth-header {
-                margin-bottom: 20px;
-                text-align: center;
-            }
-            
-            .auth-header h3 {
-                margin-top: 0;
-                color: #333;
-            }
-            
-            .auth-description {
-                color: #666;
-                margin-bottom: 0;
-            }
-            
-            .camera-container {
-                position: relative;
-                width: 100%;
-                max-width: 640px;
-                margin: 0 auto 20px;
-                border-radius: 8px;
-                overflow: hidden;
-                background-color: #000;
-            }
-            
-            #facialAuthVideo {
-                width: 100%;
-                height: auto;
-                display: block;
-                transform: scaleX(-1); /* Mirror video */
-            }
-            
-            #facialAuthCanvas {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-            }
-            
-            .face-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                pointer-events: none;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-            
-            .face-target {
-                width: 200px;
-                height: 200px;
-                border: 2px dashed rgba(255, 255, 255, 0.7);
-                border-radius: 50%;
-                transition: all 0.3s ease;
-            }
-            
-            .face-target.detected {
-                border-color: rgba(76, 175, 80, 0.8);
-                border-style: solid;
-                box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
-            }
-            
-            .auth-status {
-                display: flex;
-                align-items: center;
-                padding: 10px 15px;
-                background-color: #f5f5f5;
-                border-radius: 5px;
-                margin-bottom: 20px;
-            }
-            
-            .auth-status.in-progress {
-                background-color: #e3f2fd;
-                border-left: 3px solid #2196f3;
-            }
-            
-            .auth-status.ready {
-                background-color: #e8f5e9;
-                border-left: 3px solid #4caf50;
-            }
-            
-            .auth-status.warning {
-                background-color: #fff8e1;
-                border-left: 3px solid #ffc107;
-            }
-            
-            .auth-status.error {
-                background-color: #ffebee;
-                border-left: 3px solid #f44336;
-            }
-            
-            .auth-status.success {
-                background-color: #e8f5e9;
-                border-left: 3px solid #4caf50;
-            }
-            
-            .status-icon {
-                width: 20px;
-                height: 20px;
-                margin-right: 10px;
-            }
-            
-            .status-message {
-                flex: 1;
-            }
-            
-            .auth-controls {
-                display: flex;
-                justify-content: center;
-                gap: 15px;
-                margin-bottom: 20px;
-            }
-            
-            .auth-button {
-                padding: 10px 20px;
-                border-radius: 5px;
-                border: none;
-                cursor: pointer;
-                font-size: 16px;
-                transition: all 0.2s ease;
-            }
-            
-            .auth-button:disabled {
-                opacity: 0.6;
-                cursor: not-allowed;
-            }
-            
-            .auth-button:not(.secondary) {
-                background-color: #3f51b5;
-                color: white;
-            }
-            
-            .auth-button:not(.secondary):hover:not(:disabled) {
-                background-color: #303f9f;
-            }
-            
-            .auth-button.secondary {
-                background-color: #f5f5f5;
-                color: #333;
-            }
-            
-            .auth-button.secondary:hover:not(:disabled) {
-                background-color: #e0e0e0;
-            }
-            
-            .auth-button.primary {
-                background-color: #4caf50;
-                color: white;
-            }
-            
-            .auth-button.primary:hover:not(:disabled) {
-                background-color: #388e3c;
-            }
-            
-            .auth-error {
-                background-color: #ffebee;
-                color: #d32f2f;
-                padding: 10px 15px;
-                border-radius: 5px;
-                margin-bottom: 20px;
-                text-align: center;
-            }
-            
-            .auth-success {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 40px 20px;
-                text-align: center;
-            }
-            
-            .success-icon {
-                font-size: 48px;
-                color: #4caf50;
-                margin-bottom: 20px;
-                width: 80px;
-                height: 80px;
-                background-color: #e8f5e9;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            .success-message h4 {
-                margin-top: 0;
-                color: #333;
-            }
-            
-            /* Responsive styles */
-            @media (max-width: 768px) {
-                .auth-controls {
-                    flex-direction: column;
-                    gap: 10px;
-                }
-                
-                .auth-button {
-                    width: 100%;
-                }
-                
-                .face-target {
-                    width: 150px;
-                    height: 150px;
-                }
-            }
-        `;
-        
-        document.head.appendChild(styleElement);
-    }
-    
-    /**
-     * Completely destroy the module and clean up all resources
+     * Completely destroy the module and clean up all resources.
      */
     function destroy() {
-        isDestroyed = true;
+        log.info("Destroying facial authentication module.");
+        isDestroying = true;
         
-        // Cancel any ongoing authentication
-        cancelAuthentication();
+        // Stop camera
+        stopCamera();
         
         // Clean up models if loaded
-        if (faceDetectionModel) {
-            try {
-                faceDetectionModel.dispose();
-            } catch (e) { /* ignore */ }
-            faceDetectionModel = null;
-        }
-        
         if (faceNetModel) {
             try {
                 faceNetModel.dispose();
-            } catch (e) { /* ignore */ }
+            } catch (e) { log.warn("Error disposing FaceNet model", e); }
             faceNetModel = null;
         }
         
         // Reset module state
         isInitialized = false;
         modelLoadingPromise = null;
-        
-        // Clean up UI elements if needed
-        const container = document.getElementById('facialAuthContainer');
-        if (container && container.parentNode) {
-            container.parentNode.removeChild(container);
-        }
-        
-        log.info("Facial authentication module destroyed");
+        isDestroying = false; 
     }
     
-    // Public API
+    // --- Public API ---
+    // Expose the functions needed by the login page script
     return {
-        initialize,
-        startAuthentication,
-        cancelAuthentication,
-        registerAuthListener,
-        isAuthenticated: () => !!currentUser,
-        getCurrentUser: () => currentUser,
-        getAuthenticationStatus: () => {
-            return {
-                initialized: isInitialized,
-                authenticated: !!currentUser,
-                user: currentUser
-            };
-        },
-        destroy  // Add destroy method for complete cleanup
+        startCamera,
+        stopCamera,
+        captureAndVerify,
+        destroy,
+        
+        // Credential management
+        setCredentials,
+        setOtpVerified,
+        isOtpVerified,
+        
+        // Development helpers
+        getRandomVoter
     };
+
 })();
 
-// Initialize facial authentication when the page loads, with error handling
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if auto-initialization is enabled in config
-    const config = window.productionConfig || {};
-    if (config?.facialAuth?.autoInitialize !== false) {
-        // Delay initialization slightly to not block page rendering
-        setTimeout(() => {
-            try {
-                // Initialize facial authentication (don't await to avoid blocking)
-                window.facialAuth.initialize().then(success => {
-                    if (success) {
-                        log.info("Facial authentication initialized successfully");
-                    } else {
-                        log.warn("Facial authentication initialization failed");
-                    }
-                }).catch(error => {
-                    log.error(error, { context: 'initializationError' });
-                });
-            } catch (error) {
-                log.error(error, { context: 'criticalInitializationError' });
-            }
-        }, 500);
-    }
-});
-
-// Handle page unload to clean up resources
-window.addEventListener('beforeunload', () => {
-    try {
-        // Cancel any ongoing authentication to release camera
-        if (window.facialAuth) {
-            window.facialAuth.cancelAuthentication();
-        }
-    } catch (error) {
-        // Ignore errors during page unload
-    }
-});
+// Removed Voting Verification Specific Functions and DOMContentLoaded/beforeunload listeners
