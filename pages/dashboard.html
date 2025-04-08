@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - SecureVote</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-container">
+  <!-- Header will be loaded here -->
+  <div id="header-container"></div>
+  
+  <main class="main-content">
+    <div class="container">
+      <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="dashboard-sidebar">
+          <div class="sidebar-header">
+            <div class="user-profile">
+              <div class="user-avatar-large" id="user-avatar">
+                <i class="icon-user"></i>
+              </div>
+              <div class="user-details">
+                <h3 class="user-name" id="dashboard-username">User</h3>
+                <p class="user-email" id="dashboard-user-id">Loading...</p>
+              </div>
+            </div>
+          </div>
+          
+          <nav class="nav-sidebar">
+            <h5 class="nav-sidebar-title">Main</h5>
+            <a href="/pages/dashboard.html" class="nav-sidebar-link active">
+              <i class="nav-sidebar-icon icon-dashboard"></i> Dashboard
+            </a>
+            <a href="/pages/voting.html" class="nav-sidebar-link">
+              <i class="nav-sidebar-icon icon-vote"></i> Cast Vote
+            </a>
+            <a href="/pages/results.html" class="nav-sidebar-link">
+              <i class="nav-sidebar-icon icon-chart"></i> Results
+            </a>
+            
+            <h5 class="nav-sidebar-title mt-4">Analytics</h5>
+            <a href="/pages/analysis.html" class="nav-sidebar-link">
+              <i class="nav-sidebar-icon icon-chart"></i> Vote Analysis
+            </a>
+            <a href="/pages/deliberative.html" class="nav-sidebar-link">
+              <i class="nav-sidebar-icon icon-dashboard"></i> MADD System
+            </a>
+            <a href="/pages/zkp.html" class="nav-sidebar-link">
+              <i class="nav-sidebar-icon icon-lock"></i> ZKP Verification
+            </a>
+            
+            <h5 class="nav-sidebar-title mt-4">Account</h5>
+            <a href="/pages/profile.html" class="nav-sidebar-link">
+              <i class="nav-sidebar-icon icon-user"></i> Profile
+            </a>
+            <a href="/pages/settings.html" class="nav-sidebar-link">
+              <i class="nav-sidebar-icon icon-settings"></i> Settings
+            </a>
+            <a href="#" id="logout-link" class="nav-sidebar-link">
+              <i class="nav-sidebar-icon icon-logout"></i> Logout
+            </a>
+          </nav>
+        </div>
+        
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+          <div class="dashboard-header">
+            <h1>Dashboard</h1>
+            <p class="text-muted">Welcome to your voting dashboard</p>
+          </div>
+          
+          <!-- Stats Overview -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="icon-vote"></i>
+              </div>
+              <div class="stat-info">
+                <p class="stat-value" id="votes-cast">0</p>
+                <p class="stat-label">Votes Cast</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="icon-chart"></i>
+              </div>
+              <div class="stat-info">
+                <p class="stat-value" id="active-elections">0</p>
+                <p class="stat-label">Active Elections</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="icon-lock"></i>
+              </div>
+              <div class="stat-info">
+                <p class="stat-value" id="zkp-votes">0</p>
+                <p class="stat-label">Private Votes (ZKP)</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="icon-dashboard"></i>
+              </div>
+              <div class="stat-info">
+                <p class="stat-value" id="analysis-count">0</p>
+                <p class="stat-label">AI Analyses</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Active Elections -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2>Active Elections</h2>
+              <p>Elections you can currently participate in</p>
+            </div>
+            <div class="card-body">
+              <div class="active-elections" id="active-elections-list">
+                <div class="election-item">
+                  <div class="election-details">
+                    <h3>Community Proposal Vote</h3>
+                    <p class="text-muted">Vote on the proposed community center renovation</p>
+                    <div class="election-meta">
+                      <span class="election-time">
+                        <i class="icon-time"></i> Ends in 2 days
+                      </span>
+                      <span class="election-type">
+                        <i class="icon-lock"></i> ZKP Available
+                      </span>
+                    </div>
+                  </div>
+                  <div class="election-actions">
+                    <a href="/pages/voting.html?election=1" class="button primary-button">Vote Now</a>
+                  </div>
+                </div>
+                
+                <div class="election-item">
+                  <div class="election-details">
+                    <h3>Board Member Election</h3>
+                    <p class="text-muted">Cast your vote for the next board member</p>
+                    <div class="election-meta">
+                      <span class="election-time">
+                        <i class="icon-time"></i> Ends in 5 days
+                      </span>
+                      <span class="election-type">
+                        <i class="icon-lock"></i> ZKP Available
+                      </span>
+                    </div>
+                  </div>
+                  <div class="election-actions">
+                    <a href="/pages/voting.html?election=2" class="button primary-button">Vote Now</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Your Voting History -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2>Your Voting History</h2>
+              <p>Recent votes you've cast</p>
+            </div>
+            <div class="card-body">
+              <div class="voting-history" id="voting-history-list">
+                <div class="history-item">
+                  <div class="history-icon completed">
+                    <i class="icon-vote"></i>
+                  </div>
+                  <div class="history-details">
+                    <h3>Budget Allocation Vote</h3>
+                    <p class="text-muted">You voted on March 15, 2025</p>
+                    <div class="history-meta">
+                      <span class="vote-type private">
+                        <i class="icon-lock"></i> Private Vote (ZKP)
+                      </span>
+                      <span class="vote-status">
+                        <i class="icon-check"></i> Verified on Chain
+                      </span>
+                    </div>
+                  </div>
+                  <div class="history-actions">
+                    <a href="/pages/results.html?election=budget2025" class="button outline-button">View Results</a>
+                  </div>
+                </div>
+                
+                <div class="history-item">
+                  <div class="history-icon completed">
+                    <i class="icon-vote"></i>
+                  </div>
+                  <div class="history-details">
+                    <h3>Policy Amendment Vote</h3>
+                    <p class="text-muted">You voted on February 27, 2025</p>
+                    <div class="history-meta">
+                      <span class="vote-type public">
+                        <i class="icon-user"></i> Public Vote
+                      </span>
+                      <span class="vote-status">
+                        <i class="icon-check"></i> Verified on Chain
+                      </span>
+                    </div>
+                  </div>
+                  <div class="history-actions">
+                    <a href="/pages/results.html?election=policy2025" class="button outline-button">View Results</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <a href="/pages/history.html" class="button text-button">View All Voting History</a>
+            </div>
+          </div>
+          
+          <!-- Analysis Insights -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2>AI Analysis Insights</h2>
+              <p>Recent analytics from your vote justifications</p>
+            </div>
+            <div class="card-body">
+              <div class="analysis-insights">
+                <div class="insight-card">
+                  <div class="insight-header">
+                    <h3>Reasoning Patterns</h3>
+                    <span class="insight-badge">AI Generated</span>
+                  </div>
+                  <div class="insight-content">
+                    <p>Your vote justifications primarily use consequentialist reasoning, focusing on outcomes rather than rules or principles.</p>
+                    <div class="reasoning-chart">
+                      <div class="chart-bar">
+                        <div class="chart-label">Consequentialist</div>
+                        <div class="chart-value">
+                          <div class="chart-fill" style="width: 75%;"></div>
+                          <span>75%</span>
+                        </div>
+                      </div>
+                      <div class="chart-bar">
+                        <div class="chart-label">Deontological</div>
+                        <div class="chart-value">
+                          <div class="chart-fill" style="width: 15%;"></div>
+                          <span>15%</span>
+                        </div>
+                      </div>
+                      <div class="chart-bar">
+                        <div class="chart-label">Rights-based</div>
+                        <div class="chart-value">
+                          <div class="chart-fill" style="width: 10%;"></div>
+                          <span>10%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="insight-card">
+                  <div class="insight-header">
+                    <h3>Bias Detection</h3>
+                    <span class="insight-badge">AI Generated</span>
+                  </div>
+                  <div class="insight-content">
+                    <p>Our AI has detected the following potential cognitive biases in your recent vote justifications:</p>
+                    <div class="bias-tags">
+                      <span class="bias-tag">Confirmation Bias</span>
+                      <span class="bias-tag">Status Quo Bias</span>
+                    </div>
+                    <p class="mt-3">Consider exploring alternative viewpoints to broaden your perspective in future votes.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <a href="/pages/analysis.html" class="button text-button">View Detailed Analysis</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Footer will be loaded here -->
+  <div id="footer-container"></div>
+  
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js"></script>
+  <script src="/production-config.js"></script>
+  
+  <!-- Component Loader Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if user is authenticated
+      const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+      if (!isAuthenticated) {
+        // Redirect to login if not authenticated
+        window.location.href = '/pages/login.html';
+        return;
+      }
+      
+      // Set user information
+      const userId = sessionStorage.getItem('userId') || 'Guest';
+      document.getElementById('dashboard-username').textContent = userId;
+      document.getElementById('dashboard-user-id').textContent = `User ID: ${userId}`;
+      
+      // Generate first letter avatar from username
+      const userAvatar = document.getElementById('user-avatar');
+      if (userAvatar && userId) {
+        const firstLetter = userId.charAt(0).toUpperCase();
+        userAvatar.innerHTML = firstLetter;
+      }
+      
+      // Handle logout
+      document.getElementById('logout-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Clear authentication state
+        sessionStorage.removeItem('authenticated');
+        sessionStorage.removeItem('userId');
+        
+        // Redirect to home page
+        window.location.href = '/';
+      });
+      
+      // Load header component
+      fetch('/components/header.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('header-container').innerHTML = html;
+          
+          // Execute any scripts in the header
+          const headerScripts = document.getElementById('header-container').querySelectorAll('script');
+          headerScripts.forEach(script => {
+            const newScript = document.createElement('script');
+            if (script.src) {
+              newScript.src = script.src;
+            } else {
+              newScript.textContent = script.textContent;
+            }
+            document.head.appendChild(newScript);
+          });
+        })
+        .catch(error => console.error('Error loading header:', error));
+      
+      // Load footer component
+      fetch('/components/footer.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('footer-container').innerHTML = html;
+          
+          // Execute any scripts in the footer
+          const footerScripts = document.getElementById('footer-container').querySelectorAll('script');
+          footerScripts.forEach(script => {
+            const newScript = document.createElement('script');
+            if (script.src) {
+              newScript.src = script.src;
+            } else {
+              newScript.textContent = script.textContent;
+            }
+            document.head.appendChild(newScript);
+          });
+        })
+        .catch(error => console.error('Error loading footer:', error));
+      
+      // Load demo data
+      // In a production environment, this would be loaded from the server
+      function loadDemoData() {
+        // Update statistics
+        document.getElementById('votes-cast').textContent = '3';
+        document.getElementById('active-elections').textContent = '2';
+        document.getElementById('zkp-votes').textContent = '1';
+        document.getElementById('analysis-count').textContent = '2';
+      }
+      
+      // Load data
+      loadDemoData();
+    });
+  </script>
+  
+  <!-- Additional Styles -->
+  <style>
+    /* Dashboard specific styles */
+    .dashboard-header {
+      margin-bottom: 2rem;
+    }
+    
+    .dashboard-header h1 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .election-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .election-item:last-child {
+      border-bottom: none;
+    }
+    
+    .election-details h3 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .election-meta {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .election-time, .election-type {
+      display: flex;
+      align-items: center;
+      color: var(--gray-600);
+      font-size: 0.875rem;
+    }
+    
+    .election-time i, .election-type i {
+      margin-right: 0.5rem;
+    }
+    
+    .history-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .history-item:last-child {
+      border-bottom: none;
+    }
+    
+    .history-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    
+    .history-icon.completed {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .history-details {
+      flex: 1;
+    }
+    
+    .history-details h3 {
+      margin-bottom: 0.25rem;
+    }
+    
+    .history-meta {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .vote-type, .vote-status {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.875rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--border-radius-sm);
+    }
+    
+    .vote-type.private {
+      background-color: rgba(63, 81, 181, 0.1);
+      color: var(--primary);
+    }
+    
+    .vote-type.public {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--secondary);
+    }
+    
+    .vote-status {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--success);
+    }
+    
+    .vote-type i, .vote-status i {
+      margin-right: 0.5rem;
+    }
+    
+    .insight-card {
+      background-color: var(--gray-100);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .insight-card:last-child {
+      margin-bottom: 0;
+    }
+    
+    .insight-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .insight-header h3 {
+      margin-bottom: 0;
+    }
+    
+    .insight-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--primary-light);
+      color: white;
+      border-radius: var(--border-radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .reasoning-chart {
+      margin-top: 1.5rem;
+    }
+    
+    .chart-bar {
+      margin-bottom: 1rem;
+    }
+    
+    .chart-label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+    
+    .chart-value {
+      display: flex;
+      align-items: center;
+      background-color: var(--gray-200);
+      border-radius: var(--border-radius-sm);
+      height: 1.5rem;
+      position: relative;
+    }
+    
+    .chart-fill {
+      background-color: var(--primary);
+      height: 100%;
+      border-radius: var(--border-radius-sm);
+    }
+    
+    .chart-value span {
+      position: absolute;
+      right: 0.5rem;
+      color: var(--gray-700);
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 991px) {
+      .election-item, .history-item {
+        flex-direction: column;
+      }
+      
+      .election-actions, .history-actions {
+        margin-top: 1rem;
+        align-self: flex-start;
+      }
+      
+      .history-icon {
+        margin-bottom: 1rem;
+      }
+    }
+  </style>
+</body>
+</html>
