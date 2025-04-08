@@ -26,73 +26,69 @@
           </div>
           
           <div class="auth-body">
-            <div class="social-auth">
-              <div class="social-auth-title">
-                <span>Sign in with</span>
-              </div>
-              <div class="social-auth-buttons">
-                <button class="social-auth-button">
-                  <i class="icon-github"></i> GitHub
-                </button>
-                <button class="social-auth-button">
-                  <i class="icon-linkedin"></i> LinkedIn
-                </button>
-              </div>
-            </div>
-            
-            <div class="divider">OR</div>
-            
-            <!-- Traditional Login Form -->
-            <div id="traditional-login-form">
-              <form id="login-form">
+            <!-- Step 1: Enter Details -->
+            <div id="details-form">
+              <form id="voter-details-form">
                 <div class="form-group">
-                  <label for="user-id">User ID</label>
-                  <input type="text" id="user-id" class="form-control" placeholder="Enter your user ID" required>
+                  <label for="aadhar-number">Aadhar Number</label>
+                  <input type="text" id="aadhar-number" class="form-control" placeholder="Enter your 12-digit Aadhar" required pattern="\d{12}">
                 </div>
-                
                 <div class="form-group">
-                  <label for="password">Password</label>
-                  <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+                  <label for="voter-id">Voter ID</label>
+                  <input type="text" id="voter-id" class="form-control" placeholder="Enter your Voter ID" required>
                 </div>
-                
-                <div class="remember-forgot">
-                  <div class="form-check">
-                    <input type="checkbox" id="remember-me" class="form-check-input">
-                    <label for="remember-me" class="form-check-label">Remember me</label>
-                  </div>
-                  <a href="#" class="text-button">Forgot password?</a>
-                </div>
-                
                 <div class="form-group">
-                  <button type="button" id="proceed-to-facial-auth" class="button primary-button w-100">Continue with Facial Recognition</button>
+                  <label for="mobile-number">Registered Mobile Number</label>
+                  <input type="tel" id="mobile-number" class="form-control" placeholder="Enter your 10-digit mobile number" required pattern="\d{10}">
                 </div>
-                
                 <div class="form-group mb-0">
-                  <button type="submit" id="login-button" class="button outline-button w-100">Login with Password Only</button>
+                  <button type="button" id="send-otp-button" class="button primary-button w-100">Send OTP</button>
                 </div>
               </form>
             </div>
-            
-            <!-- Facial Authentication Form -->
+
+            <!-- Step 2: OTP Verification -->
+            <div id="otp-form" style="display: none;">
+              <form id="otp-verification-form">
+                <p class="text-center">An OTP has been sent to your registered mobile number.</p>
+                <div class="form-group">
+                  <label for="otp-input">Enter OTP</label>
+                  <input type="text" id="otp-input" class="form-control" placeholder="Enter 6-digit OTP" required pattern="\d{6}">
+                </div>
+                <p id="otp-status" class="text-small text-center text-muted"></p>
+                <div class="form-group">
+                  <button type="button" id="verify-otp-button" class="button primary-button w-100">Verify OTP</button>
+                </div>
+                <div class="form-group mb-0 text-center">
+                   <button type="button" id="back-to-details-button" class="button text-button">Back to Details</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Step 3: Facial Authentication -->
             <div id="facial-auth-form" style="display: none;">
+              <p class="text-center">OTP Verified. Please proceed with facial recognition.</p>
               <div class="face-auth-container">
                 <div class="camera-placeholder" id="camera-container">
                   <div class="face-outline"></div>
                   <div class="facescan-animation"></div>
-                  <p>Camera initialization...</p>
+                  <p>Initializing Camera...</p>
+                  <video id="facialAuthVideo" playsinline autoplay muted style="display: none; width: 100%; height: auto; border-radius: 8px;"></video>
+                  <canvas id="facialAuthCanvas" style="display: none;"></canvas>
+                  <div id="faceOverlay" class="face-overlay" style="display: none;"><div class="face-target"></div></div>
                 </div>
                 
-                <p class="face-auth-status" id="auth-status">Preparing facial recognition...</p>
+                <p class="face-auth-status" id="auth-status">Ready for facial verification.</p>
                 
-                <p class="face-auth-instructions">Please look directly at the camera and position your face within the outline for verification.</p>
+                <p class="face-auth-instructions">Position your face within the outline and click "Capture".</p>
                 
                 <div class="form-group">
                   <button type="button" id="start-camera-button" class="button primary-button">Start Camera</button>
-                  <button type="button" id="capture-button" class="button secondary-button" disabled>Capture</button>
+                  <button type="button" id="capture-button" class="button secondary-button" disabled>Capture & Verify</button>
                 </div>
                 
                 <div class="form-group mb-0">
-                  <button type="button" id="back-to-form-button" class="button text-button">Back to Login Form</button>
+                  <button type="button" id="back-to-otp-button" class="button text-button">Back to OTP</button>
                 </div>
               </div>
             </div>
@@ -113,189 +109,308 @@
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js"></script>
   <script src="/production-config.js"></script>
-  <script src="/facial-auth.js"></script>
+  <script src="/facial-auth.js"></script> 
   
-  <!-- Component Loader Script -->
+  <!-- Component Loader Script & Multi-Factor Auth Logic -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Load header component
-      fetch('/components/header.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('header-container').innerHTML = html;
-          
-          // Execute any scripts in the header
-          const headerScripts = document.getElementById('header-container').querySelectorAll('script');
-          headerScripts.forEach(script => {
-            const newScript = document.createElement('script');
-            if (script.src) {
-              newScript.src = script.src;
-            } else {
-              newScript.textContent = script.textContent;
+      // --- Component Loading ---
+      function loadComponent(url, containerId) {
+        return fetch(url)
+          .then(response => response.ok ? response.text() : Promise.reject(`Failed to load ${url}`))
+          .then(html => {
+            const container = document.getElementById(containerId);
+            if (container) {
+              container.innerHTML = html;
+              // Execute scripts within the loaded component
+              container.querySelectorAll('script').forEach(script => {
+                const newScript = document.createElement('script');
+                if (script.src) {
+                  newScript.src = script.src;
+                  newScript.async = false; // Ensure sequential execution if needed
+                } else {
+                  newScript.textContent = script.textContent;
+                }
+                document.head.appendChild(newScript).remove(); // Append and immediately remove to execute
+              });
             }
-            document.head.appendChild(newScript);
           });
-        })
-        .catch(error => console.error('Error loading header:', error));
-      
-      // Load footer component
-      fetch('/components/footer.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('footer-container').innerHTML = html;
-          
-          // Execute any scripts in the footer
-          const footerScripts = document.getElementById('footer-container').querySelectorAll('script');
-          footerScripts.forEach(script => {
-            const newScript = document.createElement('script');
-            if (script.src) {
-              newScript.src = script.src;
-            } else {
-              newScript.textContent = script.textContent;
-            }
-            document.head.appendChild(newScript);
-          });
-        })
-        .catch(error => console.error('Error loading footer:', error));
-      
-      // Setup login form interaction
-      const loginForm = document.getElementById('login-form');
-      const proceedToFacialBtn = document.getElementById('proceed-to-facial-auth');
-      const loginBtn = document.getElementById('login-button');
-      const traditionalLoginForm = document.getElementById('traditional-login-form');
+      }
+
+      Promise.all([
+        loadComponent('/components/header.html', 'header-container'),
+        loadComponent('/components/footer.html', 'footer-container')
+      ]).catch(error => console.error('Error loading components:', error));
+
+      // --- Multi-Factor Auth Elements ---
+      const detailsForm = document.getElementById('details-form');
+      const otpForm = document.getElementById('otp-form');
       const facialAuthForm = document.getElementById('facial-auth-form');
-      const backToFormBtn = document.getElementById('back-to-form-button');
+
+      const aadharInput = document.getElementById('aadhar-number');
+      const voterIdInput = document.getElementById('voter-id');
+      const mobileInput = document.getElementById('mobile-number');
+      const sendOtpButton = document.getElementById('send-otp-button');
+
+      const otpInput = document.getElementById('otp-input');
+      const verifyOtpButton = document.getElementById('verify-otp-button');
+      const otpStatus = document.getElementById('otp-status');
+      const backToDetailsButton = document.getElementById('back-to-details-button');
+
       const startCameraBtn = document.getElementById('start-camera-button');
       const captureBtn = document.getElementById('capture-button');
       const cameraContainer = document.getElementById('camera-container');
       const authStatus = document.getElementById('auth-status');
-      
-      // Proceed to facial auth button
-      if (proceedToFacialBtn) {
-        proceedToFacialBtn.addEventListener('click', function() {
-          const userId = document.getElementById('user-id').value.trim();
-          if (!userId) {
-            alert('Please enter your User ID');
+      const backToOtpButton = document.getElementById('back-to-otp-button');
+      const videoElement = document.getElementById('facialAuthVideo');
+      const canvasElement = document.getElementById('facialAuthCanvas');
+      const faceOverlay = document.getElementById('faceOverlay');
+
+      // --- Event Listeners ---
+
+      // Step 1: Send OTP
+      if (sendOtpButton) {
+        sendOtpButton.addEventListener('click', function() {
+          const aadhar = aadharInput.value.trim();
+          const voterId = voterIdInput.value.trim();
+          const mobile = mobileInput.value.trim();
+
+          // Basic validation
+          if (!aadhar || !/^\d{12}$/.test(aadhar)) {
+            alert('Please enter a valid 12-digit Aadhar number.');
             return;
           }
-          
-          // Switch to facial auth form
-          traditionalLoginForm.style.display = 'none';
-          facialAuthForm.style.display = 'block';
-          
-          // Store user ID for facial auth
-          sessionStorage.setItem('tempUserId', userId);
-          
-          authStatus.textContent = 'Ready for facial verification. Click "Start Camera" to begin.';
-        });
-      }
-      
-      // Back to login form button
-      if (backToFormBtn) {
-        backToFormBtn.addEventListener('click', function() {
-          traditionalLoginForm.style.display = 'block';
-          facialAuthForm.style.display = 'none';
-          
-          // Reset camera if active
-          if (window.facialAuth && typeof window.facialAuth.cancelAuthentication === 'function') {
-            window.facialAuth.cancelAuthentication();
+          if (!voterId) {
+            alert('Please enter your Voter ID.');
+            return;
           }
+          if (!mobile || !/^\d{10}$/.test(mobile)) {
+            alert('Please enter a valid 10-digit mobile number.');
+            return;
+          }
+
+          // Store credentials in facial auth module
+          if (window.facialAuth && typeof window.facialAuth.setCredentials === 'function') {
+            window.facialAuth.setCredentials(aadhar, voterId, mobile);
+          }
+
+          sendOtpButton.disabled = true;
+          sendOtpButton.textContent = 'Sending...';
+
+          // For development, check for test credentials
+          const isTestMode = aadhar === '123456789012' && mobile === '9876543210';
+
+          // In production, this would be an API call to send actual OTP
+          console.log(`Sending OTP for Aadhar: ${aadhar}, VoterID: ${voterId}, Mobile: ${mobile}`);
+          
+          // Simulate network delay
+          setTimeout(() => {
+            detailsForm.style.display = 'none';
+            otpForm.style.display = 'block';
+            otpStatus.textContent = `OTP sent to ${mobile.slice(0, 3)}***${mobile.slice(-4)}`;
+            otpStatus.style.color = '';
+            sendOtpButton.disabled = false;
+            sendOtpButton.textContent = 'Send OTP';
+            
+            // In test mode, show the OTP in the console
+            if (isTestMode) {
+              console.log('TEST MODE: OTP is 123456');
+            }
+            
+            otpInput.focus();
+          }, 1500);
         });
       }
-      
-      // Start camera button
-      if (startCameraBtn) {
-        startCameraBtn.addEventListener('click', function() {
-          // Initialize facial authentication
-          if (window.facialAuth) {
-            startCameraBtn.disabled = true;
-            
-            // Set the user ID in the proper field for facial auth
-            const userIdInput = document.createElement('input');
-            userIdInput.type = 'hidden';
-            userIdInput.id = 'userIdInput';
-            userIdInput.value = sessionStorage.getItem('tempUserId') || '';
-            document.body.appendChild(userIdInput);
-            
-            // Replace camera placeholder with actual camera feed
-            cameraContainer.innerHTML = '<video id="facialAuthVideo" playsinline autoplay muted></video><canvas id="facialAuthCanvas" style="display: none;"></canvas><div id="faceOverlay" class="face-overlay"><div class="face-target"></div></div>';
-            
-            // Start facial authentication
-            window.facialAuth.startAuthentication().then(function() {
-              captureBtn.disabled = false;
-              authStatus.textContent = 'Camera active. Position your face and click "Capture".';
-            }).catch(function(error) {
-              authStatus.textContent = 'Error: ' + error.message;
-              startCameraBtn.disabled = false;
-            });
-            
-            // Register auth listener
-            window.facialAuth.registerAuthListener(function(isAuthenticated, user) {
-              if (isAuthenticated) {
-                // Authentication successful
-                authStatus.textContent = 'Authentication successful! Redirecting...';
-                
-                // Store authentication state
-                sessionStorage.setItem('authenticated', 'true');
-                sessionStorage.setItem('userId', user.id);
-                
-                // Redirect to dashboard
-                setTimeout(function() {
-                  window.location.href = '/pages/dashboard.html';
-                }, 1500);
-              } else {
-                // Authentication failed
-                authStatus.textContent = 'Authentication failed. Please try again.';
-                startCameraBtn.disabled = false;
+
+      // Step 2: Verify OTP
+      if (verifyOtpButton) {
+        verifyOtpButton.addEventListener('click', function() {
+          const otp = otpInput.value.trim();
+          if (!otp || !/^\d{6}$/.test(otp)) {
+            alert('Please enter a valid 6-digit OTP.');
+            return;
+          }
+
+          verifyOtpButton.disabled = true;
+          verifyOtpButton.textContent = 'Verifying...';
+          otpStatus.textContent = '';
+
+          // For development, accept '123456' or any 6-digit OTP if using test account
+          const isValidOtp = otp === '123456' || 
+                            (aadharInput.value.trim() === '123456789012' && /^\d{6}$/.test(otp));
+          
+          console.log(`Verifying OTP: ${otp}`);
+          
+          // Simulate network delay
+          setTimeout(() => {
+            if (isValidOtp) {
+              // Mark OTP as verified in the facial auth module
+              if (window.facialAuth && typeof window.facialAuth.setOtpVerified === 'function') {
+                window.facialAuth.setOtpVerified(true);
               }
-            });
-          } else {
-            authStatus.textContent = 'Error: Facial authentication not available';
-          }
-        });
-      }
-      
-      // Capture button
-      if (captureBtn) {
-        captureBtn.addEventListener('click', function() {
-          if (window.facialAuth && typeof window.facialAuth.captureAndAuthenticate === 'function') {
-            captureBtn.disabled = true;
-            authStatus.textContent = 'Processing...';
+              
+              // Show facial authentication form
+              otpForm.style.display = 'none';
+              facialAuthForm.style.display = 'block';
+              authStatus.textContent = 'OTP Verified. Ready for facial recognition.';
+              authStatus.style.color = '';
+            } else {
+              otpStatus.textContent = 'Invalid OTP. Please try again.';
+              otpStatus.style.color = 'red';
+            }
             
-            // This will trigger the captureAndAuthenticate function in facial-auth.js
-            // The auth listener will handle the result
-          }
-        });
-      }
-      
-      // Traditional login form submission
-      if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          
-          const userId = document.getElementById('user-id').value.trim();
-          const password = document.getElementById('password').value;
-          
-          if (!userId || !password) {
-            alert('Please enter both User ID and Password');
-            return;
-          }
-          
-          // Demo login - in production, this would make an API call
-          loginBtn.disabled = true;
-          loginBtn.textContent = 'Logging in...';
-          
-          // Simulate API call
-          setTimeout(function() {
-            // Store authentication state
-            sessionStorage.setItem('authenticated', 'true');
-            sessionStorage.setItem('userId', userId);
-            
-            // Redirect to dashboard
-            window.location.href = '/pages/dashboard.html';
+            verifyOtpButton.disabled = false;
+            verifyOtpButton.textContent = 'Verify OTP';
           }, 1000);
         });
       }
+      
+      // Back Button: OTP -> Details
+      if (backToDetailsButton) {
+          backToDetailsButton.addEventListener('click', () => {
+              otpForm.style.display = 'none';
+              detailsForm.style.display = 'block';
+              otpStatus.textContent = ''; // Clear status
+          });
+      }
+
+      // Step 3: Facial Recognition - Start Camera
+      if (startCameraBtn) {
+        startCameraBtn.addEventListener('click', function() {
+          if (window.facialAuth && typeof window.facialAuth.startCamera === 'function') {
+            startCameraBtn.disabled = true;
+            authStatus.textContent = 'Starting camera...';
+            cameraContainer.querySelector('p').style.display = 'none'; // Hide "Initializing" text
+            
+            window.facialAuth.startCamera(videoElement, canvasElement, faceOverlay)
+              .then(() => {
+                videoElement.style.display = 'block';
+                faceOverlay.style.display = 'block';
+                captureBtn.disabled = false;
+                authStatus.textContent = 'Camera active. Position face and click Capture.';
+              })
+              .catch(error => {
+                authStatus.textContent = `Error starting camera: ${error.message}`;
+                authStatus.style.color = 'red';
+                startCameraBtn.disabled = false;
+                cameraContainer.querySelector('p').style.display = 'block'; // Show text again
+                cameraContainer.querySelector('p').textContent = 'Camera Error';
+              });
+          } else {
+            authStatus.textContent = 'Error: Facial authentication script not loaded correctly.';
+            authStatus.style.color = 'red';
+          }
+        });
+      }
+
+      // Step 3: Facial Recognition - Capture & Verify
+      if (captureBtn) {
+        captureBtn.addEventListener('click', function() {
+          if (window.facialAuth && typeof window.facialAuth.captureAndVerify === 'function') {
+            captureBtn.disabled = true;
+            authStatus.textContent = 'Capturing and verifying...';
+            
+            // Get credentials - they should be in the facial auth module already
+            window.facialAuth.captureAndVerify()
+              .then(result => {
+                if (result.success) {
+                  authStatus.textContent = result.newlyRegistered ? 
+                    'New user registered successfully! Redirecting...' : 
+                    'Facial Verification Successful! Redirecting...';
+                  authStatus.style.color = 'green';
+                  
+                  // Store final authentication state
+                  sessionStorage.setItem('authenticated', 'true');
+                  sessionStorage.setItem('userId', result.userId);
+                  
+                  // Redirect to the voting page (or dashboard)
+                  setTimeout(() => {
+                    window.location.href = '/pages/voting.html';
+                  }, 2000);
+                } else {
+                  authStatus.textContent = `Verification Failed: ${result.message || 'Face not recognized.'}. Please try again.`;
+                  authStatus.style.color = 'red';
+                  captureBtn.disabled = false; // Re-enable button
+                }
+              })
+              .catch(error => {
+                authStatus.textContent = `Error during verification: ${error.message}`;
+                authStatus.style.color = 'red';
+                captureBtn.disabled = false; // Re-enable button
+              });
+          } else {
+             authStatus.textContent = 'Error: Facial verification function not available.';
+             authStatus.style.color = 'red';
+             captureBtn.disabled = false;
+          }
+        });
+      }
+      
+      // Back button: Facial Auth -> OTP
+      if (backToOtpButton) {
+          backToOtpButton.addEventListener('click', () => {
+              facialAuthForm.style.display = 'none';
+              otpForm.style.display = 'block';
+              authStatus.textContent = 'Ready for facial verification.'; // Reset status
+              authStatus.style.color = ''; // Reset color
+              // Stop camera if running
+              if (window.facialAuth && typeof window.facialAuth.stopCamera === 'function') {
+                  window.facialAuth.stopCamera();
+              }
+              startCameraBtn.disabled = false;
+              captureBtn.disabled = true;
+              videoElement.style.display = 'none';
+              faceOverlay.style.display = 'none';
+              cameraContainer.querySelector('p').style.display = 'block';
+              cameraContainer.querySelector('p').textContent = 'Initializing Camera...';
+          });
+      }
+      
+      // For development/testing - Show random voter info button (hidden by default)
+      const showTestVoterButton = document.createElement('button');
+      showTestVoterButton.textContent = 'Load Test Voter';
+      showTestVoterButton.style.display = 'none'; // Hidden by default
+      showTestVoterButton.className = 'button text-button';
+      showTestVoterButton.style.marginTop = '10px';
+      
+      showTestVoterButton.addEventListener('click', async () => {
+        if (window.facialAuth && typeof window.facialAuth.getRandomVoter === 'function') {
+          try {
+            showTestVoterButton.disabled = true;
+            showTestVoterButton.textContent = 'Loading...';
+            
+            const testVoter = await window.facialAuth.getRandomVoter();
+            if (testVoter) {
+              aadharInput.value = testVoter.aadhar.replace(/\*/g, '0'); // Replace masked chars
+              voterIdInput.value = testVoter.voter_id;
+              mobileInput.value = '9876543210'; // Default test number
+              
+              showTestVoterButton.textContent = 'Test Data Loaded';
+              setTimeout(() => {
+                showTestVoterButton.textContent = 'Load Test Voter';
+                showTestVoterButton.disabled = false;
+              }, 3000);
+            } else {
+              showTestVoterButton.textContent = 'Failed to Load';
+              setTimeout(() => {
+                showTestVoterButton.textContent = 'Load Test Voter';
+                showTestVoterButton.disabled = false;
+              }, 3000);
+            }
+          } catch (error) {
+            console.error('Error loading test voter:', error);
+            showTestVoterButton.textContent = 'Error';
+            showTestVoterButton.disabled = false;
+          }
+        }
+      });
+      
+      // Only show in development mode
+      if (window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1')) {
+        detailsForm.appendChild(showTestVoterButton);
+        showTestVoterButton.style.display = 'block';
+      }
+
     });
   </script>
 </body>
