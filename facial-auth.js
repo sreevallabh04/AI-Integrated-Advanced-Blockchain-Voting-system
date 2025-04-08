@@ -90,14 +90,16 @@ window.facialAuth = (function() {
     let isDestroying = false; // Flag to prevent operations during cleanup
 
     // --- Constants ---
-    // Backend endpoints for facial verification during login
-    const LOGIN_VERIFY_API_ENDPOINT = '/api/auth/verify-face';
+    // Backend endpoints for multi-factor authentication
+    const CREDENTIALS_VERIFY_API_ENDPOINT = '/api/auth/verify-credentials';
+    const OTP_VERIFY_API_ENDPOINT = '/api/auth/verify-otp';
     const VOTER_VERIFY_API_ENDPOINT = '/api/auth/verify-voter';
 
     // Authentication state
     let currentAadhar = '';
     let currentVoterId = '';
     let currentMobile = '';
+    let currentOtp = '';
     let otpVerified = false;
 
     /**
@@ -505,6 +507,125 @@ window.facialAuth = (function() {
     }
     
     /**
+     * Submits credentials to the server for verification and OTP generation
+     * @param {string} aadhar - Aadhar number
+     * @param {string} voterId - Voter ID
+     * @param {string} mobile - Mobile number
+     * @returns {Promise<object>} - Promise resolving with { success, otp, message }
+     */
+    async function verifyCredentials(aadhar, voterId, mobile) {
+        if (!aadhar || !voterId || !mobile) {
+            throw new Error("Aadhar number, Voter ID and mobile number are required");
+        }
+        
+        // Store for future use
+        setCredentials(aadhar, voterId, mobile);
+        
+        try {
+            log.info("Submitting credentials for verification...");
+            
+            const response = await fetch(CREDENTIALS_VERIFY_API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': 'dev_facial_auth_key'  // Use dev key for now
+                },
+                body: JSON.stringify({
+                    aadhar: aadhar,
+                    voterId: voterId,
+                    mobile: mobile,
+                    timestamp: Date.now()
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+                log.error("Credential verification API error", { status: response.status, response: result });
+                throw new Error(result.error || `Verification failed (Status: ${response.status})`);
+            }
+            
+            log.info("Credentials verified, OTP sent", { success: result.success });
+            
+            // For development, the OTP is returned in the response
+            if (!isProd && result.otp) {
+                currentOtp = result.otp;
+            }
+            
+            return {
+                success: result.success,
+                otp: isProd ? null : result.otp, // Only for development
+                message: result.message || "OTP sent successfully",
+                found_in_db: result.found_in_db || false
+            };
+            
+        } catch (error) {
+            log.error(error, { context: 'verifyCredentials' });
+            return { 
+                success: false, 
+                message: error.message || "Failed to verify credentials" 
+            };
+        }
+    }
+    
+    /**
+     * Verifies OTP sent to the user's mobile
+     * @param {string} otp - The OTP to verify
+     * @returns {Promise<object>} - Promise resolving with { success, message }
+     */
+    async function verifyOtp(otp) {
+        if (!otp) {
+            throw new Error("OTP is required");
+        }
+        
+        if (!currentAadhar || !currentVoterId) {
+            throw new Error("Credential verification is required before OTP verification");
+        }
+        
+        try {
+            log.info("Verifying OTP...");
+            
+            const response = await fetch(OTP_VERIFY_API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': 'dev_facial_auth_key'  // Use dev key for now
+                },
+                body: JSON.stringify({
+                    aadhar: currentAadhar,
+                    voterId: currentVoterId,
+                    otp: otp,
+                    timestamp: Date.now()
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+                log.error("OTP verification API error", { status: response.status, response: result });
+                throw new Error(result.error || `OTP verification failed (Status: ${response.status})`);
+            }
+            
+            // Mark OTP as verified if successful
+            setOtpVerified(result.verified);
+            
+            log.info("OTP verification result", { verified: result.verified });
+            
+            return {
+                success: result.verified,
+                message: result.message || (result.verified ? "OTP verified successfully" : "OTP verification failed")
+            };
+            
+        } catch (error) {
+            log.error(error, { context: 'verifyOtp' });
+            return { 
+                success: false, 
+                message: error.message || "Failed to verify OTP" 
+            };
+        }
+    }
+    
+    /**
      * Get a random voter for testing (development only)
      */
     async function getRandomVoter() {
@@ -576,10 +697,15 @@ window.facialAuth = (function() {
     // --- Public API ---
     // Expose the functions needed by the login page script
     return {
+        // Camera functions
         startCamera,
         stopCamera,
         captureAndVerify,
         destroy,
+        
+        // Multi-factor authentication
+        verifyCredentials, // NEW: Send Aadhar, Voter ID, mobile, get OTP
+        verifyOtp,         // NEW: Verify the OTP
         
         // Credential management
         setCredentials,
