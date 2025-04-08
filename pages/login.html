@@ -151,6 +151,12 @@
           <div class="auth-footer">
             <p>Secured by AI biometrics and blockchain technology</p>
             <p class="text-small text-muted mt-2">By logging in, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+            
+            <!-- Direct Bypass Button for Testing Only -->
+            <div id="bypass-container" style="display: none; margin-top: 20px; text-align: center;">
+              <p class="text-small text-muted" style="color: #ff9800;">⚠️ Testing Mode Detected</p>
+              <button id="bypass-auth-button" class="button secondary-button">Bypass Authentication (Testing Only)</button>
+            </div>
           </div>
         </div>
       </div>
@@ -170,6 +176,43 @@
   <!-- Component Loader Script & Multi-Factor Auth Logic -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Show bypass button in testing environments
+      const isTestMode = window.location.hostname === 'localhost' || 
+                         window.location.hostname.includes('127.0.0.1') ||
+                         window.location.search.includes('test=true');
+                         
+      // Show bypass option in test mode
+      if (isTestMode) {
+        document.getElementById('bypass-container').style.display = 'block';
+        
+        // Add bypass functionality
+        document.getElementById('bypass-auth-button').addEventListener('click', function() {
+          // Set all session storage values for complete authentication
+          sessionStorage.setItem('authenticated', 'true');
+          sessionStorage.setItem('otpVerified', 'true');
+          sessionStorage.setItem('biometricVerified', 'true');
+          sessionStorage.setItem('facialVerified', 'true');
+          sessionStorage.setItem('walletConnected', 'true');
+          
+          // Add test credentials
+          sessionStorage.setItem('verifiedAadhar', '123456789012');
+          sessionStorage.setItem('verifiedVoterId', 'TEST123456');
+          sessionStorage.setItem('verifiedMobile', '9876543210');
+          sessionStorage.setItem('walletAddress', '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
+          sessionStorage.setItem('userId', 'TEST123456');
+          
+          // Add verification hash for blockchain (simple test hash)
+          const testVerification = {
+            hash: '0x' + Array(64).fill('0').join(''),
+            timestamp: Date.now(),
+            method: 'test-bypass'
+          };
+          sessionStorage.setItem('blockchainVerification', JSON.stringify(testVerification));
+          
+          // Redirect to voting page with test parameter
+          window.location.href = '/pages/voting.html?test=true';
+        });
+      }
       // --- Component Loading ---
       function loadComponent(url, containerId) {
         return fetch(url)
