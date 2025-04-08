@@ -399,35 +399,93 @@
       // Connect wallet button functionality
       document.getElementById('connect-wallet-btn').addEventListener('click', async function() {
         try {
-          // Simulating wallet connection
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Check if biometric verification was completed
+          if (sessionStorage.getItem('biometricVerified') !== 'true') {
+            throw new Error("Biometric verification required before connecting wallet");
+          }
+          
+          // Check if MetaMask or other provider is available
+          if (typeof window.ethereum === 'undefined') {
+            throw new Error("No Ethereum wallet detected. Please install MetaMask or another wallet provider.");
+          }
           
           const walletStatus = document.getElementById('wallet-status');
           const connectedAccount = document.getElementById('connected-account');
           const accountAddress = document.getElementById('account-address');
           const castVoteBtn = document.getElementById('cast-vote-btn');
           
-          // Demo address
-          const demoAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
-          
+          // Show connecting status
           walletStatus.innerHTML = `
-            <i class="icon-check-circle"></i>
-            <p>Wallet connected</p>
+            <i class="icon-loading"></i>
+            <p>Connecting to wallet...</p>
           `;
           
-          accountAddress.textContent = `${demoAddress.substring(0, 6)}...${demoAddress.substring(demoAddress.length - 4)}`;
-          connectedAccount.style.display = 'flex';
-          castVoteBtn.disabled = false;
+          // Request account access
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
           
-          // Hide the connect button
-          this.style.display = 'none';
+          if (accounts && accounts.length > 0) {
+            const userAddress = accounts[0];
+            
+            // Store connected wallet in session storage
+            sessionStorage.setItem('walletAddress', userAddress);
+            sessionStorage.setItem('walletConnected', 'true');
+            
+            // Get the network ID to ensure we're on the correct network
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            console.log(`Connected to chain ID: ${chainId}`);
+            
+            // Use stored wallet address if one was saved during login
+            const preAuthorizedWallet = sessionStorage.getItem('walletAddress');
+            
+            // If user previously authenticated with a different wallet, warn them
+            if (preAuthorizedWallet && preAuthorizedWallet.toLowerCase() !== userAddress.toLowerCase()) {
+              console.warn("Connected wallet differs from authenticated wallet");
+              // We'll allow it but show a warning
+              document.getElementById('submission-status').innerHTML = `
+                <div class="status-message warning">
+                  <i class="icon-warning"></i>
+                  <p>Warning: The connected wallet is different from the one used during authentication.</p>
+                </div>
+              `;
+            }
+            
+            // Update UI
+            walletStatus.innerHTML = `
+              <i class="icon-check-circle"></i>
+              <p>Wallet connected</p>
+            `;
+            
+            accountAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+            connectedAccount.style.display = 'flex';
+            
+            // Show submit section and enable vote button
+            document.getElementById('submit-section').style.display = 'block';
+            castVoteBtn.disabled = false;
+            
+            // Hide the connect button
+            this.style.display = 'none';
+          } else {
+            throw new Error("No accounts found. Please unlock your wallet.");
+          }
         } catch (error) {
           console.error("Error connecting wallet:", error);
-          document.getElementById('submission-status').innerHTML = `
+          const errorMessage = document.getElementById('submission-status') || document.createElement('div');
+          errorMessage.id = 'submission-status';
+          errorMessage.innerHTML = `
             <div class="status-message error">
               <i class="icon-error"></i>
               <p>Failed to connect wallet: ${error.message}</p>
             </div>
+          `;
+          
+          if (!document.getElementById('submission-status')) {
+            document.querySelector('.account-selection').appendChild(errorMessage);
+          }
+          
+          // Reset wallet status
+          document.getElementById('wallet-status').innerHTML = `
+            <i class="icon-wallet"></i>
+            <p>Wallet not connected</p>
           `;
         }
       });
