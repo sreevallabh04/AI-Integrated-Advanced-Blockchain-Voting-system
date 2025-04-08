@@ -15,272 +15,262 @@
   
   <main class="main-content">
     <div class="container">
-      <div class="dashboard-container">
+      <div class="voting-container">
         <!-- Sidebar -->
-        <div class="dashboard-sidebar">
+        <div class="voting-sidebar">
           <div class="sidebar-header">
-            <div class="user-profile">
-              <div class="user-avatar-large" id="user-avatar">
-                <i class="icon-user"></i>
+            <h2>Current Election</h2>
+          </div>
+          
+          <div class="election-info-panel">
+            <div class="election-status">
+              <span class="status-badge active">Active</span>
+              <h3 id="election-title">Community Proposal Vote</h3>
+            </div>
+            
+            <div class="election-meta">
+              <div class="meta-item">
+                <i class="icon-time"></i>
+                <div>
+                  <p class="meta-label">Time Remaining</p>
+                  <p class="meta-value" id="election-time-remaining">2 days 5 hours</p>
+                </div>
               </div>
-              <div class="user-details">
-                <h3 class="user-name" id="dashboard-username">User</h3>
-                <p class="user-email" id="dashboard-user-id">Loading...</p>
+              
+              <div class="meta-item">
+                <i class="icon-users"></i>
+                <div>
+                  <p class="meta-label">Participants</p>
+                  <p class="meta-value" id="election-participants">247</p>
+                </div>
               </div>
+              
+              <div class="meta-item">
+                <i class="icon-chart"></i>
+                <div>
+                  <p class="meta-label">Voter Turnout</p>
+                  <p class="meta-value" id="election-turnout">68%</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="election-description">
+              <h4>About This Vote</h4>
+              <p id="election-description">This vote is to decide on the proposed renovation of the community center. The proposal includes expanding the main hall, adding a new children's play area, and updating the technology infrastructure.</p>
+            </div>
+            
+            <div class="election-zkp-info">
+              <div class="info-header">
+                <h4>Privacy Options</h4>
+                <span class="info-badge">
+                  <i class="icon-lock"></i> ZKP Available
+                </span>
+              </div>
+              <p>This election supports Zero-Knowledge Proof technology, allowing you to cast a private vote while still ensuring verifiability.</p>
             </div>
           </div>
           
-          <nav class="nav-sidebar">
-            <h5 class="nav-sidebar-title">Main</h5>
-            <a href="/pages/dashboard.html" class="nav-sidebar-link">
-              <i class="nav-sidebar-icon icon-dashboard"></i> Dashboard
+          <div class="navigation-panel">
+            <a href="/pages/dashboard.html" class="button outline-button">
+              <i class="icon-arrow-left"></i> Back to Dashboard
             </a>
-            <a href="/pages/voting.html" class="nav-sidebar-link active">
-              <i class="nav-sidebar-icon icon-vote"></i> Cast Vote
-            </a>
-            <a href="/pages/results.html" class="nav-sidebar-link">
-              <i class="nav-sidebar-icon icon-chart"></i> Results
-            </a>
-            
-            <h5 class="nav-sidebar-title mt-4">Analytics</h5>
-            <a href="/pages/analysis.html" class="nav-sidebar-link">
-              <i class="nav-sidebar-icon icon-chart"></i> Vote Analysis
-            </a>
-            <a href="/pages/deliberative.html" class="nav-sidebar-link">
-              <i class="nav-sidebar-icon icon-dashboard"></i> MADD System
-            </a>
-            <a href="/pages/zkp.html" class="nav-sidebar-link">
-              <i class="nav-sidebar-icon icon-lock"></i> ZKP Verification
-            </a>
-            
-            <h5 class="nav-sidebar-title mt-4">Account</h5>
-            <a href="/pages/profile.html" class="nav-sidebar-link">
-              <i class="nav-sidebar-icon icon-user"></i> Profile
-            </a>
-            <a href="/pages/settings.html" class="nav-sidebar-link">
-              <i class="nav-sidebar-icon icon-settings"></i> Settings
-            </a>
-            <a href="#" id="logout-link" class="nav-sidebar-link">
-              <i class="nav-sidebar-icon icon-logout"></i> Logout
-            </a>
-          </nav>
+          </div>
         </div>
         
         <!-- Voting Content -->
-        <div class="dashboard-content">
-          <div class="dashboard-header">
+        <div class="voting-content">
+          <div class="voting-header">
             <h1>Cast Your Vote</h1>
-            <p class="text-muted" id="election-subtitle">Securely vote on the blockchain with optional private voting</p>
+            <p class="text-muted">Make your voice heard on the Community Proposal</p>
           </div>
           
-          <!-- Voting Interface -->
-          <div class="dashboard-card">
+          <!-- Account Selection -->
+          <div class="voting-card">
             <div class="card-header">
-              <h2 id="election-title">Community Proposal Vote</h2>
-              <p id="election-description">Vote on the proposed community center renovation</p>
-              <div class="election-meta mt-3">
-                <span class="election-time">
-                  <i class="icon-time"></i> <span id="election-deadline">Ends in 2 days</span>
-                </span>
-                <span class="election-participants">
-                  <i class="icon-users"></i> <span id="election-participants">123 participants</span>
-                </span>
-              </div>
+              <h2>1. Connect Your Wallet</h2>
+              <p>Select the Ethereum account you'll use to cast your vote</p>
             </div>
-            
             <div class="card-body">
-              <!-- Blockchain Connection Status -->
-              <div class="connection-status mb-4">
-                <div class="status-indicator" id="connection-indicator">
-                  <div class="status-dot"></div>
-                  <span id="connection-status">Connecting to blockchain...</span>
-                </div>
-                <div class="wallet-info" id="wallet-info">
-                  <span>Wallet: </span>
-                  <span id="wallet-address">Not connected</span>
-                </div>
-              </div>
-              
-              <!-- Voting Options -->
-              <div class="voting-options">
-                <h3>Select a candidate</h3>
-                
-                <div class="option-cards">
-                  <div class="option-card" data-candidate="A">
-                    <div class="option-header">
-                      <h4>Option A</h4>
-                      <div class="option-checkbox">
-                        <input type="radio" name="candidate" id="candidate-a" value="A">
-                        <label for="candidate-a"></label>
-                      </div>
-                    </div>
-                    <div class="option-content">
-                      <p>Full renovation with additional community spaces and modern facilities.</p>
-                      <ul class="option-features">
-                        <li>Complete structural update</li>
-                        <li>New tech facilities</li>
-                        <li>Expanded community areas</li>
-                        <li>Eco-friendly design</li>
-                      </ul>
-                      <div class="option-meta">
-                        <span class="budget">Budget: $2.5M</span>
-                        <span class="timeline">Timeline: 18 months</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="option-card" data-candidate="B">
-                    <div class="option-header">
-                      <h4>Option B</h4>
-                      <div class="option-checkbox">
-                        <input type="radio" name="candidate" id="candidate-b" value="B">
-                        <label for="candidate-b"></label>
-                      </div>
-                    </div>
-                    <div class="option-content">
-                      <p>Partial renovation focusing on critical infrastructure and necessary updates.</p>
-                      <ul class="option-features">
-                        <li>Essential repairs only</li>
-                        <li>Updated meeting rooms</li>
-                        <li>Basic infrastructure improvements</li>
-                        <li>Minimal disruption</li>
-                      </ul>
-                      <div class="option-meta">
-                        <span class="budget">Budget: $1.2M</span>
-                        <span class="timeline">Timeline: 8 months</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="option-card" data-candidate="C">
-                    <div class="option-header">
-                      <h4>Option C</h4>
-                      <div class="option-checkbox">
-                        <input type="radio" name="candidate" id="candidate-c" value="C">
-                        <label for="candidate-c"></label>
-                      </div>
-                    </div>
-                    <div class="option-content">
-                      <p>Minimal maintenance updates with focus on cost efficiency and quick implementation.</p>
-                      <ul class="option-features">
-                        <li>Cosmetic improvements only</li>
-                        <li>No structural changes</li>
-                        <li>Equipment upgrades</li>
-                        <li>Fast completion</li>
-                      </ul>
-                      <div class="option-meta">
-                        <span class="budget">Budget: $500K</span>
-                        <span class="timeline">Timeline: 3 months</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Justification Section -->
-              <div class="justification-section mt-5">
-                <h3>Justify your vote (optional)</h3>
-                <p class="text-muted">Providing a justification enables AI analysis and improves deliberative democracy.</p>
-                
-                <div class="form-group">
-                  <textarea id="justification" class="form-control" rows="5" placeholder="Why are you voting for this option? (Your justification will be analyzed by our AI for cognitive biases and reasoning patterns)"></textarea>
-                </div>
-              </div>
-              
-              <!-- Privacy Options -->
-              <div class="privacy-options mt-5">
-                <h3>Privacy Options</h3>
-                
-                <div class="privacy-toggle">
-                  <div class="toggle-option">
-                    <input type="radio" name="privacy" id="public-vote" value="public" checked>
-                    <label for="public-vote">
-                      <div class="toggle-icon">
-                        <i class="icon-user"></i>
-                      </div>
-                      <div class="toggle-info">
-                        <h4>Public Vote</h4>
-                        <p>Your vote will be visible on the blockchain with your account address.</p>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  <div class="toggle-option">
-                    <input type="radio" name="privacy" id="private-vote" value="private">
-                    <label for="private-vote">
-                      <div class="toggle-icon">
-                        <i class="icon-lock"></i>
-                      </div>
-                      <div class="toggle-info">
-                        <h4>Private Vote (ZKP)</h4>
-                        <p>Your vote will be anonymous using zero-knowledge proofs.</p>
-                      </div>
-                    </label>
-                  </div>
+              <div class="account-selection">
+                <div class="wallet-status" id="wallet-status">
+                  <i class="icon-wallet"></i>
+                  <p>Wallet not connected</p>
                 </div>
                 
-                <!-- ZKP Section (hidden initially) -->
-                <div id="zkp-section" class="mt-4" style="display: none;">
-                  <div class="zkp-info">
-                    <h4>Zero-Knowledge Proof Voting</h4>
-                    <p>This method allows you to prove you voted without revealing your choice. The system will generate a unique nullifier to prevent double-voting.</p>
-                    
-                    <div class="zkp-generation">
-                      <button id="generate-zkp" class="button outline-button">
-                        <i class="icon-lock"></i> Generate ZKP
-                      </button>
-                      <div id="zkp-status" class="mt-2 d-none">
-                        <div class="loading-spinner"></div>
-                        <span>Generating proof...</span>
-                      </div>
+                <div class="wallet-action">
+                  <button class="button primary-button" id="connect-wallet-btn">Connect Wallet</button>
+                </div>
+                
+                <div class="connected-account" id="connected-account" style="display: none;">
+                  <div class="account-info">
+                    <div class="account-icon">
+                      <i class="icon-user"></i>
+                    </div>
+                    <div class="account-details">
+                      <h4>Connected Account</h4>
+                      <p id="account-address" class="address-text">0x0000...0000</p>
                     </div>
                   </div>
+                  <div class="account-actions">
+                    <button class="button text-button" id="change-account-btn">Change</button>
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div class="card-footer">
-              <div class="voting-actions">
-                <button id="vote-button" class="button primary-button">
-                  <i class="icon-vote"></i> Cast Vote
-                </button>
-                <button id="cancel-button" class="button text-button">
-                  Cancel
-                </button>
-              </div>
-              <div id="vote-status" class="mt-3 d-none">
-                <div class="loading-spinner"></div>
-                <span>Processing your vote...</span>
               </div>
             </div>
           </div>
           
-          <!-- Success/Error Messages -->
-          <div id="vote-success" class="alert success-alert mt-4" style="display: none;">
-            <div class="alert-icon">
-              <i class="icon-check"></i>
+          <!-- Candidate Selection -->
+          <div class="voting-card">
+            <div class="card-header">
+              <h2>2. Select Your Preferred Option</h2>
+              <p>Choose one of the following options</p>
             </div>
-            <div class="alert-content">
-              <h3>Vote Successfully Cast!</h3>
-              <p>Your vote has been recorded on the blockchain. Transaction hash: <span id="tx-hash"></span></p>
-              <div class="alert-actions mt-3">
-                <a href="/pages/results.html" class="button outline-button">View Results</a>
-                <a href="/pages/dashboard.html" class="button text-button">Back to Dashboard</a>
+            <div class="card-body">
+              <div class="candidate-selection">
+                <div class="candidate-option">
+                  <input type="radio" name="candidate" id="candidate-a" value="A" class="candidate-radio">
+                  <label for="candidate-a" class="candidate-label">
+                    <div class="option-indicator">A</div>
+                    <div class="option-details">
+                      <h3>Approve Renovation</h3>
+                      <p>Approve the full renovation proposal as presented</p>
+                    </div>
+                  </label>
+                </div>
+                
+                <div class="candidate-option">
+                  <input type="radio" name="candidate" id="candidate-b" value="B" class="candidate-radio">
+                  <label for="candidate-b" class="candidate-label">
+                    <div class="option-indicator">B</div>
+                    <div class="option-details">
+                      <h3>Approve Partial Renovation</h3>
+                      <p>Approve only the technology infrastructure updates</p>
+                    </div>
+                  </label>
+                </div>
+                
+                <div class="candidate-option">
+                  <input type="radio" name="candidate" id="candidate-c" value="C" class="candidate-radio">
+                  <label for="candidate-c" class="candidate-label">
+                    <div class="option-indicator">C</div>
+                    <div class="option-details">
+                      <h3>Reject Renovation</h3>
+                      <p>Reject the renovation proposal entirely</p>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
           
-          <div id="vote-error" class="alert error-alert mt-4" style="display: none;">
-            <div class="alert-icon">
-              <i class="icon-error"></i>
+          <!-- Justification -->
+          <div class="voting-card">
+            <div class="card-header">
+              <h2>3. Provide Your Justification <span class="optional-badge">Optional</span></h2>
+              <p>Share your reasoning for your vote to contribute to our deliberative democracy</p>
             </div>
-            <div class="alert-content">
-              <h3>Error Casting Vote</h3>
-              <p id="error-message">There was an error processing your vote. Please try again.</p>
-              <div class="alert-actions mt-3">
-                <button id="retry-vote" class="button outline-button">Try Again</button>
+            <div class="card-body">
+              <div class="justification-section">
+                <textarea id="justification-input" class="justification-textarea" placeholder="Explain why you voted this way. Your reasoning will be analyzed by our AI system to identify patterns and contribute to the deliberative process."></textarea>
+                
+                <div class="justification-features">
+                  <div class="feature">
+                    <i class="icon-ai"></i>
+                    <div>
+                      <h4>AI Analysis</h4>
+                      <p>Your justification will be analyzed for reasoning patterns and cognitive biases</p>
+                    </div>
+                  </div>
+                  
+                  <div class="feature">
+                    <i class="icon-users"></i>
+                    <div>
+                      <h4>Collective Intelligence</h4>
+                      <p>Your reasoning contributes to our multi-agent deliberative democracy system</p>
+                    </div>
+                  </div>
+                  
+                  <div class="feature">
+                    <i class="icon-shield"></i>
+                    <div>
+                      <h4>Privacy Protected</h4>
+                      <p>Your identity can be kept private through ZKP while sharing your reasoning</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
+          
+          <!-- Privacy Settings -->
+          <div class="voting-card">
+            <div class="card-header">
+              <h2>4. Select Privacy Level</h2>
+              <p>Choose how you want your vote to be recorded on the blockchain</p>
+            </div>
+            <div class="card-body">
+              <div class="privacy-options">
+                <div class="privacy-option">
+                  <input type="radio" name="privacy" id="public-vote" value="public" class="privacy-radio" checked>
+                  <label for="public-vote" class="privacy-label">
+                    <div class="privacy-icon public">
+                      <i class="icon-globe"></i>
+                    </div>
+                    <div class="privacy-details">
+                      <h3>Public Vote</h3>
+                      <p>Your account address will be publicly linked to your vote on the blockchain</p>
+                    </div>
+                  </label>
+                </div>
+                
+                <div class="privacy-option">
+                  <input type="radio" name="privacy" id="private-vote" value="private" class="privacy-radio">
+                  <label for="private-vote" class="privacy-label">
+                    <div class="privacy-icon private">
+                      <i class="icon-lock"></i>
+                    </div>
+                    <div class="privacy-details">
+                      <h3>Private Vote (ZKP)</h3>
+                      <p>Your vote will be privately recorded using Zero-Knowledge Proofs, keeping your choice secret while ensuring verifiability</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="zkp-details" id="zkp-details" style="display: none;">
+                <div class="zkp-intro">
+                  <i class="icon-info"></i>
+                  <p>Zero-Knowledge Proofs allow you to prove you've voted without revealing which option you selected. This helps prevent coercion and maintains vote privacy.</p>
+                </div>
+                
+                <div class="zkp-options">
+                  <div class="zkp-input-group">
+                    <label for="zkp-secret">Your Secret (Only you will know this)</label>
+                    <div class="input-with-action">
+                      <input type="password" id="zkp-secret" class="zkp-input" placeholder="Enter a secret phrase or number">
+                      <button class="button outline-button" id="generate-secret-btn">Generate</button>
+                    </div>
+                  </div>
+                  
+                  <div class="zkp-explainer">
+                    <h4>How Zero-Knowledge Proofs Work</h4>
+                    <p>When you cast a private vote:</p>
+                    <ol class="zkp-steps">
+                      <li>A cryptographic proof is generated that confirms you voted without revealing your choice</li>
+                      <li>Your vote is recorded anonymously, but verifiably on the blockchain</li>
+                      <li>You can later verify your vote was counted correctly using your secret</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Vote Submission -->
+          <div class="submit-section">
+            <div class="submission-status" id="submission-status"></div>
+            <button class="button primary-button large-button" id="cast-vote-btn" disabled>Cast Your Vote</button>
+            <p class="submission-note">Once submitted, your vote cannot be changed</p>
           </div>
         </div>
       </div>
@@ -293,6 +283,7 @@
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js"></script>
   <script src="/production-config.js"></script>
+  <script src="/app.js"></script>
   <script src="/zkp-integration.js"></script>
   
   <!-- Component Loader Script -->
@@ -305,73 +296,6 @@
         window.location.href = '/pages/login.html';
         return;
       }
-      
-      // Set user information
-      const userId = sessionStorage.getItem('userId') || 'Guest';
-      document.getElementById('dashboard-username').textContent = userId;
-      document.getElementById('dashboard-user-id').textContent = `User ID: ${userId}`;
-      
-      // Generate first letter avatar from username
-      const userAvatar = document.getElementById('user-avatar');
-      if (userAvatar && userId) {
-        const firstLetter = userId.charAt(0).toUpperCase();
-        userAvatar.innerHTML = firstLetter;
-      }
-      
-      // Get election ID from URL if present
-      const urlParams = new URLSearchParams(window.location.search);
-      const electionId = urlParams.get('election');
-      
-      // Load election data (in production, this would come from the blockchain)
-      loadElectionData(electionId);
-      
-      // Initialize blockchain connection
-      initializeBlockchain();
-      
-      // Handle toggle between public and private voting
-      document.querySelectorAll('input[name="privacy"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-          const zkpSection = document.getElementById('zkp-section');
-          if (this.value === 'private') {
-            zkpSection.style.display = 'block';
-          } else {
-            zkpSection.style.display = 'none';
-          }
-        });
-      });
-      
-      // Handle vote button click
-      document.getElementById('vote-button').addEventListener('click', function() {
-        castVote();
-      });
-      
-      // Handle cancel button click
-      document.getElementById('cancel-button').addEventListener('click', function() {
-        window.location.href = '/pages/dashboard.html';
-      });
-      
-      // Handle retry button click
-      document.getElementById('retry-vote').addEventListener('click', function() {
-        document.getElementById('vote-error').style.display = 'none';
-        // Reset the voting form
-      });
-      
-      // Handle ZKP generation
-      document.getElementById('generate-zkp').addEventListener('click', function() {
-        generateZKP();
-      });
-      
-      // Handle logout
-      document.getElementById('logout-link').addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Clear authentication state
-        sessionStorage.removeItem('authenticated');
-        sessionStorage.removeItem('userId');
-        
-        // Redirect to home page
-        window.location.href = '/';
-      });
       
       // Load header component
       fetch('/components/header.html')
@@ -412,631 +336,591 @@
           });
         })
         .catch(error => console.error('Error loading footer:', error));
-    });
-    
-    // Load election data function
-    function loadElectionData(electionId) {
-      // In production, this would fetch from the blockchain or API
-      // For now, using mock data
-      let electionTitle, electionDescription, electionDeadline, electionParticipants;
       
-      if (electionId === '2') {
-        electionTitle = 'Board Member Election';
-        electionDescription = 'Cast your vote for the next board member';
-        electionDeadline = 'Ends in 5 days';
-        electionParticipants = '87 participants';
-        
-        // Update candidate options for this election
-        document.querySelector('[data-candidate="A"] h4').textContent = 'Jane Smith';
-        document.querySelector('[data-candidate="A"] p').textContent = 'Technology executive with 15 years of experience in digital transformation.';
-        document.querySelector('[data-candidate="A"] .option-features').innerHTML = `
-          <li>Former CTO of TechGrowth Inc.</li>
-          <li>Blockchain & AI expert</li>
-          <li>Harvard MBA</li>
-          <li>Community organizer</li>
-        `;
-        
-        document.querySelector('[data-candidate="B"] h4').textContent = 'Michael Johnson';
-        document.querySelector('[data-candidate="B"] p').textContent = 'Finance professional with strong background in community development.';
-        document.querySelector('[data-candidate="B"] .option-features').innerHTML = `
-          <li>Current CFO at Community First</li>
-          <li>CPA certified</li>
-          <li>Local business advocate</li>
-          <li>Volunteer coordinator</li>
-        `;
-        
-        document.querySelector('[data-candidate="C"] h4').textContent = 'Sarah Williams';
-        document.querySelector('[data-candidate="C"] p').textContent = 'Community organizer with focus on inclusive development and equity.';
-        document.querySelector('[data-candidate="C"] .option-features').innerHTML = `
-          <li>Diversity & inclusion consultant</li>
-          <li>Nonprofit director</li>
-          <li>Policy analyst</li>
-          <li>Public speaker</li>
-        `;
-        
-        // Remove budget and timeline for this election type
-        document.querySelectorAll('.option-meta').forEach(el => {
-          el.style.display = 'none';
-        });
-      } else {
-        // Default to community proposal vote
-        electionTitle = 'Community Proposal Vote';
-        electionDescription = 'Vote on the proposed community center renovation';
-        electionDeadline = 'Ends in 2 days';
-        electionParticipants = '123 participants';
-      }
-      
-      // Update the election details in the UI
-      document.getElementById('election-title').textContent = electionTitle;
-      document.getElementById('election-description').textContent = electionDescription;
-      document.getElementById('election-deadline').textContent = electionDeadline;
-      document.getElementById('election-participants').textContent = electionParticipants;
-    }
-    
-    // Initialize blockchain connection
-    async function initializeBlockchain() {
-      try {
-        const connectionIndicator = document.getElementById('connection-indicator');
-        const connectionStatus = document.getElementById('connection-status');
-        const walletAddress = document.getElementById('wallet-address');
-        
-        // Set connecting state
-        connectionIndicator.classList.add('connecting');
-        connectionStatus.textContent = 'Connecting to blockchain...';
-        
-        // Get network configuration from production config
-        const networkConfig = window.productionConfig?.getNetwork?.() || {
-          name: 'Local Hardhat Node',
-          rpcUrl: 'http://localhost:8545',
-          chainId: 31337
-        };
-        
-        // Check if production mode and use appropriate provider
-        let provider;
-        if (window.productionConfig?.isProduction?.()) {
-          // Production environment: use configured RPC URL
-          provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
-        } else {
-          // Development environment: try to connect to local node
-          provider = new ethers.JsonRpcProvider('http://localhost:8545');
-        }
-        
-        // Try to get the signer (in browser environments)
-        let signer;
-        if (window.ethereum) {
-          // Request account access if needed
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          
-          // Create Web3Provider and get signer
-          const ethersProvider = new ethers.BrowserProvider(window.ethereum);
-          signer = await ethersProvider.getSigner();
-          
-          // Update UI with wallet address
-          const address = await signer.getAddress();
-          walletAddress.textContent = formatAddress(address);
-          
-          // Set connected state
-          connectionIndicator.classList.remove('connecting');
-          connectionIndicator.classList.add('connected');
-          connectionStatus.textContent = 'Connected to ' + networkConfig.name;
-        } else {
-          // No injected Ethereum provider found
-          // For demo purposes, we'll use a simulated connection
-          if (window.productionConfig?.isDemoMode?.()) {
-            setTimeout(() => {
-              connectionIndicator.classList.remove('connecting');
-              connectionIndicator.classList.add('connected');
-              connectionStatus.textContent = 'Demo Mode: Simulated Connection';
-              walletAddress.textContent = formatAddress('0x742d35Cc6634C0532925a3b844Bc454e4438f44e');
-            }, 1500);
+      // Setup privacy option toggle
+      document.querySelectorAll('input[name="privacy"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          const zkpDetails = document.getElementById('zkp-details');
+          if (this.value === 'private') {
+            zkpDetails.style.display = 'block';
           } else {
-            throw new Error('No Ethereum wallet detected');
+            zkpDetails.style.display = 'none';
           }
+        });
+      });
+      
+      // Generate secret button functionality
+      document.getElementById('generate-secret-btn').addEventListener('click', function() {
+        const secretInput = document.getElementById('zkp-secret');
+        const randomSecret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        secretInput.value = randomSecret;
+      });
+      
+      // Connect wallet button functionality
+      document.getElementById('connect-wallet-btn').addEventListener('click', async function() {
+        try {
+          // Simulating wallet connection
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const walletStatus = document.getElementById('wallet-status');
+          const connectedAccount = document.getElementById('connected-account');
+          const accountAddress = document.getElementById('account-address');
+          const castVoteBtn = document.getElementById('cast-vote-btn');
+          
+          // Demo address
+          const demoAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+          
+          walletStatus.innerHTML = `
+            <i class="icon-check-circle"></i>
+            <p>Wallet connected</p>
+          `;
+          
+          accountAddress.textContent = `${demoAddress.substring(0, 6)}...${demoAddress.substring(demoAddress.length - 4)}`;
+          connectedAccount.style.display = 'flex';
+          castVoteBtn.disabled = false;
+          
+          // Hide the connect button
+          this.style.display = 'none';
+        } catch (error) {
+          console.error("Error connecting wallet:", error);
+          document.getElementById('submission-status').innerHTML = `
+            <div class="status-message error">
+              <i class="icon-error"></i>
+              <p>Failed to connect wallet: ${error.message}</p>
+            </div>
+          `;
         }
-      } catch (error) {
-        console.error('Blockchain connection error:', error);
-        
-        // Update UI to show error state
-        const connectionIndicator = document.getElementById('connection-indicator');
-        const connectionStatus = document.getElementById('connection-status');
-        
-        connectionIndicator.classList.remove('connecting');
-        connectionIndicator.classList.add('error');
-        connectionStatus.textContent = 'Connection Error: ' + error.message;
-        
-        // Check if demo mode is enabled
-        if (window.productionConfig?.isDemoMode?.()) {
-          setTimeout(() => {
-            connectionIndicator.classList.remove('error');
-            connectionIndicator.classList.add('connected');
-            connectionStatus.textContent = 'Demo Mode: Simulated Connection';
-            document.getElementById('wallet-address').textContent = formatAddress('0x742d35Cc6634C0532925a3b844Bc454e4438f44e');
-          }, 2000);
-        }
-      }
-    }
-    
-    // Cast vote function
-    async function castVote() {
-      try {
-        // Get selected candidate
+      });
+      
+      // Change account functionality
+      document.getElementById('change-account-btn').addEventListener('click', function() {
+        document.getElementById('connect-wallet-btn').style.display = 'block';
+        document.getElementById('connected-account').style.display = 'none';
+        document.getElementById('wallet-status').innerHTML = `
+          <i class="icon-wallet"></i>
+          <p>Wallet not connected</p>
+        `;
+        document.getElementById('cast-vote-btn').disabled = true;
+      });
+      
+      // Cast vote functionality
+      document.getElementById('cast-vote-btn').addEventListener('click', async function() {
         const selectedCandidate = document.querySelector('input[name="candidate"]:checked');
         if (!selectedCandidate) {
-          throw new Error('Please select a candidate');
+          document.getElementById('submission-status').innerHTML = `
+            <div class="status-message error">
+              <i class="icon-error"></i>
+              <p>Please select a candidate before voting</p>
+            </div>
+          `;
+          return;
         }
         
-        // Get justification text
-        const justification = document.getElementById('justification').value;
+        const justification = document.getElementById('justification-input').value;
+        const privacyMode = document.querySelector('input[name="privacy"]:checked').value;
+        const submissionStatus = document.getElementById('submission-status');
         
-        // Get privacy setting
-        const isPrivate = document.querySelector('input[name="privacy"]:checked').value === 'private';
+        submissionStatus.innerHTML = `
+          <div class="status-message loading">
+            <div class="spinner"></div>
+            <p>Processing your vote...</p>
+          </div>
+        `;
         
-        // Show voting in progress
-        document.getElementById('vote-button').disabled = true;
-        document.getElementById('vote-status').classList.remove('d-none');
-        
-        // If using ZKP, ensure proof is generated
-        let zkProof = null;
-        if (isPrivate) {
-          zkProof = sessionStorage.getItem('zkProof');
-          if (!zkProof && !window.productionConfig?.isDemoMode?.()) {
-            throw new Error('Zero-knowledge proof not generated. Please generate a proof first.');
+        try {
+          // Simulate vote processing
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          if (privacyMode === 'private') {
+            const secret = document.getElementById('zkp-secret').value;
+            if (!secret) {
+              submissionStatus.innerHTML = `
+                <div class="status-message error">
+                  <i class="icon-error"></i>
+                  <p>Please enter a secret for ZKP voting</p>
+                </div>
+              `;
+              return;
+            }
+            
+            // Here would be the actual ZKP logic
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
           
-          // In demo mode, generate a proof on demand
-          if (window.productionConfig?.isDemoMode?.()) {
-            zkProof = await generateDemoZKP(selectedCandidate.value);
-          }
-        }
-        
-        // In a real app, this would submit to the blockchain
-        // For demo purposes, simulate a blockchain transaction
-        if (window.productionConfig?.isDemoMode?.()) {
-          await simulateBlockchainVote(selectedCandidate.value, justification, isPrivate, zkProof);
-        } else {
-          // Actual blockchain submission would go here
-          // submitVoteToBlockchain(selectedCandidate.value, justification, isPrivate, zkProof);
-          throw new Error('Live blockchain integration not available in this preview');
-        }
-      } catch (error) {
-        console.error('Voting error:', error);
-        
-        // Show error message
-        document.getElementById('vote-button').disabled = false;
-        document.getElementById('vote-status').classList.add('d-none');
-        document.getElementById('error-message').textContent = error.message;
-        document.getElementById('vote-error').style.display = 'flex';
-      }
-    }
-    
-    // Generate ZKP function
-    async function generateZKP() {
-      try {
-        // Get selected candidate
-        const selectedCandidate = document.querySelector('input[name="candidate"]:checked');
-        if (!selectedCandidate) {
-          throw new Error('Please select a candidate before generating ZKP');
-        }
-        
-        const zkpStatus = document.getElementById('zkp-status');
-        zkpStatus.classList.remove('d-none');
-        
-        // For demo purposes, simulate ZKP generation
-        if (window.productionConfig?.isDemoMode?.()) {
-          const proof = await generateDemoZKP(selectedCandidate.value);
+          // Simulate successful vote
+          submissionStatus.innerHTML = `
+            <div class="status-message success">
+              <i class="icon-check-circle"></i>
+              <p>Vote successfully cast! Transaction has been confirmed on the blockchain.</p>
+            </div>
+          `;
           
-          // Store proof in session
-          sessionStorage.setItem('zkProof', JSON.stringify(proof));
+          // Disable voting controls after successful vote
+          document.getElementById('cast-vote-btn').disabled = true;
+          document.querySelectorAll('input[name="candidate"]').forEach(radio => {
+            radio.disabled = true;
+          });
+          document.querySelectorAll('input[name="privacy"]').forEach(radio => {
+            radio.disabled = true;
+          });
+          document.getElementById('justification-input').disabled = true;
           
-          // Update UI after "generation"
-          setTimeout(() => {
-            zkpStatus.classList.add('d-none');
-            document.getElementById('generate-zkp').textContent = '✓ Proof Generated';
-            document.getElementById('generate-zkp').classList.add('success-button');
+          // Add redirect notification
+          setTimeout(function() {
+            submissionStatus.innerHTML += `
+              <div class="status-message info">
+                <i class="icon-info"></i>
+                <p>Redirecting to results page in 5 seconds...</p>
+              </div>
+            `;
+            
+            // Set redirect timer
+            setTimeout(function() {
+              window.location.href = '/pages/results.html';
+            }, 5000);
           }, 2000);
-        } else {
-          // Real ZKP generation would go here
-          // This would use zkp-integration.js methods
-          throw new Error('ZKP generation not implemented in this preview');
+          
+        } catch (error) {
+          console.error("Error casting vote:", error);
+          submissionStatus.innerHTML = `
+            <div class="status-message error">
+              <i class="icon-error"></i>
+              <p>Failed to cast vote: ${error.message}</p>
+            </div>
+          `;
         }
-      } catch (error) {
-        console.error('ZKP generation error:', error);
-        document.getElementById('zkp-status').classList.add('d-none');
-        
-        // Show error message
-        document.getElementById('error-message').textContent = error.message;
-        document.getElementById('vote-error').style.display = 'flex';
-      }
-    }
-    
-    // Simulate blockchain vote for demo purposes
-    async function simulateBlockchainVote(candidate, justification, isPrivate, zkProof) {
-      return new Promise((resolve) => {
-        // Simulate blockchain delay
-        setTimeout(() => {
-          // Generate a fake transaction hash
-          const txHash = '0x' + Array.from({length: 64}, () => 
-            Math.floor(Math.random() * 16).toString(16)).join('');
-          
-          // Update UI to show success
-          document.getElementById('vote-button').disabled = false;
-          document.getElementById('vote-status').classList.add('d-none');
-          document.getElementById('tx-hash').textContent = formatAddress(txHash);
-          document.getElementById('vote-success').style.display = 'flex';
-          
-          // Store in session for demo purposes
-          sessionStorage.setItem('lastVote', JSON.stringify({
-            candidate,
-            justification,
-            isPrivate,
-            txHash
-          }));
-          
-          resolve(txHash);
-        }, 3000);
       });
-    }
-    
-    // Generate demo ZKP for demonstration
-    async function generateDemoZKP(candidate) {
-      return new Promise((resolve) => {
-        // Simulate ZKP generation delay
-        setTimeout(() => {
-          // Generate a fake proof
-          const proof = {
-            nullifier: '0x' + Math.random().toString(16).slice(2, 18),
-            proof: '0x' + Array.from({length: 128}, () => 
-              Math.floor(Math.random() * 16).toString(16)).join(''),
-            publicSignals: [candidate.charCodeAt(0)]
-          };
-          
-          resolve(proof);
-        }, 2000);
-      });
-    }
-    
-    // Helper function to format address
-    function formatAddress(address) {
-      if (!address) return '';
-      return address.substring(0, 6) + '...' + address.substring(address.length - 4);
-    }
+    });
   </script>
   
   <!-- Additional Styles -->
   <style>
-    /* Connection Status Styles */
-    .connection-status {
+    /* Voting specific styles */
+    .voting-header {
+      margin-bottom: 2rem;
+    }
+    
+    .voting-header h1 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .voting-card {
+      margin-bottom: 2rem;
+    }
+    
+    .account-selection, .candidate-selection, .justification-section, .privacy-options {
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Wallet styling */
+    .wallet-status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .wallet-status i {
+      margin-right: 0.5rem;
+      font-size: 1.25rem;
+    }
+    
+    .connected-account {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 1rem;
       background-color: var(--gray-100);
       border-radius: var(--border-radius);
+      margin-top: 1rem;
     }
     
-    .status-indicator {
+    .account-info {
       display: flex;
       align-items: center;
     }
     
-    .status-dot {
-      width: 12px;
-      height: 12px;
+    .account-icon {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background-color: var(--gray-400);
-      margin-right: 0.5rem;
-    }
-    
-    .status-indicator.connecting .status-dot {
-      background-color: var(--warning);
-      animation: pulse 1.5s infinite;
-    }
-    
-    .status-indicator.connected .status-dot {
-      background-color: var(--success);
-    }
-    
-    .status-indicator.error .status-dot {
-      background-color: var(--danger);
-    }
-    
-    @keyframes pulse {
-      0% {
-        opacity: 0.6;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0.6;
-      }
-    }
-    
-    /* Voting Options Styles */
-    .option-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1rem;
-    }
-    
-    .option-card {
-      border: 2px solid var(--gray-200);
-      border-radius: var(--border-radius);
-      transition: all 0.3s ease;
-    }
-    
-    .option-card:hover {
-      border-color: var(--primary-light);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-    
-    .option-card.selected {
-      border-color: var(--primary);
-      box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
-    }
-    
-    .option-header {
+      background-color: var(--primary-light);
+      color: white;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 1rem;
-      border-bottom: 1px solid var(--gray-200);
+      justify-content: center;
+      margin-right: 1rem;
     }
     
-    .option-content {
-      padding: 1rem;
-    }
-    
-    .option-features {
-      margin: 1rem 0;
-      padding-left: 1.5rem;
-    }
-    
-    .option-features li {
-      margin-bottom: 0.5rem;
-    }
-    
-    .option-meta {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 1rem;
+    .address-text {
+      font-family: var(--font-mono);
       font-size: 0.875rem;
-      color: var(--gray-600);
     }
     
-    /* Option Checkbox Styles */
-    .option-checkbox {
-      position: relative;
+    /* Candidate styling */
+    .candidate-option {
+      margin-bottom: 1rem;
     }
     
-    .option-checkbox input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
+    .candidate-radio {
+      display: none;
     }
     
-    .option-checkbox label {
-      display: block;
-      width: 24px;
-      height: 24px;
-      border: 2px solid var(--gray-400);
-      border-radius: 50%;
+    .candidate-label {
+      display: flex;
+      padding: 1.25rem;
+      border: 2px solid var(--gray-300);
+      border-radius: var(--border-radius);
       cursor: pointer;
       transition: all 0.2s ease;
     }
     
-    .option-checkbox input[type="radio"]:checked + label {
+    .candidate-radio:checked + .candidate-label {
       border-color: var(--primary);
-      background-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+      background-color: var(--primary-super-light);
     }
     
-    .option-checkbox input[type="radio"]:checked + label::after {
-      content: '';
-      position: absolute;
-      top: 7px;
-      left: 7px;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: white;
-    }
-    
-    /* Privacy Toggle Styles */
-    .privacy-toggle {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    
-    .toggle-option {
-      position: relative;
-    }
-    
-    .toggle-option input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    
-    .toggle-option label {
-      display: flex;
-      align-items: center;
-      padding: 1rem;
-      border: 2px solid var(--gray-200);
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    
-    .toggle-option input[type="radio"]:checked + label {
-      border-color: var(--primary);
-      background-color: rgba(var(--primary-rgb), 0.05);
-    }
-    
-    .toggle-icon {
-      width: 40px;
-      height: 40px;
+    .option-indicator {
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       background-color: var(--gray-200);
+      color: var(--gray-700);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-right: 1rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-right: 1.25rem;
       flex-shrink: 0;
-      transition: all 0.3s ease;
     }
     
-    .toggle-option input[type="radio"]:checked + label .toggle-icon {
+    .candidate-radio:checked + .candidate-label .option-indicator {
       background-color: var(--primary);
       color: white;
     }
     
-    .toggle-info h4 {
-      margin-bottom: 0.25rem;
-    }
-    
-    .toggle-info p {
-      margin: 0;
-      font-size: 0.875rem;
-      color: var(--gray-600);
-    }
-    
-    /* ZKP Section Styles */
-    .zkp-info {
-      padding: 1.5rem;
-      background-color: rgba(var(--primary-rgb), 0.05);
-      border-radius: var(--border-radius);
-      border-left: 4px solid var(--primary);
-    }
-    
-    .zkp-generation {
-      margin-top: 1rem;
-    }
-    
-    /* Alert Styles */
-    .alert {
-      display: flex;
-      align-items: flex-start;
-      padding: 1.5rem;
-      border-radius: var(--border-radius);
-    }
-    
-    .success-alert {
-      background-color: rgba(76, 175, 80, 0.1);
-      border-left: 4px solid var(--success);
-    }
-    
-    .error-alert {
-      background-color: rgba(244, 67, 54, 0.1);
-      border-left: 4px solid var(--danger);
-    }
-    
-    .alert-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 1rem;
-      flex-shrink: 0;
-    }
-    
-    .success-alert .alert-icon {
-      background-color: var(--success);
-      color: white;
-    }
-    
-    .error-alert .alert-icon {
-      background-color: var(--danger);
-      color: white;
-    }
-    
-    .alert-content {
-      flex: 1;
-    }
-    
-    .alert-content h3 {
+    .option-details h3 {
       margin-bottom: 0.5rem;
     }
     
-    /* Loading Spinner */
-    .loading-spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(var(--primary-rgb), 0.2);
-      border-radius: 50%;
-      border-top-color: var(--primary);
-      animation: spin 1s linear infinite;
-      margin-right: 0.5rem;
+    /* Justification styling */
+    .justification-textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 1rem;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--border-radius);
+      font-family: var(--font-sans);
+      margin-bottom: 1.5rem;
+      resize: vertical;
     }
     
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
+    .justification-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
     }
     
-    /* Helper Classes */
-    .d-none {
+    .feature {
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .feature i {
+      margin-right: 1rem;
+      font-size: 1.25rem;
+      color: var(--primary);
+    }
+    
+    .feature h4 {
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Privacy options styling */
+    .privacy-option {
+      margin-bottom: 1.25rem;
+    }
+    
+    .privacy-radio {
       display: none;
     }
     
-    .mt-3 {
-      margin-top: 1rem;
+    .privacy-label {
+      display: flex;
+      padding: 1.25rem;
+      border: 2px solid var(--gray-300);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
     
-    .mt-4 {
+    .privacy-radio:checked + .privacy-label {
+      border-color: var(--primary);
+      background-color: var(--primary-super-light);
+    }
+    
+    .privacy-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: var(--gray-200);
+      color: var(--gray-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-right: 1.25rem;
+      flex-shrink: 0;
+    }
+    
+    .privacy-icon.public {
+      background-color: var(--secondary-light);
+      color: white;
+    }
+    
+    .privacy-icon.private {
+      background-color: var(--primary-light);
+      color: white;
+    }
+    
+    .privacy-details h3 {
+      margin-bottom: 0.5rem;
+    }
+    
+    /* ZKP details styling */
+    .zkp-details {
+      background-color: var(--gray-100);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
       margin-top: 1.5rem;
     }
     
-    .mt-5 {
-      margin-top: 2rem;
-    }
-    
-    .mb-4 {
+    .zkp-intro {
+      display: flex;
+      align-items: flex-start;
       margin-bottom: 1.5rem;
     }
     
-    /* Success Button */
-    .success-button {
-      background-color: var(--success) !important;
-      border-color: var(--success) !important;
+    .zkp-intro i {
+      margin-right: 1rem;
+      font-size: 1.25rem;
+      color: var(--info);
+    }
+    
+    .zkp-input-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .zkp-input-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    
+    .input-with-action {
+      display: flex;
+    }
+    
+    .zkp-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--border-radius) 0 0 var(--border-radius);
+      font-family: var(--font-sans);
+    }
+    
+    .input-with-action .button {
+      border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    }
+    
+    .zkp-steps {
+      padding-left: 1.5rem;
+    }
+    
+    .zkp-steps li {
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Submit section styling */
+    .submit-section {
+      margin-top: 2.5rem;
+      text-align: center;
+    }
+    
+    .large-button {
+      padding: 1rem 2.5rem;
+      font-size: 1.125rem;
+    }
+    
+    .submission-note {
+      margin-top: 1rem;
+      color: var(--gray-600);
+      font-size: 0.875rem;
+    }
+    
+    .submission-status {
+      margin-bottom: 1.5rem;
+    }
+    
+    .status-message {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      margin-bottom: 1rem;
+    }
+    
+    .status-message.error {
+      background-color: rgba(244, 67, 54, 0.1);
+      color: var(--error);
+    }
+    
+    .status-message.success {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--success);
+    }
+    
+    .status-message.info {
+      background-color: rgba(33, 150, 243, 0.1);
+      color: var(--info);
+    }
+    
+    .status-message.loading {
+      background-color: rgba(33, 150, 243, 0.1);
+      color: var(--info);
+    }
+    
+    .status-message i, .status-message .spinner {
+      margin-right: 0.75rem;
+    }
+    
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(33, 150, 243, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--info);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Election info sidebar styling */
+    .election-info-panel {
+      background-color: var(--gray-100);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .election-status {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1.25rem;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      width: fit-content;
+    }
+    
+    .status-badge.active {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--success);
+    }
+    
+    .election-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .meta-item {
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .meta-item i {
+      margin-right: 0.75rem;
+      font-size: 1.25rem;
+      color: var(--primary);
+    }
+    
+    .meta-label {
+      color: var(--gray-600);
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .meta-value {
+      font-weight: 600;
+    }
+    
+    .election-description, .election-zkp-info {
+      margin-bottom: 1.5rem;
+    }
+    
+    .election-description h4, .election-zkp-info h4 {
+      margin-bottom: 0.75rem;
+    }
+    
+    .info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .info-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      background-color: rgba(63, 81, 181, 0.1);
+      color: var(--primary);
+      border-radius: var(--border-radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .info-badge i {
+      margin-right: 0.25rem;
+    }
+    
+    .navigation-panel {
+      text-align: center;
+    }
+    
+    .navigation-panel .button {
+      width: 100%;
+    }
+    
+    .optional-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      background-color: var(--gray-200);
+      color: var(--gray-700);
+      border-radius: var(--border-radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      vertical-align: middle;
+      margin-left: 0.5rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 991px) {
+      .voting-sidebar {
+        margin-bottom: 2rem;
+      }
     }
   </style>
-  
-  <!-- Script to connect voting options with radio buttons -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const optionCards = document.querySelectorAll('.option-card');
-      
-      optionCards.forEach(card => {
-        card.addEventListener('click', function() {
-          const candidateValue = this.dataset.candidate;
-          const radioButton = document.getElementById(`candidate-${candidateValue.toLowerCase()}`);
-          
-          // Check the radio button
-          radioButton.checked = true;
-          
-          // Update UI to show selected card
-          optionCards.forEach(c => c.classList.remove('selected'));
-          this.classList.add('selected');
-        });
-      });
-      
-      // Check for existing selection
-      const checkedRadio = document.querySelector('input[name="candidate"]:checked');
-      if (checkedRadio) {
-        const value = checkedRadio.value;
-        document.querySelector(`[data-candidate="${value}"]`).classList.add('selected');
-      }
-    });
-  </script>
 </body>
 </html>
