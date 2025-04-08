@@ -1,0 +1,47 @@
+/**
+ * Image Fallbacks CSS
+ * Contains data URI fallback images for the SecureVote platform
+ */
+
+/* Testimonial Fallback */
+.testimonial-fallback {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFOEVBRjYiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM4QjkzQzYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEMxNjAgMTQ3LjQ5IDE0NyAxMTAgMTAwIDExMEM1MyAxMTAgNDAgMTQ3LjQ5IDQwIDE4MEgxNjBaIiBmaWxsPSIjOEI5M0M2Ii8+Cjwvc3ZnPgo=');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+/* ZKP Fallback */
+.zkp-fallback {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFOEVBRjYiLz4KICA8Y2lyY2xlIGN4PSI3MCIgY3k9IjgwIiByPSIzMCIgZmlsbD0iIzNCNDJBNCIvPgogIDxjaXJjbGUgY3g9IjEzMCIgY3k9IjgwIiByPSIzMCIgZmlsbD0iIzNCNDJBNCIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEzMCIgcj0iMzAiIGZpbGw9IiMzQjQyQTQiLz4KICA8cGF0aCBkPSJNNzAgODBMMTAwIDEzME0xMDAgMTMwTDEzMCA4ME03MCA4MEgxMzAiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMyIvPgo8L3N2Zz4K');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+/* MADD Fallback */
+.madd-fallback {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFOEVBRjYiLz4KICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSIyNSIgZmlsbD0iIzNCNDJBNCIvPgogIDxjaXJjbGUgY3g9IjE0MCIgY3k9IjYwIiByPSIyNSIgZmlsbD0iIzRDQUY1MCIvPgogIDxjaXJjbGUgY3g9IjYwIiBjeT0iMTQwIiByPSIyNSIgZmlsbD0iI0YwOTQzNiIvPgogIDxjaXJjbGUgY3g9IjE0MCIgY3k9IjE0MCIgcj0iMjUiIGZpbGw9IiM5QzI3QjAiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjI1IiBmaWxsPSIjRjQ0MzM2Ii8+CiAgPHBhdGggZD0iTTYwIDYwTDEwMCAxMDBNMTAwIDEwMEwxNDAgNjBNNjAgMTQwTDEwMCAxMDBNMTAwIDEwMEwxNDAgMTQwIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+Cg==');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+/* Common image placeholder style for any missing images */
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #E8EAF6;
+  color: #3F51B5;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.image-placeholder::before {
+  content: 'Image';
+  display: block;
+}
