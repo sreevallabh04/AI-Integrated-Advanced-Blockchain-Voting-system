@@ -197,28 +197,47 @@
           sendOtpButton.disabled = true;
           sendOtpButton.textContent = 'Sending...';
 
-          // For development, check for test credentials
-          const isTestMode = aadhar === '123456789012' && mobile === '9876543210';
-
-          // In production, this would be an API call to send actual OTP
-          console.log(`Sending OTP for Aadhar: ${aadhar}, VoterID: ${voterId}, Mobile: ${mobile}`);
-          
-          // Simulate network delay
-          setTimeout(() => {
-            detailsForm.style.display = 'none';
-            otpForm.style.display = 'block';
-            otpStatus.textContent = `OTP sent to ${mobile.slice(0, 3)}***${mobile.slice(-4)}`;
-            otpStatus.style.color = '';
+          // Use the facial-auth API to verify credentials and send OTP
+          if (window.facialAuth && typeof window.facialAuth.verifyCredentials === 'function') {
+            
+            window.facialAuth.verifyCredentials(aadhar, voterId, mobile)
+              .then(result => {
+                if (result.success) {
+                  detailsForm.style.display = 'none';
+                  otpForm.style.display = 'block';
+                  otpStatus.textContent = `OTP sent to ${mobile.slice(0, 3)}***${mobile.slice(-4)}`;
+                  otpStatus.style.color = '';
+                  
+                  // In development mode, log the OTP
+                  if (result.otp && (window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1'))) {
+                    console.log(`TEST MODE: OTP is ${result.otp}`);
+                    // For super-easy testing
+                    if (aadhar === '123456789012' && mobile === '9876543210') {
+                      otpInput.value = result.otp;
+                    }
+                  }
+                  
+                  otpInput.focus();
+                } else {
+                  alert(result.message || 'Failed to verify credentials. Please check your details.');
+                }
+                
+                sendOtpButton.disabled = false;
+                sendOtpButton.textContent = 'Send OTP';
+              })
+              .catch(error => {
+                console.error('Error verifying credentials:', error);
+                alert('Error verifying credentials: ' + (error.message || 'Unknown error'));
+                sendOtpButton.disabled = false;
+                sendOtpButton.textContent = 'Send OTP';
+              });
+          } else {
+            // Fallback if API not available
+            console.error('Facial auth module not loaded correctly');
+            alert('Authentication system not loaded correctly. Please try again later.');
             sendOtpButton.disabled = false;
             sendOtpButton.textContent = 'Send OTP';
-            
-            // In test mode, show the OTP in the console
-            if (isTestMode) {
-              console.log('TEST MODE: OTP is 123456');
-            }
-            
-            otpInput.focus();
-          }, 1500);
+          }
         });
       }
 
@@ -235,24 +254,47 @@
           verifyOtpButton.textContent = 'Verifying...';
           otpStatus.textContent = '';
 
-          // For development, accept '123456' or any 6-digit OTP if using test account
-          const isValidOtp = otp === '123456' || 
-                            (aadharInput.value.trim() === '123456789012' && /^\d{6}$/.test(otp));
-          
-          console.log(`Verifying OTP: ${otp}`);
-          
-          // Simulate network delay
-          setTimeout(() => {
+          // Use the facial-auth API to verify OTP
+          if (window.facialAuth && typeof window.facialAuth.verifyOtp === 'function') {
+            
+            window.facialAuth.verifyOtp(otp)
+              .then(result => {
+                if (result.success) {
+                  // Show facial authentication form
+                  otpForm.style.display = 'none';
+                  facialAuthForm.style.display = 'block';
+                  authStatus.textContent = 'OTP Verified. Ready for facial recognition.';
+                  authStatus.style.color = '';
+                } else {
+                  otpStatus.textContent = result.message || 'Invalid OTP. Please try again.';
+                  otpStatus.style.color = 'red';
+                }
+                
+                verifyOtpButton.disabled = false;
+                verifyOtpButton.textContent = 'Verify OTP';
+              })
+              .catch(error => {
+                console.error('Error verifying OTP:', error);
+                otpStatus.textContent = 'Error verifying OTP: ' + (error.message || 'Unknown error');
+                otpStatus.style.color = 'red';
+                verifyOtpButton.disabled = false;
+                verifyOtpButton.textContent = 'Verify OTP';
+              });
+          } else {
+            // Fallback if API not available - use test OTP for development
+            console.warn('OTP verification API not available, using test mode');
+            
+            // For development only - accept 123456 or any 6 digits for test account
+            const isTestMode = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
+            const isValidOtp = isTestMode && (otp === '123456' || (aadharInput.value.trim() === '123456789012' && /^\d{6}$/.test(otp)));
+            
             if (isValidOtp) {
-              // Mark OTP as verified in the facial auth module
-              if (window.facialAuth && typeof window.facialAuth.setOtpVerified === 'function') {
-                window.facialAuth.setOtpVerified(true);
-              }
+              // Mark OTP as verified manually for test mode
+              window.facialAuth.setOtpVerified(true);
               
-              // Show facial authentication form
               otpForm.style.display = 'none';
               facialAuthForm.style.display = 'block';
-              authStatus.textContent = 'OTP Verified. Ready for facial recognition.';
+              authStatus.textContent = 'OTP Verified (TEST MODE). Ready for facial recognition.';
               authStatus.style.color = '';
             } else {
               otpStatus.textContent = 'Invalid OTP. Please try again.';
@@ -261,7 +303,7 @@
             
             verifyOtpButton.disabled = false;
             verifyOtpButton.textContent = 'Verify OTP';
-          }, 1000);
+          }
         });
       }
       
