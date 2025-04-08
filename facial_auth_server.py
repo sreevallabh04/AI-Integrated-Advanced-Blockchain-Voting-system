@@ -47,7 +47,14 @@ logger = logging.getLogger("facial-auth-api")
 
 # App configuration
 app = Flask(__name__)
-CORS(app)  # Enable Cross-Origin Resource Sharing for API access
+# Enable CORS with specific configuration for cross-origin requests
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:8000", "http://127.0.0.1:8000", "https://securevote.com"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "X-API-Key", "Authorization"]
+    }
+})
 
 # Configuration
 IMAGES_DIR = "images/users"
