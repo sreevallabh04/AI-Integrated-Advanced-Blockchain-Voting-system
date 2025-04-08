@@ -86,11 +86,11 @@
             <p class="text-muted">Make your voice heard on the Community Proposal</p>
           </div>
           
-          <!-- Account Selection -->
+              <!-- Account Selection -->
           <div class="voting-card">
             <div class="card-header">
               <h2>1. Connect Your Wallet</h2>
-              <p>Select the Ethereum account you'll use to cast your vote</p>
+              <p>Use your verified Ethereum wallet to cast your vote on the blockchain</p>
             </div>
             <div class="card-body">
               <div class="account-selection">
@@ -115,6 +115,13 @@
                   </div>
                   <div class="account-actions">
                     <button class="button text-button" id="change-account-btn">Change</button>
+                  </div>
+                </div>
+                
+                <div class="biometric-verification-status" id="biometric-verification-status">
+                  <div class="status-badge verified">
+                    <i class="icon-check-circle"></i>
+                    <span>Identity Verified via AI Facial Recognition</span>
                   </div>
                 </div>
               </div>
@@ -267,9 +274,40 @@
               </div>
             </div>
           </div>
+
+          <!-- Facial Comparison Step -->
+          <div class="voting-card" id="facial-comparison-step">
+            <div class="card-header">
+              <h2>5. Visual Verification</h2>
+              <p>Please compare the live camera feed with the reference image.</p>
+            </div>
+            <div class="card-body">
+              <div class="face-match-container">
+                <div class="reference-image-container">
+                  <h4>Reference Image</h4>
+                  <img id="reference-image" src="/images/users/Screenshot 2024-06-18 203605.png" alt="Reference User Image">
+                  <p class="text-muted text-small">This is the image stored for verification.</p>
+                </div>
+                <div class="live-camera-container">
+                  <h4>Live Camera Feed</h4>
+                  <video id="live-video-feed" autoplay playsinline muted></video>
+                  <p class="text-muted text-small">Ensure your face is well-lit and centered in the live feed.</p>
+                  <button class="button outline-button button-sm mt-2" id="start-camera-btn">Start Camera</button>
+                </div>
+              </div>
+              <div class="comparison-status" id="comparison-status">
+                Click "Start Camera" to begin visual verification.
+              </div>
+              <div class="vote-decision-buttons" id="vote-decision-buttons" style="display: none;">
+                 <p class="mb-3 font-weight-bold">Do you confirm that the person in the live feed is the same as the person in the reference image?</p>
+                 <button class="button vote-decision-button yes" id="confirm-match-btn">Yes, They Match</button>
+                 <button class="button vote-decision-button no" id="reject-match-btn">No, They Don't Match</button>
+              </div>
+            </div>
+          </div>
           
           <!-- Vote Submission -->
-          <div class="submit-section">
+          <div class="submit-section" id="submit-section" style="display: none;"> <!-- Initially hidden -->
             <div class="submission-status" id="submission-status"></div>
             <button class="button primary-button large-button" id="cast-vote-btn" disabled>Cast Your Vote</button>
             <p class="submission-note">Once submitted, your vote cannot be changed</p>
