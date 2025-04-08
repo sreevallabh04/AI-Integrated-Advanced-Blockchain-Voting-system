@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - SecureVote</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="page-container">
+  <!-- Header will be loaded here -->
+  <div id="header-container"></div>
+  
+  <main class="main-content">
+    <div class="container">
+      <div class="auth-container">
+        <div class="auth-card">
+          <div class="auth-header">
+            <img src="/assets/images/logo.svg" alt="SecureVote" class="auth-logo" onerror="this.src='/assets/images/logo-fallback.png'; this.onerror=null;">
+            <h2 class="auth-title">Login to SecureVote</h2>
+            <p class="auth-subtitle">Secure, transparent, and intelligent voting</p>
+          </div>
+          
+          <div class="auth-body">
+            <div class="social-auth">
+              <div class="social-auth-title">
+                <span>Sign in with</span>
+              </div>
+              <div class="social-auth-buttons">
+                <button class="social-auth-button">
+                  <i class="icon-github"></i> GitHub
+                </button>
+                <button class="social-auth-button">
+                  <i class="icon-linkedin"></i> LinkedIn
+                </button>
+              </div>
+            </div>
+            
+            <div class="divider">OR</div>
+            
+            <!-- Traditional Login Form -->
+            <div id="traditional-login-form">
+              <form id="login-form">
+                <div class="form-group">
+                  <label for="user-id">User ID</label>
+                  <input type="text" id="user-id" class="form-control" placeholder="Enter your user ID" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="password">Password</label>
+                  <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+                </div>
+                
+                <div class="remember-forgot">
+                  <div class="form-check">
+                    <input type="checkbox" id="remember-me" class="form-check-input">
+                    <label for="remember-me" class="form-check-label">Remember me</label>
+                  </div>
+                  <a href="#" class="text-button">Forgot password?</a>
+                </div>
+                
+                <div class="form-group">
+                  <button type="button" id="proceed-to-facial-auth" class="button primary-button w-100">Continue with Facial Recognition</button>
+                </div>
+                
+                <div class="form-group mb-0">
+                  <button type="submit" id="login-button" class="button outline-button w-100">Login with Password Only</button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Facial Authentication Form -->
+            <div id="facial-auth-form" style="display: none;">
+              <div class="face-auth-container">
+                <div class="camera-placeholder" id="camera-container">
+                  <div class="face-outline"></div>
+                  <div class="facescan-animation"></div>
+                  <p>Camera initialization...</p>
+                </div>
+                
+                <p class="face-auth-status" id="auth-status">Preparing facial recognition...</p>
+                
+                <p class="face-auth-instructions">Please look directly at the camera and position your face within the outline for verification.</p>
+                
+                <div class="form-group">
+                  <button type="button" id="start-camera-button" class="button primary-button">Start Camera</button>
+                  <button type="button" id="capture-button" class="button secondary-button" disabled>Capture</button>
+                </div>
+                
+                <div class="form-group mb-0">
+                  <button type="button" id="back-to-form-button" class="button text-button">Back to Login Form</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="auth-footer">
+            <p>Don't have an account? <a href="#">Contact your administrator</a></p>
+            <p class="text-small text-muted mt-2">By logging in, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Footer will be loaded here -->
+  <div id="footer-container"></div>
+  
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js"></script>
+  <script src="/production-config.js"></script>
+  <script src="/facial-auth.js"></script>
+  
+  <!-- Component Loader Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load header component
+      fetch('/components/header.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('header-container').innerHTML = html;
+          
+          // Execute any scripts in the header
+          const headerScripts = document.getElementById('header-container').querySelectorAll('script');
+          headerScripts.forEach(script => {
+            const newScript = document.createElement('script');
+            if (script.src) {
+              newScript.src = script.src;
+            } else {
+              newScript.textContent = script.textContent;
+            }
+            document.head.appendChild(newScript);
+          });
+        })
+        .catch(error => console.error('Error loading header:', error));
+      
+      // Load footer component
+      fetch('/components/footer.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('footer-container').innerHTML = html;
+          
+          // Execute any scripts in the footer
+          const footerScripts = document.getElementById('footer-container').querySelectorAll('script');
+          footerScripts.forEach(script => {
+            const newScript = document.createElement('script');
+            if (script.src) {
+              newScript.src = script.src;
+            } else {
+              newScript.textContent = script.textContent;
+            }
+            document.head.appendChild(newScript);
+          });
+        })
+        .catch(error => console.error('Error loading footer:', error));
+      
+      // Setup login form interaction
+      const loginForm = document.getElementById('login-form');
+      const proceedToFacialBtn = document.getElementById('proceed-to-facial-auth');
+      const loginBtn = document.getElementById('login-button');
+      const traditionalLoginForm = document.getElementById('traditional-login-form');
+      const facialAuthForm = document.getElementById('facial-auth-form');
+      const backToFormBtn = document.getElementById('back-to-form-button');
+      const startCameraBtn = document.getElementById('start-camera-button');
+      const captureBtn = document.getElementById('capture-button');
+      const cameraContainer = document.getElementById('camera-container');
+      const authStatus = document.getElementById('auth-status');
+      
+      // Proceed to facial auth button
+      if (proceedToFacialBtn) {
+        proceedToFacialBtn.addEventListener('click', function() {
+          const userId = document.getElementById('user-id').value.trim();
+          if (!userId) {
+            alert('Please enter your User ID');
+            return;
+          }
+          
+          // Switch to facial auth form
+          traditionalLoginForm.style.display = 'none';
+          facialAuthForm.style.display = 'block';
+          
+          // Store user ID for facial auth
+          sessionStorage.setItem('tempUserId', userId);
+          
+          authStatus.textContent = 'Ready for facial verification. Click "Start Camera" to begin.';
+        });
+      }
+      
+      // Back to login form button
+      if (backToFormBtn) {
+        backToFormBtn.addEventListener('click', function() {
+          traditionalLoginForm.style.display = 'block';
+          facialAuthForm.style.display = 'none';
+          
+          // Reset camera if active
+          if (window.facialAuth && typeof window.facialAuth.cancelAuthentication === 'function') {
+            window.facialAuth.cancelAuthentication();
+          }
+        });
+      }
+      
+      // Start camera button
+      if (startCameraBtn) {
+        startCameraBtn.addEventListener('click', function() {
+          // Initialize facial authentication
+          if (window.facialAuth) {
+            startCameraBtn.disabled = true;
+            
+            // Set the user ID in the proper field for facial auth
+            const userIdInput = document.createElement('input');
+            userIdInput.type = 'hidden';
+            userIdInput.id = 'userIdInput';
+            userIdInput.value = sessionStorage.getItem('tempUserId') || '';
+            document.body.appendChild(userIdInput);
+            
+            // Replace camera placeholder with actual camera feed
+            cameraContainer.innerHTML = '<video id="facialAuthVideo" playsinline autoplay muted></video><canvas id="facialAuthCanvas" style="display: none;"></canvas><div id="faceOverlay" class="face-overlay"><div class="face-target"></div></div>';
+            
+            // Start facial authentication
+            window.facialAuth.startAuthentication().then(function() {
+              captureBtn.disabled = false;
+              authStatus.textContent = 'Camera active. Position your face and click "Capture".';
+            }).catch(function(error) {
+              authStatus.textContent = 'Error: ' + error.message;
+              startCameraBtn.disabled = false;
+            });
+            
+            // Register auth listener
+            window.facialAuth.registerAuthListener(function(isAuthenticated, user) {
+              if (isAuthenticated) {
+                // Authentication successful
+                authStatus.textContent = 'Authentication successful! Redirecting...';
+                
+                // Store authentication state
+                sessionStorage.setItem('authenticated', 'true');
+                sessionStorage.setItem('userId', user.id);
+                
+                // Redirect to dashboard
+                setTimeout(function() {
+                  window.location.href = '/pages/dashboard.html';
+                }, 1500);
+              } else {
+                // Authentication failed
+                authStatus.textContent = 'Authentication failed. Please try again.';
+                startCameraBtn.disabled = false;
+              }
+            });
+          } else {
+            authStatus.textContent = 'Error: Facial authentication not available';
+          }
+        });
+      }
+      
+      // Capture button
+      if (captureBtn) {
+        captureBtn.addEventListener('click', function() {
+          if (window.facialAuth && typeof window.facialAuth.captureAndAuthenticate === 'function') {
+            captureBtn.disabled = true;
+            authStatus.textContent = 'Processing...';
+            
+            // This will trigger the captureAndAuthenticate function in facial-auth.js
+            // The auth listener will handle the result
+          }
+        });
+      }
+      
+      // Traditional login form submission
+      if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const userId = document.getElementById('user-id').value.trim();
+          const password = document.getElementById('password').value;
+          
+          if (!userId || !password) {
+            alert('Please enter both User ID and Password');
+            return;
+          }
+          
+          // Demo login - in production, this would make an API call
+          loginBtn.disabled = true;
+          loginBtn.textContent = 'Logging in...';
+          
+          // Simulate API call
+          setTimeout(function() {
+            // Store authentication state
+            sessionStorage.setItem('authenticated', 'true');
+            sessionStorage.setItem('userId', userId);
+            
+            // Redirect to dashboard
+            window.location.href = '/pages/dashboard.html';
+          }, 1000);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
