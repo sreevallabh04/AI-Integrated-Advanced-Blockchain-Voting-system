@@ -404,11 +404,6 @@
             throw new Error("Biometric verification required before connecting wallet");
           }
           
-          // Check if MetaMask or other provider is available
-          if (typeof window.ethereum === 'undefined') {
-            throw new Error("No Ethereum wallet detected. Please install MetaMask or another wallet provider.");
-          }
-          
           const walletStatus = document.getElementById('wallet-status');
           const connectedAccount = document.getElementById('connected-account');
           const accountAddress = document.getElementById('account-address');
@@ -417,64 +412,96 @@
           // Show connecting status
           walletStatus.innerHTML = `
             <i class="icon-loading"></i>
-            <p>Connecting to wallet...</p>
+            <p>Connecting to Hardhat node...</p>
           `;
           
-          // Request account access
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          
-          if (accounts && accounts.length > 0) {
-            const userAddress = accounts[0];
+          // Use the connectWallet function from app.js to connect to Hardhat
+          if (typeof window.connectWallet === 'function') {
+            await window.connectWallet();
             
-            // Store connected wallet in session storage
-            sessionStorage.setItem('walletAddress', userAddress);
-            sessionStorage.setItem('walletConnected', 'true');
-            
-            // Get the network ID to ensure we're on the correct network
-            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-            console.log(`Connected to chain ID: ${chainId}`);
-            
-            // Use stored wallet address if one was saved during login
-            const preAuthorizedWallet = sessionStorage.getItem('walletAddress');
-            
-            // If user previously authenticated with a different wallet, warn them
-            if (preAuthorizedWallet && preAuthorizedWallet.toLowerCase() !== userAddress.toLowerCase()) {
-              console.warn("Connected wallet differs from authenticated wallet");
-              // We'll allow it but show a warning
-              document.getElementById('submission-status').innerHTML = `
-                <div class="status-message warning">
-                  <i class="icon-warning"></i>
-                  <p>Warning: The connected wallet is different from the one used during authentication.</p>
-                </div>
+            // Get user address from app.js
+            if (window.userAddress) {
+              const userAddress = window.userAddress;
+              
+              // Store connected wallet in session storage
+              sessionStorage.setItem('walletAddress', userAddress);
+              sessionStorage.setItem('walletConnected', 'true');
+              
+              // Use stored wallet address if one was saved during login
+              const preAuthorizedWallet = sessionStorage.getItem('walletAddress');
+              
+              // If user previously authenticated with a different wallet, warn them
+              if (preAuthorizedWallet && preAuthorizedWallet.toLowerCase() !== userAddress.toLowerCase()) {
+                console.warn("Connected wallet differs from authenticated wallet");
+                // We'll allow it but show a warning
+                document.getElementById('submission-status').innerHTML = `
+                  <div class="status-message warning">
+                    <i class="icon-warning"></i>
+                    <p>Warning: The connected wallet is different from the one used during authentication.</p>
+                  </div>
+                `;
+              }
+              
+              // Update UI
+              walletStatus.innerHTML = `
+                <i class="icon-check-circle"></i>
+                <p>Connected to Hardhat</p>
               `;
+              
+              accountAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+              connectedAccount.style.display = 'flex';
+              
+              // Show submit section and enable vote button
+              document.getElementById('submit-section').style.display = 'block';
+              castVoteBtn.disabled = false;
+              
+              // Hide the connect button
+              this.style.display = 'none';
+              
+              // Initialize contract after successful connection
+              await initializeContract();
+            } else {
+              throw new Error("Connected to Hardhat but user address not available");
             }
-            
-            // Update UI
-            walletStatus.innerHTML = `
-              <i class="icon-check-circle"></i>
-              <p>Wallet connected</p>
-            `;
-            
-            accountAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-            connectedAccount.style.display = 'flex';
-            
-            // Show submit section and enable vote button
-            document.getElementById('submit-section').style.display = 'block';
-            castVoteBtn.disabled = false;
-            
-            // Hide the connect button
-            this.style.display = 'none';
           } else {
-            throw new Error("No accounts found. Please unlock your wallet.");
+            // If connectWallet function is not available, check if already connected
+            if (window.isWalletConnected && window.userAddress) {
+              const userAddress = window.userAddress;
+              
+              // Store connected wallet in session storage
+              sessionStorage.setItem('walletAddress', userAddress);
+              sessionStorage.setItem('walletConnected', 'true');
+              
+              // Update UI
+              walletStatus.innerHTML = `
+                <i class="icon-check-circle"></i>
+                <p>Connected to Hardhat</p>
+              `;
+              
+              accountAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+              connectedAccount.style.display = 'flex';
+              
+              // Show submit section and enable vote button
+              document.getElementById('submit-section').style.display = 'block';
+              castVoteBtn.disabled = false;
+              
+              // Hide the connect button
+              this.style.display = 'none';
+              
+              // Initialize contract after successful connection
+              await initializeContract();
+            } else {
+              throw new Error("Could not connect to Hardhat node - app.js not properly loaded");
+            }
           }
         } catch (error) {
-          console.error("Error connecting wallet:", error);
+          console.error("Error connecting to Hardhat:", error);
           const errorMessage = document.getElementById('submission-status') || document.createElement('div');
           errorMessage.id = 'submission-status';
           errorMessage.innerHTML = `
             <div class="status-message error">
               <i class="icon-error"></i>
-              <p>Failed to connect wallet: ${error.message}</p>
+              <p>Failed to connect to Hardhat: ${error.message}</p>
             </div>
           `;
           
@@ -509,13 +536,21 @@
       // Initialize contract when wallet is connected
       async function initializeContract() {
         try {
-          if (typeof window.ethereum === 'undefined') {
-            console.error("Ethereum provider not found");
-            return false;
+          // Use Hardhat provider and signer from app.js if available
+          if (window.provider && window.signer) {
+            provider = window.provider;
+            signer = window.signer;
+            console.log("Using Hardhat provider and signer from app.js");
+          } else {
+            // Create a new connection to Hardhat node
+            console.log("Creating new connection to Hardhat node");
+            provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+            
+            // Use default Hardhat private key (not recommended for production)
+            const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // Hardhat's default private key
+            const wallet = new ethers.Wallet(privateKey, provider);
+            signer = wallet;
           }
-          
-          provider = new ethers.BrowserProvider(window.ethereum);
-          signer = await provider.getSigner();
           
           // Get contract address from production config or environment
           const networkConfig = window.ProductionConfig?.getNetworkConfig();
