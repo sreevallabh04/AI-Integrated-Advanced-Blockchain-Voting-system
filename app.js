@@ -586,6 +586,36 @@ async function connectWallet() {
         setupDemoButtonListener('enableDemoModeButton');
     }
 }
+/**
+ * Prompt the user to connect their wallet after facial authentication
+ */
+function promptWalletConnection() {
+  const walletPrompt = document.createElement('div');
+  walletPrompt.className = 'wallet-prompt notice-banner';
+  walletPrompt.innerHTML = `
+    <p><strong>Face Verified! 👤✓</strong> Now connect your Ethereum wallet to enable voting.</p>
+    <button id="promptConnectWalletBtn" class="button primary-button">Connect Wallet</button>
+  `;
+  
+  // Add to the page
+  const container = document.querySelector('.container') || document.body;
+  container.prepend(walletPrompt);
+  
+  // Add event listener
+  document.getElementById('promptConnectWalletBtn').addEventListener('click', () => {
+    connectWallet();
+    walletPrompt.remove();
+  });
+  
+  // Auto-remove after 30 seconds
+  setTimeout(() => {
+    if (document.body.contains(walletPrompt)) {
+      walletPrompt.classList.add('fade-out');
+      setTimeout(() => walletPrompt.remove(), 1000);
+    }
+  }, 30000);
+}
+
 // Helper to create/get status element
 function createStatusElement() {
     let statusElement = document.getElementById("connectionStatus");
