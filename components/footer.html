@@ -1,0 +1,117 @@
+<!-- Footer Component -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-main">
+      <div class="footer-logo">
+        <a href="/">
+          <img src="/assets/images/logo.svg" alt="SecureVote" onerror="this.src='/assets/images/logo-fallback.png'; this.onerror=null;">
+          <span>SecureVote</span>
+        </a>
+        <p class="tagline">Next-generation decentralized voting with blockchain security and AI analysis</p>
+      </div>
+      
+      <div class="footer-nav-wrapper">
+        <div class="footer-nav">
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="/pages/voting.html">Cast Vote</a></li>
+            <li><a href="/pages/results.html">View Results</a></li>
+            <li><a href="/pages/dashboard.html">Dashboard</a></li>
+            <li><a href="/pages/profile.html">Your Profile</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-nav">
+          <h4>Features</h4>
+          <ul>
+            <li><a href="/pages/analysis.html">Vote Analysis</a></li>
+            <li><a href="/pages/deliberative.html">Deliberative Democracy</a></li>
+            <li><a href="/pages/zkp.html">Zero-Knowledge Proofs</a></li>
+            <li><a href="/pages/blockchain.html">Blockchain Security</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-nav">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/pages/documentation.html">Documentation</a></li>
+            <li><a href="/pages/faq.html">FAQ</a></li>
+            <li><a href="/pages/research.html">Research Papers</a></li>
+            <li><a href="/pages/api.html">API</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-nav">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="/pages/about.html">About Us</a></li>
+            <li><a href="/pages/contact.html">Contact</a></li>
+            <li><a href="/pages/privacy.html">Privacy Policy</a></li>
+            <li><a href="/pages/terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <div class="social-links">
+        <a href="#" aria-label="Twitter" class="social-icon"><i class="icon-twitter"></i></a>
+        <a href="#" aria-label="GitHub" class="social-icon"><i class="icon-github"></i></a>
+        <a href="#" aria-label="LinkedIn" class="social-icon"><i class="icon-linkedin"></i></a>
+        <a href="#" aria-label="Discord" class="social-icon"><i class="icon-discord"></i></a>
+      </div>
+      
+      <div class="copyright">
+        <p>&copy; 2025 SecureVote. All rights reserved.</p>
+        <p class="technlogy-stack">
+          Built with <a href="https://ethereum.org" target="_blank" rel="noopener">Ethereum</a>, 
+          <a href="https://hardhat.org" target="_blank" rel="noopener">Hardhat</a>, 
+          <a href="https://groq.com" target="_blank" rel="noopener">Groq</a>, and 
+          <a href="https://circom.io" target="_blank" rel="noopener">Circom</a>
+        </p>
+      </div>
+      
+      <div class="language-selector">
+        <select id="language-select" aria-label="Select language">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="ja">日本語</option>
+          <option value="zh">中文</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Language selector functionality
+    const languageSelect = document.getElementById('language-select');
+    if (languageSelect) {
+      // Get stored language preference
+      const storedLanguage = localStorage.getItem('preferredLanguage');
+      if (storedLanguage) {
+        languageSelect.value = storedLanguage;
+      }
+      
+      // Set up event listener to save language preference
+      languageSelect.addEventListener('change', function() {
+        const selectedLanguage = this.value;
+        localStorage.setItem('preferredLanguage', selectedLanguage);
+        
+        // In a real implementation, this would trigger language change
+        // For demo purposes, we're just storing the preference
+        console.log(`Language changed to: ${selectedLanguage}`);
+      });
+    }
+    
+    // Make external links open in new tab with security attributes
+    document.querySelectorAll('a[target="_blank"]').forEach(link => {
+      if (!link.hasAttribute('rel')) {
+        link.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
+  });
+</script>
