@@ -91,7 +91,9 @@ window.facialAuth = (function() {
 
     // --- Constants ---
     // Backend endpoints for multi-factor authentication
-    const API_BASE_URL = isProd ? '/api' : 'http://localhost:5001/api';
+    // Always use port 5001 on localhost to prevent 501 errors from the HTTP server
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
+    const API_BASE_URL = isLocalhost ? 'http://localhost:5001/api' : '/api';
     const CREDENTIALS_VERIFY_API_ENDPOINT = `${API_BASE_URL}/auth/verify-credentials`;
     const OTP_VERIFY_API_ENDPOINT = `${API_BASE_URL}/auth/verify-otp`;
     const VOTER_VERIFY_API_ENDPOINT = `${API_BASE_URL}/auth/verify-voter`;
