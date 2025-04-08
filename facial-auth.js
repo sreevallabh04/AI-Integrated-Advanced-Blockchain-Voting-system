@@ -528,11 +528,48 @@ window.facialAuth = (function() {
         try {
             log.info("Submitting credentials for verification...");
             
-            const response = await fetch(CREDENTIALS_VERIFY_API_ENDPOINT, {
+            // Improved fetch with retry logic and better error handling
+            const fetchWithRetry = async (url, options, retries = 3, backoff = 300) => {
+                try {
+                    const response = await fetch(url, options);
+                    
+                    // Check for successful response
+                    if (response.ok) return response;
+                    
+                    // Handle HTTP error responses
+                    const errorData = await response.json().catch(() => ({ error: `HTTP error ${response.status}` }));
+                    throw new Error(errorData.error || `Server returned ${response.status} ${response.statusText}`);
+                } catch (error) {
+                    // Network error or other fetch failure
+                    if (retries === 0) {
+                        const isOffline = !window.navigator.onLine;
+                        const errorMessage = isOffline 
+                            ? "You are offline. Please check your internet connection."
+                            : (error.message || "Failed to connect to authentication server.");
+                            
+                        log.error(`API request failed: ${errorMessage}`, { endpoint: url, retries: 'exhausted' });
+                        throw new Error(errorMessage);
+                    }
+                    
+                    log.warn(`API request failed, retrying (${retries} attempts left)`, { 
+                        error: error.message,
+                        endpoint: url
+                    });
+                    
+                    // Wait with exponential backoff
+                    await new Promise(resolve => setTimeout(resolve, backoff));
+                    
+                    // Retry with increased backoff
+                    return fetchWithRetry(url, options, retries - 1, backoff * 2);
+                }
+            };
+            
+            const response = await fetchWithRetry(CREDENTIALS_VERIFY_API_ENDPOINT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-API-Key': 'dev_facial_auth_key'  // Use dev key for now
+                    'X-API-Key': 'dev_facial_auth_key',  // Use dev key for now
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
                     aadhar: aadhar,
