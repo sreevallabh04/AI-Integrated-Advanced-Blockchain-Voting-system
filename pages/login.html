@@ -634,58 +634,84 @@
       // Step 4: Wallet Connection
       if (connectWalletButton) {
         connectWalletButton.addEventListener('click', async function() {
-          if (typeof window.ethereum !== 'undefined') {
-            try {
-              // Show connecting status
-              walletStatus.className = 'wallet-status connecting';
-              walletStatus.innerHTML = '<i class="icon-loading"></i><span>Connecting...</span>';
-              this.disabled = true;
-              
-              // Request wallet connection
-              await window.ethereum.request({ method: 'eth_requestAccounts' });
-              
-              // Use ethers.js to connect
-              const provider = new ethers.BrowserProvider(window.ethereum);
-              const signer = await provider.getSigner();
-              const userAddress = await signer.getAddress();
-              
-              // Update wallet status
-              walletStatus.className = 'wallet-status connected';
-              walletStatus.innerHTML = `
-                <i class="icon-check-circle"></i>
-                <span>Connected: ${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}</span>
-              `;
-              
-              // Store wallet info in session
-              sessionStorage.setItem('walletConnected', 'true');
-              sessionStorage.setItem('walletAddress', userAddress);
-              
-              // Enable proceed button
-              proceedToVotingButton.disabled = false;
-              
-              // Update button
-              this.textContent = 'Wallet Connected';
-              this.disabled = true;
-              
-              console.log("Wallet connected:", userAddress);
-            } catch (error) {
-              console.error("Failed to connect wallet:", error);
-              
-              // Show error in wallet status
-              walletStatus.className = 'wallet-status error';
-              walletStatus.innerHTML = '<i class="icon-error"></i><span>Connection failed</span>';
-              
-              // Reset button
-              this.textContent = 'Connect Wallet';
-              this.disabled = false;
+          try {
+            // Check if biometric verification was completed
+            if (sessionStorage.getItem('biometricVerified') !== 'true') {
+              throw new Error("Biometric verification required before connecting wallet");
             }
-          } else {
-            // No wallet available
-            alert('No Ethereum wallet detected. Please install MetaMask or another wallet provider.');
             
-            // Update wallet status
-            walletStatus.className = 'wallet-status not-found';
-            walletStatus.innerHTML = '<i class="icon-error"></i><span>No wallet found</span>';
+            // Show connecting status
+            walletStatus.className = 'wallet-status connecting';
+            walletStatus.innerHTML = '<i class="icon-loading"></i><span>Connecting to Hardhat node...</span>';
+            this.disabled = true;
+            
+            // Use the connectWallet function from app.js to connect to Hardhat
+            if (typeof window.connectWallet === 'function') {
+              await window.connectWallet();
+              
+              // Get user address from app.js
+              if (window.userAddress) {
+                // Update wallet status
+                walletStatus.className = 'wallet-status connected';
+                walletStatus.innerHTML = `
+                  <i class="icon-check-circle"></i>
+                  <span>Connected to Hardhat: ${window.userAddress.substring(0, 6)}...${window.userAddress.substring(window.userAddress.length - 4)}</span>
+                `;
+                
+                // Store wallet info in session
+                sessionStorage.setItem('walletConnected', 'true');
+                sessionStorage.setItem('walletAddress', window.userAddress);
+                
+                // Enable proceed button
+                proceedToVotingButton.disabled = false;
+                
+                // Update button
+                this.textContent = 'Hardhat Connected';
+                this.disabled = true;
+                
+                console.log("Hardhat node connected:", window.userAddress);
+              } else {
+                throw new Error("Connected to Hardhat but user address not available");
+              }
+            } else {
+              // If connectWallet function is not available, try to use the global variables from app.js
+              console.log("Trying alternative connection method...");
+              
+              // Check if the app.js has already connected automatically
+              if (window.isWalletConnected && window.userAddress) {
+                // Update wallet status
+                walletStatus.className = 'wallet-status connected';
+                walletStatus.innerHTML = `
+                  <i class="icon-check-circle"></i>
+                  <span>Connected to Hardhat: ${window.userAddress.substring(0, 6)}...${window.userAddress.substring(window.userAddress.length - 4)}</span>
+                `;
+                
+                // Store wallet info in session
+                sessionStorage.setItem('walletConnected', 'true');
+                sessionStorage.setItem('walletAddress', window.userAddress);
+                
+                // Enable proceed button
+                proceedToVotingButton.disabled = false;
+                
+                // Update button
+                this.textContent = 'Hardhat Connected';
+                this.disabled = true;
+                
+                console.log("Hardhat already connected:", window.userAddress);
+              } else {
+                throw new Error("Could not connect to Hardhat node - app.js not properly loaded");
+              }
+            }
+          } catch (error) {
+            console.error("Failed to connect to Hardhat:", error);
+            
+            // Show error in wallet status
+            walletStatus.className = 'wallet-status error';
+            walletStatus.innerHTML = `<i class="icon-error"></i><span>${error.message}</span>`;
+            
+            // Reset button
+            this.textContent = 'Connect to Hardhat';
+            this.disabled = false;
           }
         });
       }
