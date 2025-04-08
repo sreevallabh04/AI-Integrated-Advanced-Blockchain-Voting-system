@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voting Results - SecureVote</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+  <!-- ChartJS for visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="page-container">
+  <!-- Header will be loaded here -->
+  <div id="header-container"></div>
+  
+  <main class="main-content">
+    <div class="container">
+      <div class="results-container">
+        <!-- Sidebar -->
+        <div class="results-sidebar">
+          <div class="sidebar-header">
+            <h2>Election Details</h2>
+          </div>
+          
+          <div class="election-info-panel">
+            <div class="election-status">
+              <span class="status-badge active">Active</span>
+              <h3 id="election-title">Community Proposal Vote</h3>
+            </div>
+            
+            <div class="election-meta">
+              <div class="meta-item">
+                <i class="icon-time"></i>
+                <div>
+                  <p class="meta-label">Time Remaining</p>
+                  <p class="meta-value" id="election-time-remaining">2 days 5 hours</p>
+                </div>
+              </div>
+              
+              <div class="meta-item">
+                <i class="icon-users"></i>
+                <div>
+                  <p class="meta-label">Total Votes</p>
+                  <p class="meta-value" id="total-votes">247</p>
+                </div>
+              </div>
+              
+              <div class="meta-item">
+                <i class="icon-chart"></i>
+                <div>
+                  <p class="meta-label">Voter Turnout</p>
+                  <p class="meta-value" id="election-turnout">68%</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="election-description">
+              <h4>About This Vote</h4>
+              <p id="election-description">This vote is to decide on the proposed renovation of the community center. The proposal includes expanding the main hall, adding a new children's play area, and updating the technology infrastructure.</p>
+            </div>
+            
+            <div class="election-verification">
+              <h4>Blockchain Verification</h4>
+              <p>All votes are verified on the Ethereum blockchain. You can audit the results by examining the smart contract.</p>
+              <div class="verification-details">
+                <div class="verification-item">
+                  <span class="label">Contract Address:</span>
+                  <span class="value code-text" id="contract-address">0x8B3...F9E2</span>
+                </div>
+                <div class="verification-item">
+                  <span class="label">Block Height:</span>
+                  <span class="value" id="block-height">15,782,392</span>
+                </div>
+                <div class="verification-actions">
+                  <a href="#" class="button outline-button sm-button" id="view-on-etherscan">
+                    <i class="icon-external-link"></i> View on Etherscan
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="navigation-panel">
+            <a href="/pages/dashboard.html" class="button outline-button">
+              <i class="icon-arrow-left"></i> Back to Dashboard
+            </a>
+          </div>
+        </div>
+        
+        <!-- Results Content -->
+        <div class="results-content">
+          <div class="results-header">
+            <h1>Voting Results</h1>
+            <div class="results-actions">
+              <div class="refresh-controls">
+                <span class="refresh-timestamp" id="last-updated">Last updated: 08-Apr-2025, 17:32:41</span>
+                <button class="button text-button" id="refresh-results">
+                  <i class="icon-refresh"></i> Refresh
+                </button>
+              </div>
+              <div class="export-controls">
+                <button class="button outline-button">
+                  <i class="icon-download"></i> Export Results
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Vote Breakdown Card -->
+          <div class="results-card">
+            <div class="card-header">
+              <h2>Vote Distribution</h2>
+              <p>Current breakdown of votes for each option</p>
+            </div>
+            <div class="card-body">
+              <div class="vote-visualization">
+                <div class="chart-container">
+                  <canvas id="vote-distribution-chart"></canvas>
+                </div>
+                <div class="vote-stats">
+                  <div class="vote-option">
+                    <div class="option-indicator">A</div>
+                    <div class="option-details">
+                      <div class="option-name-votes">
+                        <h3>Approve Renovation</h3>
+                        <span class="vote-count" id="option-a-count">146 votes</span>
+                      </div>
+                      <div class="progress-bar">
+                        <div class="progress" style="width: 59%;" id="option-a-progress"></div>
+                      </div>
+                      <div class="percentage">59%</div>
+                    </div>
+                  </div>
+                  
+                  <div class="vote-option">
+                    <div class="option-indicator">B</div>
+                    <div class="option-details">
+                      <div class="option-name-votes">
+                        <h3>Approve Partial Renovation</h3>
+                        <span class="vote-count" id="option-b-count">75 votes</span>
+                      </div>
+                      <div class="progress-bar">
+                        <div class="progress" style="width: 30%;" id="option-b-progress"></div>
+                      </div>
+                      <div class="percentage">30%</div>
+                    </div>
+                  </div>
+                  
+                  <div class="vote-option">
+                    <div class="option-indicator">C</div>
+                    <div class="option-details">
+                      <div class="option-name-votes">
+                        <h3>Reject Renovation</h3>
+                        <span class="vote-count" id="option-c-count">26 votes</span>
+                      </div>
+                      <div class="progress-bar">
+                        <div class="progress" style="width: 11%;" id="option-c-progress"></div>
+                      </div>
+                      <div class="percentage">11%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Vote Trends Card -->
+          <div class="results-card">
+            <div class="card-header">
+              <h2>Voting Trends</h2>
+              <p>How voting patterns have evolved over time</p>
+            </div>
+            <div class="card-body">
+              <div class="trends-visualization">
+                <canvas id="vote-trends-chart"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <!-- AI Analysis Card -->
+          <div class="results-card">
+            <div class="card-header">
+              <h2>AI Analysis of Justifications</h2>
+              <p>Insights generated from voter justifications</p>
+            </div>
+            <div class="card-body">
+              <div class="analysis-tabs">
+                <div class="tab-navigation">
+                  <button class="tab-button active" data-tab="reasoning-patterns">Reasoning Patterns</button>
+                  <button class="tab-button" data-tab="key-themes">Key Themes</button>
+                  <button class="tab-button" data-tab="cognitive-biases">Cognitive Biases</button>
+                </div>
+                
+                <div class="tab-content">
+                  <!-- Reasoning Patterns Tab -->
+                  <div class="tab-pane active" id="reasoning-patterns-tab">
+                    <div class="reasoning-analysis">
+                      <div class="analysis-chart-container">
+                        <canvas id="reasoning-patterns-chart"></canvas>
+                      </div>
+                      <div class="analysis-summary">
+                        <h3>Reasoning Analysis</h3>
+                        <p>The majority of voters (65%) justified their decisions using consequentialist reasoning, focusing on the outcomes and benefits of the renovation project. Deontological reasoning was present in 20% of justifications, with voters referencing duties and obligations to the community. Rights-based arguments accounted for 15% of justifications, particularly when discussing accessibility concerns.</p>
+                        
+                        <div class="key-finding">
+                          <i class="icon-lightbulb"></i>
+                          <div>
+                            <h4>Key Finding</h4>
+                            <p>Voters who selected Option A (full renovation) were significantly more likely to use consequentialist reasoning, focusing on long-term benefits and return on investment.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Key Themes Tab -->
+                  <div class="tab-pane" id="key-themes-tab" style="display: none;">
+                    <div class="themes-analysis">
+                      <div class="themes-chart-container">
+                        <canvas id="key-themes-chart"></canvas>
+                      </div>
+                      <div class="themes-list">
+                        <h3>Prominent Themes</h3>
+                        <div class="theme-item">
+                          <div class="theme-header">
+                            <h4>Community Benefits (37%)</h4>
+                            <span class="theme-score">Score: 8.7/10</span>
+                          </div>
+                          <p>Voters frequently mentioned the broader community benefits of the renovation, including improved accessibility, more space for community events, and better facilities for diverse age groups.</p>
+                          <p class="theme-quote">"The expanded hall would benefit everyone in the community from children to seniors, providing space for diverse activities and strengthening our sense of community."</p>
+                        </div>
+                        
+                        <div class="theme-item">
+                          <div class="theme-header">
+                            <h4>Financial Concerns (29%)</h4>
+                            <span class="theme-score">Score: 7.5/10</span>
+                          </div>
+                          <p>Cost considerations were prominent in justifications, with voters expressing concern about budget allocation, potential for cost overruns, and financial prioritization.</p>
+                          <p class="theme-quote">"While I support improving community facilities, we should consider a phased approach to manage costs and prevent budget overruns that could impact other essential services."</p>
+                        </div>
+                        
+                        <div class="theme-item">
+                          <div class="theme-header">
+                            <h4>Technology Infrastructure (21%)</h4>
+                            <span class="theme-score">Score: 8.2/10</span>
+                          </div>
+                          <p>Many voters emphasized the importance of updating technological infrastructure, citing digital inclusion, educational opportunities, and modernization needs.</p>
+                          <p class="theme-quote">"Updating our technology infrastructure is critical for bridging the digital divide and ensuring all community members have access to modern digital resources."</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Cognitive Biases Tab -->
+                  <div class="tab-pane" id="cognitive-biases-tab" style="display: none;">
+                    <div class="biases-analysis">
+                      <div class="biases-visualization">
+                        <canvas id="cognitive-biases-chart"></canvas>
+                      </div>
+                      <div class="biases-explanation">
+                        <h3>Detected Cognitive Biases</h3>
+                        <p>Our AI analysis identified several cognitive biases in voter justifications. Understanding these biases can help improve future deliberative processes.</p>
+                        
+                        <div class="bias-item">
+                          <div class="bias-header">
+                            <h4>Status Quo Bias (32%)</h4>
+                            <span class="bias-indicator high">High</span>
+                          </div>
+                          <p>A preference for the current state of affairs, particularly evident in Option C voters who preferred to avoid any changes to the community center.</p>
+                          <div class="bias-example">
+                            <span class="example-label">Example:</span>
+                            <p>"The current community center has served us well for years; we don't need to fix what isn't broken."</p>
+                          </div>
+                        </div>
+                        
+                        <div class="bias-item">
+                          <div class="bias-header">
+                            <h4>Confirmation Bias (27%)</h4>
+                            <span class="bias-indicator medium">Medium</span>
+                          </div>
+                          <p>The tendency to interpret new evidence as confirmation of existing beliefs or theories. Voters often selected information that supported their preferred option.</p>
+                          <div class="bias-example">
+                            <span class="example-label">Example:</span>
+                            <p>"I've always believed we need more community space, and the increasing attendance at community events clearly proves this point."</p>
+                          </div>
+                        </div>
+                        
+                        <div class="bias-item">
+                          <div class="bias-header">
+                            <h4>Hyperbolic Discounting (18%)</h4>
+                            <span class="bias-indicator medium">Medium</span>
+                          </div>
+                          <p>The tendency to prefer immediate benefits over future benefits, evident in concerns about short-term costs versus long-term community value.</p>
+                          <div class="bias-example">
+                            <span class="example-label">Example:</span>
+                            <p>"The immediate cost is too high, even if the renovation might provide benefits over the next decade."</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Deliberative Democracy Insights -->
+          <div class="results-card">
+            <div class="card-header">
+              <h2>Multi-Agent Deliberative Democracy</h2>
+              <p>AI-powered deliberation between different reasoning perspectives</p>
+            </div>
+            <div class="card-body">
+              <div class="madd-section">
+                <div class="madd-intro">
+                  <i class="icon-ai"></i>
+                  <div>
+                    <h3>What is MADD?</h3>
+                    <p>Our Multi-Agent Deliberative Democracy (MADD) system simulates a deliberative process between AI agents representing different reasoning styles and perspectives. This helps uncover insights that might be missed in traditional voting.</p>
+                  </div>
+                </div>
+                
+                <div class="madd-agents">
+                  <h3>Deliberative Agents</h3>
+                  <div class="agent-profiles">
+                    <div class="agent-card">
+                      <div class="agent-icon consequentialist">
+                        <i class="icon-agent"></i>
+                      </div>
+                      <div class="agent-details">
+                        <h4>Consequentialist Agent</h4>
+                        <p>Focuses on outcomes and results, evaluating options based on their effects</p>
+                      </div>
+                    </div>
+                    
+                    <div class="agent-card">
+                      <div class="agent-icon deontological">
+                        <i class="icon-agent"></i>
+                      </div>
+                      <div class="agent-details">
+                        <h4>Deontological Agent</h4>
+                        <p>Focuses on principles, duties, and rules rather than outcomes</p>
+                      </div>
+                    </div>
+                    
+                    <div class="agent-card">
+                      <div class="agent-icon rights-based">
+                        <i class="icon-agent"></i>
+                      </div>
+                      <div class="agent-details">
+                        <h4>Rights-Based Agent</h4>
+                        <p>Prioritizes individual rights and justice considerations</p>
+                      </div>
+                    </div>
+                    
+                    <div class="agent-card">
+                      <div class="agent-icon virtue-ethics">
+                        <i class="icon-agent"></i>
+                      </div>
+                      <div class="agent-details">
+                        <h4>Virtue Ethics Agent</h4>
+                        <p>Emphasizes character development and community values</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="deliberation-results">
+                  <h3>Deliberation Outcome</h3>
+                  <div class="consensus-map">
+                    <div class="consensus-visualization">
+                      <canvas id="consensus-map-chart"></canvas>
+                    </div>
+                    <div class="consensus-explanation">
+                      <div class="consensus-header">
+                        <h4>Consensus Recommendation</h4>
+                        <span class="consensus-badge">Moderate Consensus</span>
+                      </div>
+                      <p>After deliberation, the agents reached a moderate consensus favoring Option A (Full Renovation) with the following key insights:</p>
+                      <ul class="consensus-points">
+                        <li>Long-term community benefits outweigh short-term financial concerns</li>
+                        <li>Technology infrastructure updates are essential for equal access and education</li>
+                        <li>The children's play area addresses an underserved community need</li>
+                        <li>A phased implementation approach could address some financial concerns</li>
+                      </ul>
+                      
+                      <div class="deliberation-excerpt">
+                        <h4>Deliberation Highlights</h4>
+                        <div class="deliberation-thread">
+                          <div class="deliberation-message">
+                            <div class="message-agent consequentialist">
+                              <i class="icon-agent"></i>
+                            </div>
+                            <div class="message-content">
+                              <span class="agent-name">Consequentialist Agent:</span>
+                              <p>The full renovation provides the highest long-term utility for the community. Cost-benefit analysis shows a positive return on investment over 10 years through increased usage and new programs.</p>
+                            </div>
+                          </div>
+                          
+                          <div class="deliberation-message">
+                            <div class="message-agent rights-based">
+                              <i class="icon-agent"></i>
+                            </div>
+                            <div class="message-content">
+                              <span class="agent-name">Rights-Based Agent:</span>
+                              <p>We must consider access equality. The current center has accessibility limitations that exclude some community members. Renovation addresses these fundamental rights to access.</p>
+                            </div>
+                          </div>
+                          
+                          <div class="deliberation-message">
+                            <div class="message-agent deontological">
+                              <i class="icon-agent"></i>
+                            </div>
+                            <div class="message-content">
+                              <span class="agent-name">Deontological Agent:</span>
+                              <p>There's a duty to fiscal responsibility. We should consider whether the full renovation is necessary or if the partial option fulfills our obligations to the community while being more financially prudent.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <button class="button text-button full-width-button">
+                          View Complete Deliberation
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Your Vote Card -->
+          <div class="results-card">
+            <div class="card-header">
+              <h2>Your Vote</h2>
+              <p>How you participated in this election</p>
+            </div>
+            <div class="card-body">
+              <div class="your-vote-section" id="your-vote-section">
+                <div class="vote-verification-message">
+                  <i class="icon-info-circle"></i>
+                  <p>Please connect your wallet to verify your vote in this election.</p>
+                </div>
+                <button class="button primary-button" id="verify-vote-btn">
+                  <i class="icon-wallet"></i> Connect Wallet to Verify
+                </button>
+              </div>
+              
+              <div class="your-vote-details" id="your-vote-details" style="display: none;">
+                <div class="vote-status">
+                  <div class="vote-status-icon verified">
+                    <i class="icon-check-circle"></i>
+                  </div>
+                  <div class="vote-status-details">
+                    <h3>Vote Verified</h3>
+                    <p class="status-message">Your vote was successfully verified on the blockchain.</p>
+                  </div>
+                </div>
+                
+                <div class="vote-information">
+                  <div class="vote-info-item">
+                    <span class="info-label">Your Choice:</span>
+                    <span class="info-value">Option A: Approve Renovation</span>
+                  </div>
+                  <div class="vote-info-item">
+                    <span class="info-label">Vote Type:</span>
+                    <span class="info-value">
+                      <i class="icon-lock"></i> Private Vote (ZKP)
+                    </span>
+                  </div>
+                  <div class="vote-info-item">
+                    <span class="info-label">Timestamp:</span>
+                    <span class="info-value">08-Apr-2025, 17:15:22</span>
+                  </div>
+                  <div class="vote-info-item">
+                    <span class="info-label">Transaction:</span>
+                    <span class="info-value code-text">0x8f72...e159</span>
+                  </div>
+                </div>
+                
+                <div class="vote-justification">
+                  <h4>Your Justification</h4>
+                  <div class="justification-text">
+                    <p>I support the full renovation because our community center needs modernization to serve all residents effectively. The technology upgrades will help bridge the digital divide, while the expanded space will allow for more diverse community activities. The children's play area addresses a significant gap in our current facilities.</p>
+                  </div>
+                  
+                  <div class="justification-analysis">
+                    <h4>AI Analysis of Your Reasoning</h4>
+                    <div class="analysis-item">
+                      <div class="analysis-label">Primary Reasoning:</div>
+                      <div class="analysis-value">Consequentialist (outcome-focused)</div>
+                    </div>
+                    <div class="analysis-item">
+                      <div class="analysis-label">Key Themes:</div>
+                      <div class="analysis-value">
+                        <span class="theme-tag">Technology Access</span>
+                        <span class="theme-tag">Community Inclusion</span>
+                        <span class="theme-tag">Modernization</span>
+                      </div>
+                    </div>
+                    <div class="analysis-item">
+                      <div class="analysis-label">Cognitive Biases:</div>
+                      <div class="analysis-value">None detected</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Footer will be loaded here -->
+  <div id="footer-container"></div>
+  
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js"></script>
+  <script src="/production-config.js"></script>
+  
+  <!-- Component Loader Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if user is authenticated
+      const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+      if (!isAuthenticated) {
+        // Redirect to login if not authenticated
+        window.location.href = '/pages/login.html';
+        return;
+      }
+      
+      // Load header component
+      fetch('/components/header.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('header-container').innerHTML = html;
+          
+          // Execute any scripts in the header
+          const headerScripts = document.getElementById('header-container').querySelectorAll('script');
+          headerScripts.forEach(script => {
+            const newScript = document.createElement('script');
+            if (script.src) {
+              newScript.src = script.src;
+            } else {
+              newScript.textContent = script.textContent;
+            }
+            document.head.appendChild(newScript);
+          });
+        })
+        .catch(error => console.error('Error loading header:', error));
+      
+      // Load footer component
+      fetch('/components/footer.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('footer-container').innerHTML = html;
+          
+          // Execute any scripts in the footer
+          const footerScripts = document.getElementById('footer-container').querySelectorAll('script');
+          footerScripts.forEach(script => {
+            const newScript = document.createElement('script');
+            if (script.src) {
+              newScript.src = script.src;
+            } else {
+              newScript.textContent = script.textContent;
+            }
+            document.head.appendChild(newScript);
+          });
+        })
+        .catch(error => console.error('Error loading footer:', error));
+      
+      // Initialize tabs
+      const tabButtons = document.querySelectorAll('.tab-button');
+      tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Remove active class from all buttons and hide all panes
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(pane => pane.style.display = 'none');
+          
+          // Add active class to clicked button and show corresponding pane
+          this.classList.add('active');
+          document.getElementById(`${this.dataset.tab}-tab`).style.display = 'block';
+        });
+      });
+      
+      // Verify vote button
+      document.getElementById('verify-vote-btn').addEventListener('click', async function() {
+        try {
+          // Simulate wallet connection and vote verification
+          this.innerHTML = '<div class="spinner"></div> Verifying...';
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          document.getElementById('your-vote-section').style.display = 'none';
+          document.getElementById('your-vote-details').style.display = 'block';
+        } catch (error) {
+          console.error("Error verifying vote:", error);
+          const voteSection = document.getElementById('your-vote-section');
+          voteSection.innerHTML = `
+            <div class="vote-verification-message error">
+              <i class="icon-error"></i>
+              <p>Failed to verify your vote: ${error.message}</p>
+            </div>
+            <button class="button primary-button" id="verify-vote-btn">
+              <i class="icon-wallet"></i> Try Again
+            </button>
+          `;
+        }
+      });
+      
+      // Initialize charts
+      function initializeCharts() {
+        // Vote Distribution Chart
+        const voteDistributionCtx = document.getElementById('vote-distribution-chart').getContext('2d');
+        const voteDistributionChart = new Chart(voteDistributionCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Approve Renovation', 'Approve Partial Renovation', 'Reject Renovation'],
+            datasets: [{
+              data: [59, 30, 11],
+              backgroundColor: [
+                'rgba(76, 175, 80, 0.8)',
+                'rgba(33, 150, 243, 0.8)',
+                'rgba(244, 67, 54, 0.8)'
+              ],
+              borderColor: [
+                'rgba(76, 175, 80, 1)',
+                'rgba(33, 150, 243, 1)',
+                'rgba(244, 67, 54, 1)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  padding: 20,
+                  font: {
+                    size: 12
+                  }
+                }
+              }
+            },
+            cutout: '65%'
+          }
+        });
+        
+        // Vote Trends Chart
+        const voteTrendsCtx = document.getElementById('vote-trends-chart').getContext('2d');
+        const voteTrendsChart = new Chart(voteTrendsCtx, {
+          type: 'line',
+          data: {
+            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+            datasets: [
+              {
+                label: 'Approve Renovation',
+                data: [10, 25, 45, 70, 95, 120, 146],
+                borderColor: 'rgba(76, 175, 80, 1)',
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                tension: 0.3,
+                fill: true
+              },
+              {
+                label: 'Approve Partial Renovation',
+                data: [5, 15, 28, 40, 52, 65, 75],
+                borderColor: 'rgba(33, 150, 243, 1)',
+                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                tension: 0.3,
+                fill: true
+              },
+              {
+                label: 'Reject Renovation',
+                data: [3, 7, 12, 16, 19, 23, 26],
+                borderColor: 'rgba(244, 67, 54, 1)',
+                backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                tension: 0.3,
+                fill: true
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Number of Votes'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Voting Period'
+                }
+              }
+            }
+          }
+        });
+        
+        // Reasoning Patterns Chart
+        const reasoningCtx = document.getElementById('reasoning-patterns-chart').getContext('2d');
+        const reasoningChart = new Chart(reasoningCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Consequentialist', 'Deontological', 'Rights-based'],
+            datasets: [{
+              label: 'Reasoning Patterns',
+              data: [65, 20, 15],
+              backgroundColor: [
+                'rgba(63, 81, 181, 0.8)',
+                'rgba(156, 39, 176, 0.8)',
+                'rgba(255, 152, 0, 0.8)'
+              ],
+              borderColor: [
+                'rgba(63, 81, 181, 1)',
+                'rgba(156, 39, 176, 1)',
+                'rgba(255, 152, 0, 1)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Percentage of Justifications'
+                },
+                ticks: {
+                  callback: function(value) {
+                    return value + '%';
+                  }
+                }
+              }
+            }
+          }
+        });
+        
+        // Key Themes Chart
+        const themesCtx = document.getElementById('key-themes-chart').getContext('2d');
+        const themesChart = new Chart(themesCtx, {
+          type: 'polarArea',
+          data: {
+            labels: ['Community Benefits', 'Financial Concerns', 'Technology Infrastructure', 'Other'],
+            datasets: [{
+              data: [37, 29, 21, 13],
+              backgroundColor: [
+                'rgba(76, 175, 80, 0.7)',
+                'rgba(244, 67, 54, 0.7)',
+                'rgba(33, 150, 243, 0.7)',
+                'rgba(189, 189, 189, 0.7)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }
+        });
+        
+        // Cognitive Biases Chart
+        const biasesCtx = document.getElementById('cognitive-biases-chart').getContext('2d');
+        const biasesChart = new Chart(biasesCtx, {
+          type: 'radar',
+          data: {
+            labels: ['Status Quo Bias', 'Confirmation Bias', 'Hyperbolic Discounting', 'Availability Bias', 'Bandwagon Effect'],
+            datasets: [{
+              label: 'Bias Frequency',
+              data: [32, 27, 18, 14, 9],
+              backgroundColor: 'rgba(156, 39, 176, 0.2)',
+              borderColor: 'rgba(156, 39, 176, 1)',
+              pointBackgroundColor: 'rgba(156, 39, 176, 1)',
+              pointBorderColor: '#fff',
+              pointHoverBackgroundColor: '#fff',
+              pointHoverBorderColor: 'rgba(156, 39, 176, 1)'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              r: {
+                angleLines: {
+                  display: true
+                },
+                suggestedMin: 0,
+                suggestedMax: 40,
+                ticks: {
+                  callback: function(value) {
+                    return value + '%';
+                  }
+                }
+              }
+            }
+          }
+        });
+        
+        // Consensus Map Chart
+        const consensusCtx = document.getElementById('consensus-map-chart').getContext('2d');
+        const consensusChart = new Chart(consensusCtx, {
+          type: 'scatter',
+          data: {
+            datasets: [
+              {
+                label: 'Consequentialist Agent',
+                data: [{x: 0.8, y: 0.7}],
+                backgroundColor: 'rgba(76, 175, 80, 1)',
+                pointRadius: 10,
+                pointHoverRadius: 12
+              },
+              {
+                label: 'Deontological Agent',
+                data: [{x: 0.3, y: 0.6}],
+                backgroundColor: 'rgba(33, 150, 243, 1)',
+                pointRadius: 10,
+                pointHoverRadius: 12
+              },
+              {
+                label: 'Rights-Based Agent',
+                data: [{x: 0.7, y: 0.4}],
+                backgroundColor: 'rgba(255, 152, 0, 1)',
+                pointRadius: 10,
+                pointHoverRadius: 12
+              },
+              {
+                label: 'Virtue Ethics Agent',
+                data: [{x: 0.6, y: 0.7}],
+                backgroundColor: 'rgba(156, 39, 176, 1)',
+                pointRadius: 10,
+                pointHoverRadius: 12
+              },
+              {
+                label: 'Consensus',
+                data: [{x: 0.6, y: 0.6}],
+                backgroundColor: 'rgba(244, 67, 54, 1)',
+                pointRadius: 15,
+                pointHoverRadius: 17,
+                pointStyle: 'star'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return context.dataset.label;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                min: 0,
+                max: 1,
+                title: {
+                  display: true,
+                  text: 'Support for Full Renovation'
+                },
+                ticks: {
+                  callback: function(value) {
+                    if (value === 0) return 'Oppose';
+                    if (value === 1) return 'Support';
+                    return '';
+                  }
+                }
+              },
+              y: {
+                min: 0,
+                max: 1,
+                title: {
+                  display: true,
+                  text: 'Importance of Community Investment'
+                },
+                ticks: {
+                  callback: function(value) {
+                    if (value === 0) return 'Low';
+                    if (value === 1) return 'High';
+                    return '';
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      // Initialize charts when page loads
+      initializeCharts();
+      
+      // Refresh button functionality
+      document.getElementById('refresh-results').addEventListener('click', function() {
+        const timestamp = document.getElementById('last-updated');
+        const now = new Date();
+        timestamp.textContent = `Last updated: ${now.toLocaleDateString()}, ${now.toLocaleTimeString()}`;
+        
+        // Simulate data refresh
+        this.innerHTML = '<i class="icon-spin"></i> Refreshing...';
+        setTimeout(() => {
+          this.innerHTML = '<i class="icon-refresh"></i> Refresh';
+          
+          // Re-initialize charts (in a real app, this would fetch new data)
+          initializeCharts();
+        }, 1500);
+      });
+    });
+  </script>
+  
+  <!-- Additional Styles -->
+  <style>
+    /* Results specific styles */
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .results-actions {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .refresh-controls, .export-controls {
+      display: flex;
+      align-items: center;
+    }
+    
+    .refresh-timestamp {
+      margin-right: 1rem;
+      color: var(--gray-600);
+      font-size: 0.875rem;
+    }
+    
+    /* Vote visualization styles */
+    .vote-visualization {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+      margin-bottom: 1rem;
+    }
+    
+    @media (min-width: 992px) {
+      .vote-visualization {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+    }
+    
+    .chart-container {
+      height: 300px;
+      position: relative;
+    }
+    
+    .vote-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .vote-option {
+      display: flex;
+      align-items: center;
+    }
+    
+    .option-indicator {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    
+    .vote-option:nth-child(1) .option-indicator {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: rgba(76, 175, 80, 1);
+    }
+    
+    .vote-option:nth-child(2) .option-indicator {
+      background-color: rgba(33, 150, 243, 0.2);
+      color: rgba(33, 150, 243, 1);
+    }
+    
+    .vote-option:nth-child(3) .option-indicator {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: rgba(244, 67, 54, 1);
+    }
+    
+    .option-details {
+      flex: 1;
+    }
+    
+    .option-name-votes {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .option-name-votes h3 {
+      margin-bottom: 0;
+      font-size: 1rem;
+    }
+    
+    .vote-count {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background-color: var(--gray-200);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.25rem;
+    }
+    
+    .progress {
+      height: 100%;
+      border-radius: 4px;
+    }
+    
+    .vote-option:nth-child(1) .progress {
+      background-color: rgba(76, 175, 80, 1);
+    }
+    
+    .vote-option:nth-child(2) .progress {
+      background-color: rgba(33, 150, 243, 1);
+    }
+    
+    .vote-option:nth-child(3) .progress {
+      background-color: rgba(244, 67, 54, 1);
+    }
+    
+    .percentage {
+      text-align: right;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    
+    /* Trends visualization styles */
+    .trends-visualization {
+      height: 350px;
+      position: relative;
+    }
+    
+    /* Analysis tab styles */
+    .analysis-tabs {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .tab-navigation {
+      display: flex;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--gray-300);
+    }
+    
+    .tab-button {
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .tab-button.active {
+      border-bottom-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    .tab-button:hover:not(.active) {
+      background-color: var(--gray-100);
+    }
+    
+    /* Reasoning analysis styles */
+    .reasoning-analysis {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+    }
+    
+    @media (min-width: 992px) {
+      .reasoning-analysis {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+    }
+    
+    .analysis-chart-container {
+      height: 300px;
+      position: relative;
+    }
+    
+    .key-finding {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background-color: rgba(63, 81, 181, 0.1);
+      border-radius: var(--border-radius);
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .key-finding i {
+      color: var(--primary);
+      margin-right: 1rem;
+      font-size: 1.25rem;
+    }
+    
+    .key-finding h4 {
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Themes analysis styles */
+    .themes-analysis {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+    }
+    
+    @media (min-width: 992px) {
+      .themes-analysis {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+    }
+    
+    .themes-chart-container {
+      height: 300px;
+      position: relative;
+    }
+    
+    .theme-item {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .theme-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    .theme-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .theme-header h4 {
+      margin-bottom: 0;
+    }
+    
+    .theme-score {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .theme-quote {
+      margin-top: 0.75rem;
+      font-style: italic;
+      color: var(--gray-700);
+      border-left: 3px solid var(--gray-300);
+      padding-left: 1rem;
+    }
+    
+    /* Biases analysis styles */
+    .biases-analysis {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+    }
+    
+    @media (min-width: 992px) {
+      .biases-analysis {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+    }
+    
+    .biases-visualization {
+      height: 300px;
+      position: relative;
+    }
+    
+    .bias-item {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .bias-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    .bias-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .bias-header h4 {
+      margin-bottom: 0;
+    }
+    
+    .bias-indicator {
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--border-radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .bias-indicator.high {
+      background-color: rgba(244, 67, 54, 0.1);
+      color: var(--error);
+    }
+    
+    .bias-indicator.medium {
+      background-color: rgba(255, 152, 0, 0.1);
+      color: var(--warning);
+    }
+    
+    .bias-indicator.low {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--success);
+    }
+    
+    .bias-example {
+      margin-top: 0.75rem;
+      background-color: var(--gray-100);
+      padding: 0.75rem;
+      border-radius: var(--border-radius);
+    }
+    
+    .example-label {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    
+    .bias-example p {
+      display: inline;
+      font-style: italic;
+    }
+    
+    /* MADD section styles */
+    .madd-intro {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background-color: var(--gray-100);
+      border-radius: var(--border-radius);
+    }
+    
+    .madd-intro i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-right: 1.5rem;
+    }
+    
+    .madd-agents {
+      margin-bottom: 2rem;
+    }
+    
+    .agent-profiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    
+    .agent-card {
+      padding: 1rem;
+      background-color: var(--gray-100);
+      border-radius: var(--border-radius);
+      display: flex;
+      align-items: center;
+    }
+    
+    .agent-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    
+    .agent-icon.consequentialist {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: rgba(76, 175, 80, 1);
+    }
+    
+    .agent-icon.deontological {
+      background-color: rgba(33, 150, 243, 0.2);
+      color: rgba(33, 150, 243, 1);
+    }
+    
+    .agent-icon.rights-based {
+      background-color: rgba(255, 152, 0, 0.2);
+      color: rgba(255, 152, 0, 1);
+    }
+    
+    .agent-icon.virtue-ethics {
+      background-color: rgba(156, 39, 176, 0.2);
+      color: rgba(156, 39, 176, 1);
+    }
+    
+    .agent-details h4 {
+      margin-bottom: 0.25rem;
+      font-size: 0.875rem;
+    }
+    
+    .agent-details p {
+      font-size: 0.75rem;
+      margin-bottom: 0;
+    }
+    
+    /* Consensus map styles */
+    .consensus-map {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+    }
+    
+    @media (min-width: 992px) {
+      .consensus-map {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+    }
+    
+    .consensus-visualization {
+      height: 350px;
+      position: relative;
+    }
+    
+    .consensus-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .consensus-header h4 {
+      margin-bottom: 0;
+    }
+    
+    .consensus-badge {
+      padding: 0.25rem 0.75rem;
+      background-color: rgba(33, 150, 243, 0.1);
+      color: var(--info);
+      border-radius: var(--border-radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .consensus-points {
+      margin-bottom: 1.5rem;
+    }
+    
+    .consensus-points li {
+      margin-bottom: 0.5rem;
+    }
+    
+    .deliberation-excerpt {
+      background-color: var(--gray-100);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+    }
+    
+    .deliberation-thread {
+      margin-bottom: 1.5rem;
+    }
+    
+    .deliberation-message {
+      display: flex;
+      margin-bottom: 1.25rem;
+    }
+    
+    .deliberation-message:last-child {
+      margin-bottom: 0;
+    }
+    
+    .message-agent {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    
+    .message-agent.consequentialist {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: rgba(76, 175, 80, 1);
+    }
+    
+    .message-agent.deontological {
+      background-color: rgba(33, 150, 243, 0.2);
+      color: rgba(33, 150, 243, 1);
+    }
+    
+    .message-agent.rights-based {
+      background-color: rgba(255, 152, 0, 0.2);
+      color: rgba(255, 152, 0, 1);
+    }
+    
+    .message-agent.virtue-ethics {
+      background-color: rgba(156, 39, 176, 0.2);
+      color: rgba(156, 39, 176, 1);
+    }
+    
+    .agent-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+    
+    .full-width-button {
+      width: 100%;
+      text-align: center;
+    }
+    
+    /* Your vote section styles */
+    .your-vote-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    
+    .vote-verification-message {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .vote-verification-message i {
+      margin-right: 0.75rem;
+      font-size: 1.25rem;
+      color: var(--info);
+    }
+    
+    .vote-verification-message.error i {
+      color: var(--error);
+    }
+    
+    .your-vote-details {
+      padding: 1.5rem;
+    }
+    
+    .vote-status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .vote-status-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1.5rem;
+      flex-shrink: 0;
+      font-size: 1.75rem;
+    }
+    
+    .vote-status-icon.verified {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: var(--success);
+    }
+    
+    .vote-status-icon.pending {
+      background-color: rgba(255, 152, 0, 0.2);
+      color: var(--warning);
+    }
+    
+    .vote-status-details h3 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .status-message {
+      color: var(--gray-700);
+    }
+    
+    .vote-information {
+      background-color: var(--gray-100);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .vote-info-item {
+      display: flex;
+      margin-bottom: 1rem;
+    }
+    
+    .vote-info-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .info-label {
+      font-weight: 600;
+      width: 120px;
+      flex-shrink: 0;
+    }
+    
+    .code-text {
+      font-family: var(--font-mono);
+    }
+    
+    .vote-justification h4 {
+      margin-bottom: 1rem;
+    }
+    
+    .justification-text {
+      background-color: var(--gray-100);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .justification-analysis h4 {
+      margin-bottom: 1rem;
+    }
+    
+    .analysis-item {
+      display: flex;
+      margin-bottom: 1rem;
+    }
+    
+    .analysis-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .analysis-label {
+      font-weight: 600;
+      width: 150px;
+      flex-shrink: 0;
+    }
+    
+    .theme-tag {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--success);
+      border-radius: var(--border-radius-sm);
+      font-size: 0.75rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Verification details styles */
+    .election-verification {
+      margin-top: 1.5rem;
+    }
+    
+    .verification-details {
+      background-color: rgba(33, 150, 243, 0.05);
+      border-radius: var(--border-radius);
+      padding: 1rem;
+      margin-top: 0.75rem;
+    }
+    
+    .verification-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    
+    .verification-actions {
+      margin-top: 1rem;
+      text-align: center;
+    }
+    
+    .sm-button {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.875rem;
+    }
+    
+    /* Icon animations */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .icon-spin {
+      display: inline-block;
+      animation: spin 1s linear infinite;
+    }
+  </style>
+</body>
+</html>
