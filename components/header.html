@@ -1,0 +1,164 @@
+<!-- Header Component with Navigation -->
+<header class="site-header">
+  <div class="container header-container">
+    <div class="logo-container">
+      <a href="/" class="logo">
+        <img src="/assets/images/logo.svg" alt="SecureVote" onerror="this.src='/assets/images/logo-fallback.png'; this.onerror=null;">
+        <span class="logo-text">SecureVote</span>
+      </a>
+    </div>
+    
+    <button class="mobile-menu-toggle" aria-label="Toggle menu">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+    
+    <nav class="main-navigation">
+      <ul class="nav-menu">
+        <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+        <li class="nav-item"><a href="/pages/voting.html" class="nav-link">Vote</a></li>
+        <li class="nav-item"><a href="/pages/results.html" class="nav-link">Results</a></li>
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link dropdown-toggle">Research</a>
+          <ul class="dropdown-menu">
+            <li><a href="/pages/analysis.html">Vote Analysis</a></li>
+            <li><a href="/pages/deliberative.html">Deliberative Democracy</a></li>
+            <li><a href="/pages/zkp.html">Zero-Knowledge Proofs</a></li>
+          </ul>
+        </li>
+        <li class="nav-item"><a href="/pages/documentation.html" class="nav-link">Documentation</a></li>
+      </ul>
+      
+      <div class="auth-nav">
+        <button id="user-profile-btn" class="user-profile-button hidden">
+          <div class="user-avatar">
+            <i class="profile-icon"></i>
+          </div>
+          <span class="username">User</span>
+        </button>
+        <a href="/pages/login.html" id="login-btn" class="button primary-button">Log In</a>
+        <div class="user-dropdown hidden">
+          <ul>
+            <li><a href="/pages/dashboard.html"><i class="dashboard-icon"></i> Dashboard</a></li>
+            <li><a href="/pages/profile.html"><i class="profile-icon"></i> Profile</a></li>
+            <li><a href="/pages/settings.html"><i class="settings-icon"></i> Settings</a></li>
+            <li class="divider"></li>
+            <li><a href="#" id="logout-link"><i class="logout-icon"></i> Log Out</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu toggle
+    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    const mainNavigation = document.querySelector('.main-navigation');
+    
+    if (mobileMenuToggle) {
+      mobileMenuToggle.addEventListener('click', function() {
+        this.classList.toggle('active');
+        mainNavigation.classList.toggle('active');
+      });
+    }
+    
+    // Dropdown menus
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    
+    dropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        this.parentNode.classList.toggle('active');
+      });
+    });
+    
+    // User profile dropdown
+    const userProfileBtn = document.getElementById('user-profile-btn');
+    const userDropdown = document.querySelector('.user-dropdown');
+    
+    if (userProfileBtn) {
+      userProfileBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        userDropdown.classList.toggle('visible');
+      });
+    }
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+      // Close nav dropdowns
+      document.querySelectorAll('.dropdown.active').forEach(dropdown => {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove('active');
+        }
+      });
+      
+      // Close user dropdown
+      if (userDropdown && userDropdown.classList.contains('visible') && 
+          userProfileBtn && !userProfileBtn.contains(e.target) && 
+          !userDropdown.contains(e.target)) {
+        userDropdown.classList.remove('visible');
+      }
+    });
+    
+    // Check if user is logged in (using sessionStorage for demo)
+    function updateAuthUI() {
+      const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+      const loginBtn = document.getElementById('login-btn');
+      const userProfileBtn = document.getElementById('user-profile-btn');
+      
+      if (isAuthenticated) {
+        // User is logged in
+        if (loginBtn) loginBtn.classList.add('hidden');
+        if (userProfileBtn) {
+          userProfileBtn.classList.remove('hidden');
+          
+          // Update username if available
+          const usernameEl = userProfileBtn.querySelector('.username');
+          const userId = sessionStorage.getItem('userId') || 'User';
+          if (usernameEl && userId) {
+            usernameEl.textContent = userId;
+          }
+        }
+      } else {
+        // User is not logged in
+        if (loginBtn) loginBtn.classList.remove('hidden');
+        if (userProfileBtn) userProfileBtn.classList.add('hidden');
+      }
+    }
+    
+    // Initial auth UI update
+    updateAuthUI();
+    
+    // Logout functionality
+    const logoutLink = document.getElementById('logout-link');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Clear authentication state
+        sessionStorage.removeItem('authenticated');
+        sessionStorage.removeItem('userId');
+        
+        // Update UI
+        updateAuthUI();
+        
+        // Close dropdown
+        userDropdown.classList.remove('visible');
+        
+        // Redirect to home page
+        window.location.href = '/';
+      });
+    }
+    
+    // Set active nav item based on current page
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.nav-link').forEach(link => {
+      if (link.getAttribute('href') === currentPath) {
+        link.parentElement.classList.add('active');
+      }
+    });
+  });
+</script>
