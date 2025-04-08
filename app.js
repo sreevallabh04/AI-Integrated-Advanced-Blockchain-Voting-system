@@ -274,6 +274,7 @@ function setupFacialAuthentication() {
                   promptWalletConnection();
                 }, 1000);
               }
+          
           // Verify credentials and send OTP (assuming this is part of your login flow)
           const credResult = await window.facialAuth.verifyCredentials(aadhar, voterId, mobile);
           if (!credResult.success) {
@@ -287,35 +288,6 @@ function setupFacialAuthentication() {
               showAuthError("OTP entry cancelled.");
               return;
           }
-/**
- * Prompt the user to connect their wallet after facial authentication
- */
-function promptWalletConnection() {
-  const walletPrompt = document.createElement('div');
-  walletPrompt.className = 'wallet-prompt notice-banner';
-  walletPrompt.innerHTML = `
-    <p><strong>Face Verified! 👤✓</strong> Now connect your Ethereum wallet to enable voting.</p>
-    <button id="promptConnectWalletBtn" class="button primary-button">Connect Wallet</button>
-  `;
-  
-  // Add to the page
-  const container = document.querySelector('.container') || document.body;
-  container.prepend(walletPrompt);
-  
-  // Add event listener
-  document.getElementById('promptConnectWalletBtn').addEventListener('click', () => {
-    connectWallet();
-    walletPrompt.remove();
-  });
-  
-  // Auto-remove after 30 seconds
-  setTimeout(() => {
-    if (document.body.contains(walletPrompt)) {
-      walletPrompt.classList.add('fade-out');
-      setTimeout(() => walletPrompt.remove(), 1000);
-    }
-  }, 30000);
-}
           // Verify OTP
           const otpResult = await window.facialAuth.verifyOtp(otp);
           if (!otpResult.success) {
@@ -614,7 +586,6 @@ async function connectWallet() {
         setupDemoButtonListener('enableDemoModeButton');
     }
 }
-            isWalletConnected = false;
 // Helper to create/get status element
 function createStatusElement() {
     let statusElement = document.getElementById("connectionStatus");
@@ -626,7 +597,6 @@ function createStatusElement() {
     }
     return statusElement;
 }
-        isWalletConnected = false;
 // Helper to remove status element after a delay
 function removeStatusElement(element, delay) {
     setTimeout(() => {
@@ -710,20 +680,10 @@ function setupDemoButtonListener(buttonId) {
          });
      }
 }
-         
-         isWalletConnected = true;
-         // Update voting controls
-         updateVotingControls();
-        
-        isWalletConnected = false;
-        // Update voting controls
-        updateVotingControls();
 // Update Wallet Button and Address Display
 function updateWalletStatus(address) {
     const connectButton = document.getElementById("connectWalletButton");
     const walletAddressElement = document.getElementById("walletAddress"); // Assuming an element with this ID exists or will be created
-                isWalletConnected = false;
-                updateVotingControls();
     if (address) {
         // Wallet is connected
         if (connectButton) {
@@ -983,7 +943,39 @@ document.getElementById("voteButton").addEventListener("click", async () => {
             userFriendlyError = "Transaction rejected in wallet.";
         } else if (error.message.includes("insufficient funds")) {
             userFriendlyError = "Insufficient funds for gas fees.";
-        } else if (error.data?.message) { // Check for Hardhat/RPC error message
+        } else if (error.data?.message) {
+            userFriendlyError = error.data.message;
+        }
+        
+        // Display error message
+        votingStatus.className = "notice-banner error";
+        votingStatus.innerHTML = `<p><strong>Error casting vote:</strong> ${userFriendlyError}</p>`;
+    }
+});
+
+/**
+ * Handle demo mode vote
+ */
+async function handleDemoVote(candidateIndex, justificationText, candidateName) {
+    log.info("Handling vote in demo mode");
+    
+    // Show demo notice
+    const demoNotice = document.createElement("div");
+    demoNotice.className = "notice-banner info";
+    demoNotice.innerHTML = `
+        <p><strong>Demo Mode:</strong> Your vote will be processed without actual blockchain transactions.</p>
+    `;
+    document.getElementById("voteButton").insertAdjacentElement("afterend", demoNotice);
+    
+    // Simulate transaction delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Update success message
+    demoNotice.className = "notice-banner success";
+    demoNotice.innerHTML = `<p><strong>✅ Demo vote cast successfully!</strong></p>`;
+    
+    // Remove notice after delay
+    setTimeout(() => {
         demoNotice.classList.add("fade-out");
         setTimeout(() => demoNotice.remove(), 1000);
     }, 3000);
