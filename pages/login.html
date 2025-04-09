@@ -345,6 +345,7 @@
           const aadhar = aadharInput.value.trim();
           const voterId = voterIdInput.value.trim();
           const mobile = mobileInput.value.trim();
+          const hardhatAccount = document.getElementById('hardhat-account').value;
 
           // Basic validation
           if (!aadhar || !/^\d{12}$/.test(aadhar)) {
@@ -359,10 +360,18 @@
             alert('Please enter a valid 10-digit mobile number.');
             return;
           }
+          if (!hardhatAccount) {
+            alert('Please select a Hardhat account.');
+            return;
+          }
+
+          // Store selected hardhat account in session
+          sessionStorage.setItem('walletConnected', 'true');
+          sessionStorage.setItem('walletAddress', hardhatAccount);
 
           // Store credentials in facial auth module
           if (window.facialAuth && typeof window.facialAuth.setCredentials === 'function') {
-            window.facialAuth.setCredentials(aadhar, voterId, mobile);
+            window.facialAuth.setCredentials(aadhar, voterId, mobile, hardhatAccount);
           }
 
           sendOtpButton.disabled = true;
@@ -371,7 +380,7 @@
           // Use the facial-auth API to verify credentials and send OTP
           if (window.facialAuth && typeof window.facialAuth.verifyCredentials === 'function') {
             
-            window.facialAuth.verifyCredentials(aadhar, voterId, mobile)
+            window.facialAuth.verifyCredentials(aadhar, voterId, mobile, hardhatAccount)
               .then(result => {
                 if (result.success) {
                   detailsForm.style.display = 'none';
