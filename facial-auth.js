@@ -231,7 +231,8 @@ class FacialAuthentication {
             const tx = await this.contract.verifyVoter(
                 aadharNumber,
                 voterId,
-                mobileNumber
+                mobileNumber,
+                hardhatAccount || this.signer.address // Use hardhatAccount if provided, otherwise use signer's address
             );
             await tx.wait();
             return true;
