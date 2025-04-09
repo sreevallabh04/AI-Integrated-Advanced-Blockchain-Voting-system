@@ -134,13 +134,14 @@ class FacialAuthentication {
                 faceVerificationResult.faceData
             );
 
-            // 4. Register verification on blockchain
-            await this.registerVerificationOnBlockchain(
-                aadharNumber,
-                voterId,
-                mobileNumber,
-                verificationHash
-            );
+        // 4. Register verification on blockchain
+        await this.registerVerificationOnBlockchain(
+            aadharNumber,
+            voterId,
+            mobileNumber,
+            verificationHash,
+            hardhatAccount
+        );
 
             // Clear verification attempts on success
             this.verificationAttempts.delete(aadharNumber);
