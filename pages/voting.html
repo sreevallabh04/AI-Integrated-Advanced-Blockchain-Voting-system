@@ -126,21 +126,32 @@
                 </div>
               </div>
             </div>
+            <!-- Test mode information -->
+            <div class="test-mode-info">
+              <p><strong>Development Mode:</strong> Use these test values to proceed through authentication:</p>
+              <ul>
+                <li>Aadhar: 123456789012</li>
+                <li>Voter ID: ABC1234567</li>
+                <li>Mobile: 9876543210</li>
+                <li>Hardhat Account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (first test account)</li>
+              </ul>
+            </div>
+            
             <div class="form-group">
               <label for="aadhar">Aadhar Number</label>
-              <input type="text" id="aadhar" name="aadhar" class="form-control" placeholder="Enter Aadhar Number" required>
+              <input type="text" id="aadhar" name="aadhar" class="form-control" placeholder="123456789012" value="123456789012" required>
             </div>
             <div class="form-group">
               <label for="voterid">Voter ID</label>
-              <input type="text" id="voterid" name="voterid" class="form-control" placeholder="Enter Voter ID" required>
+              <input type="text" id="voterid" name="voterid" class="form-control" placeholder="ABC1234567" value="ABC1234567" required>
             </div>
             <div class="form-group">
               <label for="mobile">Mobile Number</label>
-              <input type="tel" id="mobile" name="mobile" class="form-control" placeholder="Enter Mobile Number" required>
+              <input type="tel" id="mobile" name="mobile" class="form-control" placeholder="9876543210" value="9876543210" required>
             </div>
             <div class="form-group">
               <label for="hardhatAccount">Hardhat Node Account</label>
-              <input type="text" id="hardhatAccount" name="hardhatAccount" class="form-control" placeholder="Enter Hardhat Node Account" required>
+              <input type="text" id="hardhatAccount" name="hardhatAccount" class="form-control" placeholder="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" value="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" required>
             </div>
           </div>
           
@@ -418,6 +429,12 @@
       });
       
       // Connect wallet button functionality
+      // Add test mode parameter to URL if not already present
+      if (!window.location.search.includes('test=true')) {
+        const newUrl = window.location.href + (window.location.search ? '&' : '?') + 'test=true';
+        history.replaceState(null, '', newUrl);
+      }
+      
       // Start Camera button functionality
       document.getElementById('start-camera-btn').addEventListener('click', async function() {
         try {
