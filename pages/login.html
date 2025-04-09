@@ -143,19 +143,23 @@
                 <p>Please select one of the Hardhat accounts below to use for voting on the blockchain.</p>
                 
                 <div class="hardhat-account-selection">
-                  <label for="hardhat-account">Select Hardhat Account:</label>
-                  <select id="hardhat-account" class="form-control mb-3">
-                    <option value="">-- Select an account --</option>
-                    <option value="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266">Account #0: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266</option>
-                    <option value="0x70997970C51812dc3A010C7d01b50e0d17dc79C8">Account #1: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8</option>
-                    <option value="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC">Account #2: 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC</option>
-                    <option value="0x90F79bf6EB2c4f870365E785982E1f101E93b906">Account #3: 0x90F79bf6EB2c4f870365E785982E1f101E93b906</option>
-                    <option value="0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65">Account #4: 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65</option>
-                  </select>
+                  <label for="wallet-hardhat-account">Select Hardhat Account:</label>
+                  <div class="hardhat-account-container">
+                    <select id="wallet-hardhat-account" class="form-control mb-3">
+                      <option value="">-- Loading Hardhat accounts... --</option>
+                    </select>
+                    <button type="button" id="wallet-refresh-accounts" class="button small-button" title="Refresh account list">
+                      <i class="icon-refresh"></i>
+                    </button>
+                  </div>
+                  
+                  <div id="wallet-hardhat-status" class="text-small mt-2">
+                    <span class="text-muted">Checking for running Hardhat node...</span>
+                  </div>
                   
                   <div class="account-note">
                     <i class="icon-info"></i>
-                    <p class="text-small">These accounts are automatically created when you run <code>npx hardhat node</code>. Select the account you wish to use for voting.</p>
+                    <p class="text-small">These accounts are dynamically loaded from your running <code>npx hardhat node</code> instance. Select the account you wish to use for voting.</p>
                   </div>
                 </div>
                 
