@@ -426,14 +426,16 @@
           
           // No more retries, show detailed error
           let errorMessage = '';
-          if (error.message && error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+          if (error.message && error.message.includes('parse') || error.message.includes('JSON')) {
+            errorMessage = '<span class="text-danger">❌ JSON parsing error: ' + error.message + '. Try restarting the Hardhat node with "npx hardhat node" in a new terminal window.</span>';
+          } else if (error.message && error.message.includes('Failed to fetch') || error.name === 'TypeError') {
             errorMessage = '<span class="text-danger">❌ Cannot connect to Hardhat node. Make sure to run "npx hardhat node" in your terminal and check that no firewall is blocking port 8545.</span>';
           } else if (error.message && error.message.includes('timeout')) {
             errorMessage = '<span class="text-danger">❌ Connection to Hardhat node timed out. The node may be busy or not responding properly.</span>';
           } else if (error.message && error.message.includes('No accounts')) {
             errorMessage = '<span class="text-danger">❌ Connected to Hardhat node but no accounts were found. Try restarting the node with "npx hardhat node".</span>';
           } else {
-            errorMessage = '<span class="text-danger">❌ Cannot connect to Hardhat node. Make sure to run "npx hardhat node" in your terminal.</span>';
+            errorMessage = '<span class="text-danger">❌ Cannot connect to Hardhat node: ' + error.message + '. Try running "npx hardhat node" in a new terminal window.</span>';
           }
           
           // Update both dropdowns and status areas
