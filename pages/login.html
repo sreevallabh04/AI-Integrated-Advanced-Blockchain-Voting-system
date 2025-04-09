@@ -226,14 +226,19 @@
       const walletHardhatStatusEl = document.getElementById('wallet-hardhat-status');
       
       // Function to fetch accounts from running Hardhat node
-      async function fetchHardhatAccounts() {
+      // Hardhat accounts fetching function with retry
+      async function fetchHardhatAccounts(retryCount = 0) {
+        const maxRetries = 3;
+        const alternativePorts = ['8545', '8546', '7545']; // Hardhat default, alternative, Ganache
+
         try {
           // Update status for both dropdowns
+          const connectingMessage = '<span class="text-muted">Connecting to Hardhat node' + (retryCount > 0 ? ` (attempt ${retryCount + 1})` : '') + '...</span>';
           if (hardhatStatusEl) {
-            hardhatStatusEl.innerHTML = '<span class="text-muted">Connecting to Hardhat node...</span>';
+            hardhatStatusEl.innerHTML = connectingMessage;
           }
           if (walletHardhatStatusEl) {
-            walletHardhatStatusEl.innerHTML = '<span class="text-muted">Connecting to Hardhat node...</span>';
+            walletHardhatStatusEl.innerHTML = connectingMessage;
           }
           
           // Clear both dropdowns
@@ -244,14 +249,54 @@
             walletHardhatSelect.innerHTML = '<option value="">-- Connecting to Hardhat node... --</option>';
           }
           
-          // Connect to the Hardhat node
-          const provider = new ethers.JsonRpcProvider(HARDHAT_RPC_URL);
+          // Try different ports if we're on a retry
+          let port = '8545'; // Default hardhat port
+          if (retryCount > 0 && retryCount <= alternativePorts.length) {
+            port = alternativePorts[retryCount - 1];
+            console.log(`Trying alternative port: ${port}`);
+          }
           
-          // Verify connection by getting a block
-          await provider.getBlockNumber();
+          // Connect to the Hardhat node
+          const rpcUrl = `http://127.0.0.1:${port}`;
+          console.log(`Attempting to connect to Hardhat node at: ${rpcUrl}`);
+          
+          // Test connection with a simple fetch first
+          const testResponse = await fetch(rpcUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'net_version',
+              params: []
+            })
+          });
+          
+          if (!testResponse.ok) {
+            throw new Error(`HTTP error! status: ${testResponse.status}`);
+          }
+          
+          // If fetch works, continue with ethers provider
+          const provider = new ethers.JsonRpcProvider(rpcUrl);
+          
+          console.log('Provider created, checking connection...');
+          
+          // Verify connection by getting a block with timeout
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Connection timeout')), 3000)
+          );
+          const blockNumberPromise = provider.getBlockNumber();
+          await Promise.race([blockNumberPromise, timeoutPromise]);
+          
+          console.log('Connection verified, fetching accounts...');
           
           // Get accounts from the node
           const accounts = await provider.send("eth_accounts", []);
+          console.log(`Found ${accounts.length} accounts:`, accounts);
+          
+          if (accounts.length === 0) {
+            throw new Error('No accounts found on Hardhat node');
+          }
           
           // Update credentials dropdown
           if (credentialsHardhatSelect) {
@@ -287,11 +332,36 @@
           if (walletHardhatStatusEl) {
             walletHardhatStatusEl.innerHTML = successMessage;
           }
-        } catch (error) {
-          console.error('Failed to fetch Hardhat accounts:', error);
           
-          // Error message
-          const errorMessage = '<span class="text-danger">❌ Cannot connect to Hardhat node. Make sure to run "npx hardhat node" in your terminal.</span>';
+          // Store connection details for future use
+          window.hardhatConnected = true;
+          window.hardhatPort = port;
+          
+          return true;
+        } catch (error) {
+          console.error(`Failed to fetch Hardhat accounts (attempt ${retryCount + 1}):`, error);
+          
+          // Try again with different port if we haven't reached max retries
+          if (retryCount < maxRetries) {
+            console.log(`Retrying with attempt ${retryCount + 2}...`);
+            return new Promise(resolve => {
+              setTimeout(() => {
+                resolve(fetchHardhatAccounts(retryCount + 1));
+              }, 1000); // Wait 1 second before retry
+            });
+          }
+          
+          // No more retries, show detailed error
+          let errorMessage = '';
+          if (error.message && error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+            errorMessage = '<span class="text-danger">❌ Cannot connect to Hardhat node. Make sure to run "npx hardhat node" in your terminal and check that no firewall is blocking port 8545.</span>';
+          } else if (error.message && error.message.includes('timeout')) {
+            errorMessage = '<span class="text-danger">❌ Connection to Hardhat node timed out. The node may be busy or not responding properly.</span>';
+          } else if (error.message && error.message.includes('No accounts')) {
+            errorMessage = '<span class="text-danger">❌ Connected to Hardhat node but no accounts were found. Try restarting the node with "npx hardhat node".</span>';
+          } else {
+            errorMessage = '<span class="text-danger">❌ Cannot connect to Hardhat node. Make sure to run "npx hardhat node" in your terminal.</span>';
+          }
           
           // Update both dropdowns and status areas
           if (credentialsHardhatSelect) {
@@ -307,6 +377,58 @@
           if (walletHardhatStatusEl) {
             walletHardhatStatusEl.innerHTML = errorMessage;
           }
+          
+          // Add help text with instructions
+          const helpText = document.createElement('div');
+          helpText.className = 'text-small text-muted mt-2';
+          helpText.innerHTML = `
+            <strong>Need help?</strong> Try these steps:
+            <ol class="mt-1">
+              <li>Open a new terminal window</li>
+              <li>Navigate to your project folder</li>
+              <li>Run <code>npx hardhat node</code></li>
+              <li>Wait for it to start (you'll see a list of accounts)</li>
+              <li>Click the refresh button to retry</li>
+            </ol>
+          `;
+          
+          if (hardhatStatusEl && !document.getElementById('hardhat-help-text')) {
+            helpText.id = 'hardhat-help-text';
+            hardhatStatusEl.parentNode.appendChild(helpText);
+          }
+          
+          return false;
+        }
+      }
+      
+      // Add a special hardhat detection function
+      async function tryDirectHardhatConnection() {
+        try {
+          const response = await fetch('http://127.0.0.1:8545', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: Date.now(),
+              method: 'eth_chainId',
+              params: []
+            }),
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'same-origin',
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer'
+          });
+          
+          if (!response.ok) {
+            return false;
+          }
+          
+          const data = await response.json();
+          return data && data.result ? true : false;
+        } catch (error) {
+          console.log('Direct Hardhat detection failed:', error);
+          return false;
         }
       }
       
