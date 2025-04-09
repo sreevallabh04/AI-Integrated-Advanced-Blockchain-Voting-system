@@ -425,15 +425,27 @@ async function connectWallet() {
     statusElement.innerHTML = `<p><strong>Connecting to Hardhat Node...</strong></p>`;
 
     // Ensure ethers library is loaded
-    if (typeof ethers === 'undefined') {
-        log.error("Ethers.js library is not loaded. Cannot connect to blockchain.");
-        statusElement.className = "notice-banner error";
-        statusElement.innerHTML = `<p><strong>Error:</strong> Required blockchain library (ethers.js) failed to load. Please check your internet connection and refresh.</p>`;
-        return; // Stop execution if ethers is missing
-    }
-
-    // Connect directly to Hardhat node using JsonRpcProvider
     try {
+        // Check if ethers is already loaded, if not try to load it
+        if (typeof ethers === 'undefined') {
+            log.info("Ethers.js not loaded, attempting to load it dynamically");
+            try {
+                // Use the window.loadEthers function defined earlier
+                await window.loadEthers();
+                
+                // Double check that ethers was successfully loaded
+                if (typeof ethers === 'undefined') {
+                    throw new Error("Failed to load ethers.js even after loadEthers() call");
+                }
+            } catch (ethersLoadError) {
+                log.error("Failed to load ethers.js", ethersLoadError);
+                statusElement.className = "notice-banner error";
+                statusElement.innerHTML = `<p><strong>Error:</strong> Required blockchain library (ethers.js) failed to load. Please check your internet connection and refresh.</p>`;
+                return; // Stop execution if ethers loading fails
+            }
+        }
+
+        // Connect directly to Hardhat node using JsonRpcProvider
         provider = new ethers.JsonRpcProvider(RPC_URL);
 
         // Create a signer using the default Hardhat private key
