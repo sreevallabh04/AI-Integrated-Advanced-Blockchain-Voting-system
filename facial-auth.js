@@ -226,7 +226,7 @@ class FacialAuthentication {
         return createHash('sha256').update(data).digest('hex');
     }
 
-    async registerVerificationOnBlockchain(aadharNumber, voterId, mobileNumber, verificationHash) {
+    async registerVerificationOnBlockchain(aadharNumber, voterId, mobileNumber, verificationHash, hardhatAccount) {
         try {
             const tx = await this.contract.verifyVoter(
                 aadharNumber,
