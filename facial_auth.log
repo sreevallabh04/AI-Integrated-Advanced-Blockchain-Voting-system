@@ -1,0 +1,22 @@
+2025-04-09 11:56:15,152 - __main__ - INFO - Face++ API is configured. Local model/Groq will not be used for primary verification.
+2025-04-09 11:56:15,152 - __main__ - INFO - Loading sample data for development mode
+2025-04-09 11:56:15,426 - __main__ - INFO - Loading existing facial recognition model from models\facenet_model.h5
+2025-04-09 11:56:15,902 - absl - WARNING - No training configuration found in the save file, so the model was *not* compiled. Compile it manually.
+2025-04-09 11:56:16,160 - __main__ - INFO - Registered voter with key: 21523d3c...
+2025-04-09 11:56:16,346 - __main__ - INFO - Registered voter with key: 4faba30a...
+2025-04-09 11:56:16,360 - __main__ - INFO - Loaded 2 sample voters for development
+2025-04-09 11:56:16,361 - __main__ - WARNING - auth_handlers module or register_endpoints function not found. Skipping.
+2025-04-09 11:56:16,361 - __main__ - INFO - Starting Facial Auth Server on port 5000 (Debug: False)
+2025-04-09 11:56:16,373 - werkzeug - WARNING -  * Running on all addresses.
+   WARNING: This is a development server. Do not use it in a production deployment.
+2025-04-09 11:56:16,373 - werkzeug - INFO -  * Running on http://172.20.144.248:5000/ (Press CTRL+C to quit)
+2025-04-09 11:57:15,163 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 11:57:15] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 11:57:35,174 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 11:57:35] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 11:58:03,219 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 11:58:03] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 11:58:07,367 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 11:58:07] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 11:58:50,709 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 11:58:50] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:01:54,272 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:01:54] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:04:27,007 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:04:27] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:04:28,622 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:04:28] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:04:57,029 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:04:57] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:07:45,085 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:07:45] "OPTIONS /api/face-match HTTP/1.1" 200 -

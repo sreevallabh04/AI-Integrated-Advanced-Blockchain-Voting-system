@@ -58,13 +58,8 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, resources={
-    r"/*": {
-        "origins": os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
+# Configure CORS properly to allow requests from the frontend origin
+CORS(app, resources={r"/api/*": {"origins": ["http://localhost:8000", "http://127.0.0.1:8000"]}}, supports_credentials=True)
 
 # Initialize rate limiter
 limiter = Limiter(
@@ -711,7 +706,7 @@ def api_auth_required(f):
         return f(*args, **kwargs)
     return decorated
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/api/health', methods=['GET'], endpoint='api_health_check')
 def health_check():
     """Health check endpoint."""
     return jsonify({

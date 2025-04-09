@@ -1040,11 +1040,11 @@
         });
       }
       
-      // Step 4: Hardhat Account Selection
-      const hardhatAccountSelect = document.getElementById('hardhat-account');
+      // Step 4: Hardhat Account Selection (Corrected ID)
+      const walletHardhatAccountSelect = document.getElementById('wallet-hardhat-account'); // Use the correct ID for Step 4 dropdown
       
-      if (hardhatAccountSelect) {
-        hardhatAccountSelect.addEventListener('change', function() {
+      if (walletHardhatAccountSelect) { // Check the correct variable
+        walletHardhatAccountSelect.addEventListener('change', function() { // Use the correct variable
           const selectedAccount = this.value;
           if (selectedAccount) {
             walletStatus.className = 'wallet-status connecting';
@@ -1063,15 +1063,15 @@
       if (connectWalletButton) {
         connectWalletButton.addEventListener('click', async function() {
           try {
-            // Check if biometric verification was completed
-            if (sessionStorage.getItem('biometricVerified') !== 'true') {
-              throw new Error("Biometric verification required before connecting wallet");
+            // Check if biometric verification was completed (or bypassed)
+            if (sessionStorage.getItem('authenticated') !== 'true') { // Check general authenticated flag now
+              throw new Error("Authentication required before selecting account");
             }
             
-            // Get selected account
-            const selectedAccount = hardhatAccountSelect.value;
+            // Get selected account from the correct dropdown for Step 4
+            const selectedAccount = walletHardhatAccountSelect.value; // Use the correct variable
             if (!selectedAccount) {
-              throw new Error("Please select a Hardhat account before proceeding");
+              throw new Error("Please select a Hardhat account from the dropdown");
             }
             
             // Show connecting status

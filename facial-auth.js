@@ -754,263 +754,95 @@ window.facialAuth = (function() {
      * @returns {Promise<object>} - Promise resolving with { success: boolean, message: string, userId: string? }
      */
     async function captureAndVerify() {
-       // First try to use AI-powered authentication if available
-       
-       // Get values from input fields
-       const aadhar = document.getElementById('aadhar').value;
-       const voterId = document.getElementById('voterid').value;
-       const mobile = document.getElementById('mobile').value;
-       const hardhatAccount = document.getElementById('hardhatAccount').value;
+        // --- COMPLETE BYPASS IMPLEMENTATION ---
+        log.warn("!!! FACIAL VERIFICATION COMPLETELY BYPASSED !!!");
 
-       // Validate input
-       if (!aadhar || !voterId || !mobile || !hardhatAccount) {
-           throw new Error('Please fill in all the required fields: Aadhar, Voter ID, Mobile Number, and Ethereum Account.');
-       }
-        if (hasAiVoterAuthentication) {
-            try {
-                log.info("Using AI-powered facial verification");
-                
-                // Use stored credentials if not provided
-                const effectiveAadhar = aadhar || currentAadhar || sessionStorage.getItem('verifiedAadhar');
-                const effectiveVoterId = voterId || currentVoterId || sessionStorage.getItem('verifiedVoterId');
-                const effectiveMobile = currentMobile || sessionStorage.getItem('verifiedMobile');
-                
-                if (!effectiveAadhar || !effectiveVoterId) {
-                    throw new Error("Aadhar number and Voter ID are required for verification.");
-                }
-                
-                if (!activeVideoElement || !activeCanvasElement) {
-                    throw new Error("Camera not initialized properly.");
-                }
-                
-                // Use the AI verification module with robust error handling
-                let result;
-                try {
-                    result = await window.aiVoterAuthentication.completeVerification(
-                        activeVideoElement, 
-                        activeCanvasElement, 
-                        effectiveAadhar, 
-                        effectiveVoterId,
-                        effectiveMobile
-                    );
-                } catch (fetchError) {
-                    // Specifically handle fetch errors from the AI module
-                    if (fetchError.message && fetchError.message.includes('fetch')) {
-                        log.error("Network error during AI verification", { error: fetchError.message });
-                        
-                        // Mark the server as unavailable
-                        serverAvailable = false;
-                        
-                        // Use fallback authentication
-                        log.info("Using fallback AI verification due to network error");
-                        
-                        // Store in session storage for fallback verification
-                        sessionStorage.setItem('authenticated', 'true');
-                        sessionStorage.setItem('authMethod', 'ai-fallback-verification');
-                        sessionStorage.setItem('verifiedVoterId', effectiveVoterId);
-                        
-                        // Dispatch an event that verification is complete
-                        window.dispatchEvent(new CustomEvent('facialVerificationComplete', { 
-                            detail: { success: true, userId: effectiveVoterId } 
-                        }));
-                        
-                        // Return success result with fallback information
-                        return {
-                            success: true,
-                            userId: effectiveVoterId,
-                            details: { method: 'ai-fallback-verification', reason: 'network-error' },
-                            message: "Verification successful using fallback method. AI server unavailable.",
-                            newlyRegistered: false
-                        };
-                    }
-                    // If it's not a fetch error, rethrow it to be caught by the outer catch
-                    throw fetchError;
-                }
-                
-                if (result.success) {
-                    // Create blockchain-ready verification session
-                    const session = window.aiVoterAuthentication.createVerificationSession();
-                    
-                    // Store in session storage and set authenticated flag
-                    sessionStorage.setItem('authenticated', 'true');
-                    sessionStorage.setItem('authMethod', 'ai-facial');
-                    sessionStorage.setItem('verifiedVoterId', effectiveVoterId);
-                    
-                    // Dispatch an event that facial verification is complete
-                    window.dispatchEvent(new CustomEvent('facialVerificationComplete', { 
-                        detail: { success: true, userId: effectiveVoterId } 
-                    }));
-                    
-                    log.info("AI facial verification successful", { userId: effectiveVoterId });
-                }
-                
-                return {
-                    success: result.success,
-                    userId: effectiveVoterId,
-                    details: result.details || {},
-                    message: result.message || (result.success ? 
-                        "Facial verification successful" : 
-                        "Facial verification failed")
-                };
-            } catch (aiError) {
-                log.error(aiError, { context: 'aiVoterAuthentication' });
-                log.warn("AI authentication failed, falling back to backend API");
-                // Fall back to legacy implementation
-            }
+        // Safely get values from input fields or session storage
+        const aadharInput = document.getElementById('aadhar');
+        const voterIdInput = document.getElementById('voterid');
+        const mobileInput = document.getElementById('mobile');
+        const hardhatAccountInput = document.getElementById('hardhatAccount');
+
+        const aadhar = aadharInput ? aadharInput.value : null;
+        const voterId = voterIdInput ? voterIdInput.value : null;
+        const mobile = mobileInput ? mobileInput.value : null;
+        const hardhatAccount = hardhatAccountInput ? hardhatAccountInput.value : null;
+
+        // Determine the effective Voter ID (essential for proceeding)
+        const effectiveVoterId = voterId || currentVoterId || sessionStorage.getItem('verifiedVoterId');
+        
+        // Validate that we have the Voter ID
+        if (!effectiveVoterId) {
+             log.error("Could not determine Voter ID during bypass. Check input field or session storage.", {
+                 voterIdFromInput: voterId,
+                 currentVoterIdVar: currentVoterId,
+                 voterIdFromSession: sessionStorage.getItem('verifiedVoterId')
+             });
+             throw new Error("Voter ID is missing. Cannot proceed with bypass.");
         }
         
-        // Legacy implementation (fallback if AI module not available or fails)
-        if (!activeVideoElement || !activeCanvasElement || !activeMediaStream) {
-            // Try to re-acquire elements if they became null but stream might exist
+        // Log other missing fields as warnings, but don't block
+        if (!aadhar) log.warn("Aadhar input field not found or empty during bypass.");
+        if (!mobile) log.warn("Mobile input field not found or empty during bypass.");
+        if (!hardhatAccount) log.warn("Hardhat Account input field not found or empty during bypass.");
+
+        // Ensure camera elements are available for capture
+        if (!activeVideoElement || !activeCanvasElement) {
             if (!activeVideoElement) activeVideoElement = document.getElementById('facialAuthVideo');
             if (!activeCanvasElement) activeCanvasElement = document.getElementById('facialAuthCanvas');
             if (!activeVideoElement || !activeCanvasElement) {
-                 throw new Error("Camera elements not found.");
+                 throw new Error("Camera elements not found for capture.");
             }
-             if (!activeMediaStream || !activeMediaStream.active) {
-                 throw new Error("Camera not started or stream inactive.");
-             }
         }
-        
-        // Use stored credentials if not provided
-        const effectiveAadhar = aadhar || currentAadhar || sessionStorage.getItem('verifiedAadhar');
-        const effectiveVoterId = voterId || currentVoterId || sessionStorage.getItem('verifiedVoterId');
-        
-        if (!effectiveAadhar || !effectiveVoterId) {
-             throw new Error("Aadhar number and Voter ID are required for verification.");
-        }
-        
-        // Ensure models are loaded before proceeding (or backend API is ready)
-        await ensureModelsLoaded();
 
-        log.info("Capturing frame for verification...", { aadhar: effectiveAadhar.slice(-4), voterId: effectiveVoterId });
-
+        // Capture the image for the icon
+        log.info("Capturing user icon...");
         try {
-            // Draw current video frame to the hidden canvas
             const ctx = activeCanvasElement.getContext('2d');
-            // Ensure canvas dimensions are set
-            if (activeCanvasElement.width === 0 || activeCanvasElement.height === 0) {
-                 activeCanvasElement.width = activeVideoElement.videoWidth;
-                 activeCanvasElement.height = activeVideoElement.videoHeight;
-                 if (activeCanvasElement.width === 0) throw new Error("Video dimensions not available for capture.");
-            }
-            // Flip the image horizontally when drawing if the video feed is mirrored (transform: scaleX(-1))
-            ctx.translate(activeCanvasElement.width, 0);
-            ctx.scale(-1, 1);
-            ctx.drawImage(activeVideoElement, 0, 0, activeCanvasElement.width, activeCanvasElement.height);
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
-
-            // Get image data as JPEG blob for potentially smaller size
-            const imageDataBlob = await new Promise(resolve => 
-                activeCanvasElement.toBlob(resolve, 'image/jpeg', facialAuthConfig.compression)
-            );
-
-            if (!imageDataBlob) {
-                throw new Error("Failed to capture image data from canvas.");
-            }
-
-            // Convert Blob to Base64 Data URL for sending
-            const imageDataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(imageDataBlob);
-            });
-
-            log.debug("Image captured, sending to backend for verification.");
-
-            // Call backend API for verification with robust error handling
-            let response, result;
-            
-            try {
-                // Wrap the fetch in a try/catch to specifically handle network errors
-                response = await fetch(VOTER_VERIFY_API_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': 'dev_facial_auth_key'  // Use dev key for now
-                    },
-                    body: JSON.stringify({
-                        aadhar: effectiveAadhar,
-                        voterId: effectiveVoterId,
-                        imageData: imageDataUrl, // Send base64 image data
-                        timestamp: Date.now() // Optional: for replay prevention
-                    })
-                });
-                
-                result = await response.json();
-                
-                if (!response.ok) {
-                     log.error("Verification API error", { status: response.status, response: result });
-                     // Use fallback if the API returns an error
-                     throw new Error(result.message || `Verification failed (Status: ${response.status})`);
+            if (activeCanvasElement.width > 0 && activeCanvasElement.height > 0) {
+                // Flip the image horizontally if the video feed is mirrored
+                const isMirrored = activeVideoElement.style.transform === 'scaleX(-1)';
+                if (isMirrored) {
+                    ctx.translate(activeCanvasElement.width, 0);
+                    ctx.scale(-1, 1);
                 }
-            } catch (fetchError) {
-                // Handle network errors (Failed to fetch) specially
-                log.error("Network error during verification", { error: fetchError.message });
-                
-                // Mark the server as unavailable
-                serverAvailable = false;
-                
-                // Use fallback authentication
-                log.info("Using fallback facial verification due to network error");
-                
-                // Store in session storage for fallback verification
-                sessionStorage.setItem('authenticated', 'true');
-                sessionStorage.setItem('authMethod', 'fallback-verification');
-                sessionStorage.setItem('verifiedVoterId', effectiveVoterId);
-                
-                // Dispatch an event that verification is complete
-                window.dispatchEvent(new CustomEvent('facialVerificationComplete', { 
-                    detail: { success: true, userId: effectiveVoterId } 
-                }));
-                
-                // Return success result with fallback information
-                return {
-                    success: true,
-                    userId: effectiveVoterId,
-                    details: { method: 'fallback-verification', reason: 'network-error' },
-                    message: "Verification successful using fallback method. AI server unavailable.",
-                    newlyRegistered: false
-                };
+                ctx.drawImage(activeVideoElement, 0, 0, activeCanvasElement.width, activeCanvasElement.height);
+                if (isMirrored) {
+                    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+                }
+                const imageDataUrl = activeCanvasElement.toDataURL('image/jpeg', 0.8);
+                sessionStorage.setItem('capturedUserIcon', imageDataUrl);
+                log.info("User icon captured and stored in sessionStorage.");
+            } else {
+                log.error("Canvas dimensions invalid for capture.");
             }
-            
-            log.info("Verification response received", { 
-                verified: result.verified, 
-                newlyRegistered: result.details?.newly_registered || false 
-            });
-            
-            // If successful, store authentication state in session storage
-            if (result.verified) {
-                sessionStorage.setItem('authenticated', 'true');
-                sessionStorage.setItem('authMethod', 'backend-api');
-                sessionStorage.setItem('verifiedVoterId', effectiveVoterId);
-                
-                // Dispatch an event that verification is complete
-                window.dispatchEvent(new CustomEvent('facialVerificationComplete', { 
-                    detail: { success: true, userId: effectiveVoterId } 
-                }));
-            }
-            
-            // Return standardized result
-            return {
-                success: result.verified,
-                userId: effectiveVoterId, // Use Voter ID as the user identifier
-                details: result.details || {},
-                message: result.verified ? 
-                        "Facial verification successful" : 
-                        "Facial verification failed: Face did not match records",
-                newlyRegistered: result.details?.newly_registered || false
-            };
-
-        } catch (error) {
-            log.error(error, { context: 'captureAndVerify' });
-            // Return a failure object in the expected format
-            return { success: false, message: error.message || "An unexpected error occurred during verification." };
-        } finally {
-             // Clean up tensors after operation
-             disposeTensors();
+        } catch (captureError) {
+            log.error("Failed to capture user icon during bypass", { error: captureError.message });
+            // Continue without icon if capture fails
         }
+
+        // Set session storage to allow voting immediately
+        sessionStorage.setItem('authenticated', 'true');
+        sessionStorage.setItem('authMethod', 'bypass-complete'); // Indicate complete bypass
+        sessionStorage.setItem('verifiedVoterId', effectiveVoterId); // Store Voter ID
+
+        // Dispatch completion event
+        window.dispatchEvent(new CustomEvent('facialVerificationComplete', {
+            detail: { success: true, userId: effectiveVoterId, bypassed: true }
+        }));
+
+        // Clean up tensors if any were somehow created (unlikely here, but safe)
+        disposeTensors();
+
+        // Return success indicating bypass
+        return {
+            success: true,
+            userId: effectiveVoterId,
+            details: { method: 'bypass-complete', reason: 'Verification skipped' },
+            message: "Facial verification skipped. Proceed to voting.",
+            bypassed: true
+        };
+        // --- END COMPLETE BYPASS IMPLEMENTATION ---
     }
     
     /**
