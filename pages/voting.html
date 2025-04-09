@@ -314,6 +314,16 @@
               <div class="comparison-status" id="comparison-status">
                 Click "Start Camera" to begin visual verification.
               </div>
+              <!-- OTP Verification Section -->
+              <div class="otp-verification" id="otp-verification" style="display: none;">
+                <h4>OTP Verification</h4>
+                <p>Enter the OTP sent to your mobile number:</p>
+                <div class="otp-input-container">
+                  <input type="text" id="otp-input" class="form-control" placeholder="Enter OTP" maxlength="6">
+                  <button class="button primary-button" id="verify-otp-btn">Verify OTP</button>
+                </div>
+                <div id="otp-status"></div>
+              </div>
               <div class="vote-decision-buttons" id="vote-decision-buttons" style="display: none;">
                  <p class="mb-3 font-weight-bold">Do you confirm that the person in the live feed is the same as the person in the reference image?</p>
                  <button class="button vote-decision-button yes" id="confirm-match-btn">Yes, They Match</button>
@@ -428,51 +438,147 @@
             return;
           }
           
-          // Start biometric verification
+          // Start credential verification first (this sends the OTP)
           document.getElementById('comparison-status').innerHTML = `
             <div class="status-message loading">
               <div class="spinner"></div>
-              <p>Starting camera for biometric verification...</p>
+              <p>Verifying credentials and sending OTP...</p>
             </div>
           `;
           
           // Use facial-auth.js functionality if available
           if (window.facialAuth) {
             try {
-              // Initialize camera
-              await window.facialAuth.startCamera(
-                document.getElementById('live-video-feed'),
-                document.createElement('canvas')
+              // First verify credentials to send OTP
+              const credentialResult = await window.facialAuth.verifyCredentials(
+                aadhar, 
+                voterId, 
+                mobile, 
+                hardhatAccount
               );
               
-              document.getElementById('comparison-status').innerHTML = `
-                <div class="status-message info">
-                  <i class="icon-info"></i>
-                  <p>Camera started. Please position your face in the frame.</p>
-                </div>
-              `;
-              
-              // Show verification buttons
-              document.getElementById('vote-decision-buttons').style.display = 'block';
-              
-            } catch (facialError) {
+              if (credentialResult.success) {
+                document.getElementById('comparison-status').innerHTML = `
+                  <div class="status-message success">
+                    <i class="icon-check-circle"></i>
+                    <p>Credentials verified. ${credentialResult.message}</p>
+                  </div>
+                `;
+                
+                // Show OTP verification section
+                document.getElementById('otp-verification').style.display = 'block';
+                
+                // If we're in development mode and OTP is returned directly, show it
+                if (credentialResult.otp) {
+                  document.getElementById('otp-status').innerHTML = `
+                    <div class="dev-otp-info">Development mode: OTP is ${credentialResult.otp}</div>
+                  `;
+                }
+              } else {
+                document.getElementById('comparison-status').innerHTML = `
+                  <div class="status-message error">
+                    <i class="icon-error"></i>
+                    <p>Credential verification failed: ${credentialResult.message}</p>
+                  </div>
+                `;
+              }
+            } catch (verifyError) {
               document.getElementById('comparison-status').innerHTML = `
                 <div class="status-message error">
                   <i class="icon-error"></i>
-                  <p>Failed to start camera: ${facialError.message}</p>
+                  <p>Credential verification error: ${verifyError.message}</p>
                 </div>
               `;
             }
           } else {
             document.getElementById('comparison-status').innerHTML = `
               <div class="status-message error">
-                <i class="icon-error"></i>
-                <p>Facial authentication module not found.</p>
+              <i class="icon-error"></i>
+              <p>Facial authentication module not found.</p>
               </div>
             `;
           }
         } catch (error) {
           document.getElementById('comparison-status').innerHTML = `
+            <div class="status-message error">
+            <i class="icon-error"></i>
+            <p>Error: ${error.message}</p>
+            </div>
+          `;
+        }
+      });
+      
+      // Verify OTP button functionality
+      document.getElementById('verify-otp-btn').addEventListener('click', async function() {
+        try {
+          const otp = document.getElementById('otp-input').value;
+          
+          if (!otp) {
+            document.getElementById('otp-status').innerHTML = `
+              <div class="status-message error">
+                <i class="icon-error"></i>
+                <p>Please enter the OTP.</p>
+              </div>
+            `;
+            return;
+          }
+          
+          document.getElementById('otp-status').innerHTML = `
+            <div class="status-message loading">
+              <div class="spinner"></div>
+              <p>Verifying OTP...</p>
+            </div>
+          `;
+          
+          if (window.facialAuth) {
+            try {
+              const otpResult = await window.facialAuth.verifyOtp(otp);
+              
+              if (otpResult.success) {
+                document.getElementById('otp-status').innerHTML = `
+                  <div class="status-message success">
+                    <i class="icon-check-circle"></i>
+                    <p>OTP verified successfully. Starting camera for facial verification...</p>
+                  </div>
+                `;
+                
+                // Hide OTP verification section
+                document.getElementById('otp-verification').style.display = 'none';
+                
+                // Start camera for facial verification
+                await window.facialAuth.startCamera(
+                  document.getElementById('live-video-feed'),
+                  document.createElement('canvas')
+                );
+                
+                document.getElementById('comparison-status').innerHTML = `
+                  <div class="status-message info">
+                    <i class="icon-info"></i>
+                    <p>Camera started. Please position your face in the frame.</p>
+                  </div>
+                `;
+                
+                // Show verification buttons
+                document.getElementById('vote-decision-buttons').style.display = 'block';
+              } else {
+                document.getElementById('otp-status').innerHTML = `
+                  <div class="status-message error">
+                    <i class="icon-error"></i>
+                    <p>OTP verification failed: ${otpResult.message}</p>
+                  </div>
+                `;
+              }
+            } catch (otpError) {
+              document.getElementById('otp-status').innerHTML = `
+                <div class="status-message error">
+                  <i class="icon-error"></i>
+                  <p>OTP verification error: ${otpError.message}</p>
+                </div>
+              `;
+            }
+          }
+        } catch (error) {
+          document.getElementById('otp-status').innerHTML = `
             <div class="status-message error">
               <i class="icon-error"></i>
               <p>Error: ${error.message}</p>
@@ -484,12 +590,6 @@
       // Confirm match button functionality
       document.getElementById('confirm-match-btn').addEventListener('click', async function() {
         try {
-          // Get values from input fields
-          const aadhar = document.getElementById('aadhar').value;
-          const voterId = document.getElementById('voterid').value;
-          const mobile = document.getElementById('mobile').value;
-          const hardhatAccount = document.getElementById('hardhatAccount').value;
-          
           document.getElementById('comparison-status').innerHTML = `
             <div class="status-message loading">
               <div class="spinner"></div>
