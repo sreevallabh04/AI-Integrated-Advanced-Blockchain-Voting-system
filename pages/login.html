@@ -259,7 +259,7 @@
           // Connect to the Hardhat node
           const rpcUrl = `http://127.0.0.1:${port}`;
           console.log(`Attempting to connect to Hardhat node at: ${rpcUrl}`);
-          
+      
       // Test connection with a complete JSON-RPC request
       const testRequest = {
         jsonrpc: "2.0",
@@ -303,30 +303,36 @@
             throw new Error('No accounts found on Hardhat node');
           }
           
-          // Update credentials dropdown
-          if (credentialsHardhatSelect) {
-            credentialsHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
-            
-            // Add each account to the dropdown
-            accounts.forEach((account, index) => {
-              const option = document.createElement('option');
-              option.value = account;
-              option.textContent = `Account #${index}: ${account}`;
-              credentialsHardhatSelect.appendChild(option);
-            });
-          }
+          // IMMEDIATE UPDATE: Directly update dropdown UI elements
+          updateAccountDropdowns(accounts);
           
-          // Update wallet dropdown
-          if (walletHardhatSelect) {
-            walletHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
+          // Function to update both dropdown menus with accounts
+          function updateAccountDropdowns(accounts) {
+            // Update credentials dropdown
+            if (credentialsHardhatSelect) {
+              credentialsHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
+              
+              // Add each account to the dropdown
+              accounts.forEach((account, index) => {
+                const option = document.createElement('option');
+                option.value = account;
+                option.textContent = `Account #${index}: ${account}`;
+                credentialsHardhatSelect.appendChild(option);
+              });
+            }
             
-            // Add each account to the dropdown
-            accounts.forEach((account, index) => {
-              const option = document.createElement('option');
-              option.value = account;
-              option.textContent = `Account #${index}: ${account}`;
-              walletHardhatSelect.appendChild(option);
-            });
+            // Update wallet dropdown
+            if (walletHardhatSelect) {
+              walletHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
+              
+              // Add each account to the dropdown
+              accounts.forEach((account, index) => {
+                const option = document.createElement('option');
+                option.value = account;
+                option.textContent = `Account #${index}: ${account}`;
+                walletHardhatSelect.appendChild(option);
+              });
+            }
           }
           
           // Update status for both areas
