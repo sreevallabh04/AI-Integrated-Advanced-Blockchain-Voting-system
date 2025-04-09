@@ -19,6 +19,15 @@ import requests
 import hashlib
 from datetime import datetime
 from functools import wraps
+import sqlite3
+from dotenv import load_dotenv
+import face_recognition
+from werkzeug.security import generate_password_hash, check_password_hash
+import time
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+load_dotenv()
 
 try:
     from flask import Flask, request, jsonify, Response
@@ -30,9 +39,9 @@ try:
     from tensorflow.keras.models import Sequential, Model, load_model
     from tensorflow.keras.layers import ZeroPadding2D, Convolution2D, MaxPooling2D
     from tensorflow.keras.layers import Dense, Dropout, Flatten, Activation, BatchNormalization
-except ImportError:
-    print("Required libraries not found. Please install with:")
-    print("pip install flask flask-cors opencv-python pillow numpy tensorflow requests")
+except ImportError as e:
+    print(f"Required libraries not found: {str(e)}")
+    print("Please install with: pip install -r requirements.txt")
     sys.exit(1)
 
 # Configure logging
@@ -40,38 +49,88 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
+        logging.FileHandler('facial_auth.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
-logger = logging.getLogger("facial-auth-api")
+
+logger = logging.getLogger(__name__)
+
+# Initialize Flask app
+app = Flask(__name__)
+CORS(app, resources={
+    r"/*": {
+        "origins": os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
+
+# Initialize rate limiter
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+# Security headers
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
+# Error handlers
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify(error="Rate limit exceeded. Please try again later."), 429
+
+@app.errorhandler(500)
+def internal_error(e):
+    logger.error(f"Internal server error: {str(e)}")
+    return jsonify(error="An internal error occurred. Please try again later."), 500
+
+@app.errorhandler(404)
+def not_found_error(e):
+    return jsonify(error="Resource not found."), 404
+
+# Health check endpoint
+@app.route('/health', methods=['GET'])
+def health_check():
+    try:
+        # Check database connection
+        conn = get_db_connection()
+        conn.close()
+        return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()}), 200
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
 # App configuration
-app = Flask(__name__)
-# Enable CORS with a more permissive configuration for development
-CORS(app, 
-     origins=["http://localhost:8000", "http://127.0.0.1:8000", "http://localhost", "https://securevote.com"],
-     methods=["GET", "POST", "OPTIONS"], 
-     allow_headers=["Content-Type", "X-API-Key", "Authorization", "Access-Control-Allow-Origin"],
-     supports_credentials=True,
-     max_age=3600)
-
-# Configuration
-IMAGES_DIR = "images/users"
-REFERENCE_IMAGE_PATH = os.path.join(IMAGES_DIR, "Screenshot 2024-06-18 203605.png") # Specific image for voting comparison
-METADATA_FILE = f"{IMAGES_DIR}/metadata.json"
-TEMP_DIR = "images/temp"
-MODEL_DIR = "models"
-VERIFICATION_THRESHOLD = 0.6  # Adjust this threshold based on testing
+app.config['IMAGES_DIR'] = "images/users"
+app.config['REFERENCE_IMAGE_PATH'] = os.path.join(app.config['IMAGES_DIR'], "Screenshot 2024-06-18 203605.png") # Specific image for voting comparison
+app.config['METADATA_FILE'] = f"{app.config['IMAGES_DIR']}/metadata.json"
+app.config['TEMP_DIR'] = "images/temp"
+app.config['MODEL_DIR'] = "models"
+app.config['VERIFICATION_THRESHOLD'] = 0.6  # Adjust this threshold based on testing
 
 # Groq API configuration
-GROQ_API_KEY = "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"
-GROQ_API_URL = "https://api.groq.com/v1/chat/completions"  # Endpoint for LLM with vision capabilities
-USE_GROQ_API = True  # Set to False to use local model, True to use Groq API
+app.config['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY", "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")
+app.config['GROQ_API_URL'] = "https://api.groq.com/v1/chat/completions"
+app.config['USE_GROQ_API'] = False # Defaulting to False as we are implementing Face++
+
+# Face++ API configuration
+app.config['FACE_API_KEY'] = os.getenv("FACE_API_KEY")
+app.config['FACE_API_SECRET'] = os.getenv("FACE_API_SECRET")
+app.config['FACE_API_URL'] = os.getenv("FACE_API_URL", "https://api-us.faceplusplus.com/facepp/v3/compare")
+app.config['FACEPLUSPLUS_CONFIDENCE_THRESHOLD'] = float(os.getenv("VERIFICATION_THRESHOLD", 75.0)) # Face++ uses 0-100 scale often
 
 # Ensure directories exist
-os.makedirs(IMAGES_DIR, exist_ok=True)
-os.makedirs(TEMP_DIR, exist_ok=True)
-os.makedirs(MODEL_DIR, exist_ok=True)
+os.makedirs(app.config['IMAGES_DIR'], exist_ok=True)
+os.makedirs(app.config['TEMP_DIR'], exist_ok=True)
+os.makedirs(app.config['MODEL_DIR'], exist_ok=True)
 
 # Global model variables
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -81,13 +140,93 @@ reference_embedding = None # Global variable to store the reference embedding
 # Temporary database for development
 voter_database = {}  # Maps Aadhar+VoterID to face embeddings
 
+# Database initialization
+def init_db():
+    conn = sqlite3.connect('voter_verification.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS voter_verification
+        (aadhar_number TEXT PRIMARY KEY,
+         voter_id TEXT,
+         mobile_number TEXT,
+         face_encoding BLOB,
+         verification_time TIMESTAMP)
+    ''')
+    conn.commit()
+    conn.close()
+
+# Initialize database on startup
+init_db()
+
+class FaceVerification:
+    def __init__(self):
+        self.known_face_encodings = {}
+        self.load_known_faces()
+
+    def load_known_faces(self):
+        conn = sqlite3.connect('voter_verification.db')
+        c = conn.cursor()
+        c.execute('SELECT aadhar_number, face_encoding FROM voter_verification')
+        for row in c.fetchall():
+            aadhar_number, face_encoding_blob = row
+            face_encoding = np.frombuffer(face_encoding_blob, dtype=np.float64)
+            self.known_face_encodings[aadhar_number] = face_encoding
+        conn.close()
+
+    def verify_face(self, image_data, aadhar_number):
+        try:
+            # Decode base64 image
+            image_bytes = base64.b64decode(image_data.split(',')[1])
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            # Convert to RGB (face_recognition uses RGB)
+            rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            
+            # Find faces in the image
+            face_locations = face_recognition.face_locations(rgb_image)
+            if not face_locations:
+                return {'isMatch': False, 'error': 'No face detected'}
+
+            # Get face encoding
+            face_encoding = face_recognition.face_encodings(rgb_image, face_locations)[0]
+
+            # Check if we have a known face for this Aadhar number
+            if aadhar_number not in self.known_face_encodings:
+                return {'isMatch': False, 'error': 'No registered face found'}
+
+            # Compare faces
+            known_encoding = self.known_face_encodings[aadhar_number]
+            matches = face_recognition.compare_faces([known_encoding], face_encoding, tolerance=0.6)
+            face_distance = face_recognition.face_distance([known_encoding], face_encoding)[0]
+            confidence = 1 - face_distance
+
+            return {
+                'isMatch': matches[0],
+                'confidence': float(confidence),
+                'faceData': base64.b64encode(face_encoding.tobytes()).decode('utf-8')
+            }
+        except Exception as e:
+            return {'isMatch': False, 'error': str(e)}
+
+face_verifier = FaceVerification()
+
+# --- Database Connection ---
+DATABASE_URL = os.getenv('DATABASE_URL', 'voter_verification.db')
+
+def get_db_connection():
+    """Establishes a connection to the SQLite database."""
+    conn = sqlite3.connect(DATABASE_URL)
+    conn.row_factory = sqlite3.Row # Return rows as dictionary-like objects
+    return conn
+
 def load_metadata():
     """Load the user metadata."""
-    if not os.path.exists(METADATA_FILE):
-        with open(METADATA_FILE, 'w') as f:
+    if not os.path.exists(app.config['METADATA_FILE']):
+        with open(app.config['METADATA_FILE'], 'w') as f:
             json.dump({}, f)
     
-    with open(METADATA_FILE, 'r') as f:
+    with open(app.config['METADATA_FILE'], 'r') as f:
         try:
             return json.load(f)
         except json.JSONDecodeError:
@@ -101,7 +240,7 @@ def get_voter_key(aadhar, voter_id):
 
 def save_metadata(metadata):
     """Save the user metadata."""
-    with open(METADATA_FILE, 'w') as f:
+    with open(app.config['METADATA_FILE'], 'w') as f:
         json.dump(metadata, f, indent=2)
 
 def register_voter(aadhar, voter_id, face_embedding, image_path=None):
@@ -124,11 +263,11 @@ def init_face_model():
     Only needed when not using Groq API."""
     global face_model
     
-    if USE_GROQ_API:
+    if app.config['USE_GROQ_API']:
         logger.info("Using Groq API for facial recognition, skipping local model initialization")
         return
     
-    model_path = os.path.join(MODEL_DIR, "facenet_model.h5")
+    model_path = os.path.join(app.config['MODEL_DIR'], "facenet_model.h5")
     
     # Check if we have a saved model
     if os.path.exists(model_path):
@@ -207,7 +346,7 @@ def preprocess_face(face_img):
 
 def get_face_embedding(face_img):
     """Get the embedding vector for a face using local model or Groq API."""
-    if USE_GROQ_API:
+    if app.config['USE_GROQ_API']:
         return get_groq_embedding(face_img)
     else:
         if face_model is None:
@@ -233,7 +372,7 @@ def get_groq_embedding(face_img):
         
         # Prepare request to Groq API
         headers = {
-            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Authorization": f"Bearer {app.config['GROQ_API_KEY']}",
             "Content-Type": "application/json"
         }
         
@@ -266,7 +405,7 @@ def get_groq_embedding(face_img):
         }
         
         # Make request to Groq API
-        response = requests.post(GROQ_API_URL, headers=headers, json=data)
+        response = requests.post(app.config['GROQ_API_URL'], headers=headers, json=data)
         
         if response.status_code != 200:
             logger.error(f"Groq API error: {response.status_code}, {response.text}")
@@ -317,15 +456,15 @@ def get_groq_embedding(face_img):
 def load_reference_embedding():
     """Load the embedding for the single reference image used in voting."""
     global reference_embedding
-    if not os.path.exists(REFERENCE_IMAGE_PATH):
-        logger.error(f"CRITICAL: Reference image not found at {REFERENCE_IMAGE_PATH}")
+    if not os.path.exists(app.config['REFERENCE_IMAGE_PATH']):
+        logger.error(f"CRITICAL: Reference image not found at {app.config['REFERENCE_IMAGE_PATH']}")
         reference_embedding = None
         return
 
-    logger.info(f"Loading reference image from {REFERENCE_IMAGE_PATH}")
-    ref_img = cv2.imread(REFERENCE_IMAGE_PATH)
+    logger.info(f"Loading reference image from {app.config['REFERENCE_IMAGE_PATH']}")
+    ref_img = cv2.imread(app.config['REFERENCE_IMAGE_PATH'])
     if ref_img is None:
-        logger.error(f"CRITICAL: Failed to load reference image: {REFERENCE_IMAGE_PATH}")
+        logger.error(f"CRITICAL: Failed to load reference image: {app.config['REFERENCE_IMAGE_PATH']}")
         reference_embedding = None
         return
 
@@ -498,7 +637,7 @@ def verify_face(user_id, face_img):
             best_match = os.path.basename(image_path)
     
     # Determine verification result
-    if max_similarity >= VERIFICATION_THRESHOLD:
+    if max_similarity >= app.config['VERIFICATION_THRESHOLD']:
         logger.info(f"Verification successful for user {user_id} with similarity {max_similarity:.4f}")
         return True, {
             "match": True,
@@ -510,7 +649,7 @@ def verify_face(user_id, face_img):
         return False, {
             "match": False,
             "similarity": float(max_similarity),
-            "threshold": VERIFICATION_THRESHOLD
+            "threshold": app.config['VERIFICATION_THRESHOLD']
         }
 
 def verify_voter_by_face(aadhar, voter_id, face_img):
@@ -897,36 +1036,260 @@ def get_random_voter():
         logger.error(f"Error getting random voter: {str(e)}")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
-if __name__ == "__main__":
-    # Initialize face recognition model (if not using Groq API)
-    if not USE_GROQ_API:
-        init_face_model()
-        
-    # Load the reference embedding at startup
-    load_reference_embedding()
-    
-    # Load sample data for development
-    load_sample_data()
-    
-    # Import and register authentication endpoints
+@app.route('/api/auth/verify-credentials', methods=['POST'])
+def verify_credentials():
     try:
-        import auth_handlers
-        app = auth_handlers.register_endpoints(
-            app, 
-            api_auth_required, 
-            voter_database, 
-            get_voter_key,
-            extract_face_from_image, 
-            verify_voter_by_face, 
-            get_face_embedding, 
-            register_voter,
-            TEMP_DIR
-        )
-        logger.info("Successfully registered authentication endpoints")
+        data = request.json
+        aadhar_number = data.get('aadharNumber')
+        voter_id = data.get('voterId')
+        mobile_number = data.get('mobileNumber')
+
+        # In production, implement actual credential verification logic
+        # This is a placeholder that always returns True
+        return jsonify({'isValid': True})
     except Exception as e:
-        logger.error(f"Error registering authentication endpoints: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/auth/verify-face', methods=['POST'])
+def verify_face():
+    try:
+        data = request.json
+        image_data = data.get('imageData')
+        aadhar_number = data.get('aadharNumber')
+
+        if not image_data or not aadhar_number:
+            return jsonify({'error': 'Missing required data'}), 400
+
+        result = face_verifier.verify_face(image_data, aadhar_number)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/auth/register-face', methods=['POST'])
+def register_face():
+    try:
+        data = request.json
+        image_data = data.get('imageData')
+        aadhar_number = data.get('aadharNumber')
+        voter_id = data.get('voterId')
+        mobile_number = data.get('mobileNumber')
+
+        if not all([image_data, aadhar_number, voter_id, mobile_number]):
+            return jsonify({'error': 'Missing required data'}), 400
+
+        # Decode and process image
+        image_bytes = base64.b64decode(image_data.split(',')[1])
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Get face encoding
+        face_locations = face_recognition.face_locations(rgb_image)
+        if not face_locations:
+            return jsonify({'error': 'No face detected'}), 400
+
+        face_encoding = face_recognition.face_encodings(rgb_image, face_locations)[0]
+
+        # Store in database
+        conn = sqlite3.connect('voter_verification.db')
+        c = conn.cursor()
+        c.execute('''
+            INSERT OR REPLACE INTO voter_verification
+            (aadhar_number, voter_id, mobile_number, face_encoding, verification_time)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (aadhar_number, voter_id, mobile_number, face_encoding.tobytes(), datetime.now()))
+        conn.commit()
+        conn.close()
+
+        # Update in-memory cache
+        face_verifier.known_face_encodings[aadhar_number] = face_encoding
+
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"Error registering face: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# --- New Face++ Match Endpoint ---
+@app.route('/api/face-match', methods=['POST'])
+@limiter.limit("10 per minute") # Add rate limiting
+def face_match_endpoint():
+    """
+    Handles face verification requests using Face++ API.
+    Expects: { capturedImage: base64_string, userId: string, voterId: string }
+    Returns: { success: boolean, message: string, data: { isMatch: boolean, confidence: float, ... } }
+    """
+    start_time = time.time()
+    try:
+        # --- Input Validation ---
+        data = request.json
+        if not data:
+            return jsonify({"success": False, "message": "No data provided"}), 400
+
+        captured_image_b64 = data.get('capturedImage')
+        user_id = data.get('userId') # Using userId passed from frontend
+        voter_id = data.get('voterId') # Also passed
+
+        if not captured_image_b64:
+            return jsonify({"success": False, "message": "capturedImage is required"}), 400
+        if not user_id:
+            return jsonify({"success": False, "message": "userId is required"}), 400
+
+        # --- Retrieve Reference Image Path ---
+        # In a real app, fetch from DB based on userId/voterId
+        # For now, use the sample data logic or a default
+        reference_image_path = None
+        # Check sample data first (development)
+        for key, voter_data in voter_database.items():
+             # Use voter_id for matching as it's more likely unique from frontend perspective
+            if voter_data.get("voter_id") == voter_id or voter_data.get("voter_id") == user_id:
+                reference_image_path = voter_data.get("image_path")
+                logger.info(f"Found reference image path for {user_id}/{voter_id} in sample data: {reference_image_path}")
+                break
+
+        # Fallback if not in sample data (or if sample data loading failed)
+        if not reference_image_path:
+             # Use the default reference image if no specific one found
+             reference_image_path = app.config.get('REFERENCE_IMAGE_PATH', 'images/users/WIN_20250408_19_12_01_Pro.jpg')
+             logger.warning(f"User {user_id}/{voter_id} not found in sample data. Using default reference: {reference_image_path}")
+
+        if not reference_image_path or not os.path.exists(reference_image_path):
+             logger.error(f"Reference image path not found or invalid: {reference_image_path}")
+             return jsonify({"success": False, "message": f"Reference image not found for user {user_id}"}), 404
+
+        # --- Prepare Face++ API Call ---
+        api_key = app.config.get('FACE_API_KEY')
+        api_secret = app.config.get('FACE_API_SECRET')
+        api_url = app.config.get('FACE_API_URL')
+
+        if not api_key or not api_secret:
+            logger.error("Face++ API Key or Secret not configured in environment.")
+            return jsonify({"success": False, "message": "Server configuration error: Face++ credentials missing."}), 500
+
+        payload = {
+            'api_key': api_key,
+            'api_secret': api_secret,
+            'image_base64_1': captured_image_b64.split(',', 1)[1] if captured_image_b64.startswith('data:') else captured_image_b64,
+            # 'image_url2': 'URL_OF_REFERENCE_IMAGE', # Option 1: If reference is URL
+            # 'image_base64_2': 'BASE64_OF_REFERENCE_IMAGE', # Option 2: If reference is base64
+            # 'face_token1': 'TOKEN_FROM_DETECT', # Option 3: Using face tokens
+            # 'face_token2': 'TOKEN_FROM_DETECT'
+        }
+
+        files = {
+             'image_file2': (os.path.basename(reference_image_path), open(reference_image_path, 'rb'), 'image/jpeg')
+             # Sending reference image as file upload
+        }
+
+        logger.info(f"Calling Face++ Compare API for user {user_id} against {os.path.basename(reference_image_path)}")
+
+        # --- Make API Call ---
+        try:
+            response = requests.post(api_url, data=payload, files=files, timeout=15) # Added timeout
+            response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+            faceplusplus_result = response.json()
+        except requests.exceptions.RequestException as e:
+             logger.error(f"Face++ API request failed: {str(e)}")
+             return jsonify({"success": False, "message": f"Failed to connect to Face++ API: {str(e)}"}), 503 # Service Unavailable
+        finally:
+             # Ensure file handle is closed
+             if 'image_file2' in files:
+                 files['image_file2'][1].close()
+
+
+        # --- Process Face++ Response ---
+        logger.debug(f"Face++ API Raw Response: {faceplusplus_result}")
+
+        if "error_message" in faceplusplus_result:
+            error_msg = faceplusplus_result["error_message"]
+            logger.error(f"Face++ API Error: {error_msg}")
+            # Handle specific errors if needed, e.g., face not detected
+            if "NO_FACE_FOUND" in error_msg:
+                 return jsonify({
+                     "success": True, # API call succeeded, but no face found
+                     "message": "No face detected in the captured image.",
+                     "data": {"isMatch": False, "confidence": 0.0, "error": "NO_FACE_FOUND"}
+                 }), 200
+            else:
+                 return jsonify({"success": False, "message": f"Face++ API Error: {error_msg}"}), 500
+
+        confidence = faceplusplus_result.get('confidence', 0.0)
+        # Face++ thresholds are complex, often involving multiple values (e.g., 1e-3, 1e-4, 1e-5)
+        # We'll use the configured single threshold for simplicity here.
+        threshold = app.config['FACEPLUSPLUS_CONFIDENCE_THRESHOLD']
+        is_match = confidence >= threshold
+
+        # --- Format Response for Frontend ---
+        response_data = {
+            "isMatch": is_match,
+            "confidence": float(confidence),
+            "threshold": float(threshold),
+            "livenessConfirmed": None, # Face++ might provide this in other APIs or specific modes
+            "spoofingDetected": None,
+            "processing": { # Add some basic processing info if available
+                "faceDetected": True, # Assumed if confidence > 0
+                "apiResponse": faceplusplus_result # Include raw response for debugging if needed (optional)
+            }
+        }
+
+        end_time = time.time()
+        logger.info(f"Face++ verification for {user_id} completed in {end_time - start_time:.2f}s. Match: {is_match}, Confidence: {confidence}")
+
+        return jsonify({
+            "success": True,
+            "message": "Verification check complete",
+            "data": response_data
+        })
+
+    except Exception as e:
+        logger.exception(f"Unhandled error in /api/face-match: {str(e)}") # Log full traceback
+        return jsonify({"success": False, "message": f"Internal server error: {str(e)}"}), 500
+
+
+# --- Main Execution ---
+if __name__ == "__main__":
+    # Initialize face recognition model (if not using Groq API or Face++)
+    if not app.config['USE_GROQ_API'] and not app.config['FACE_API_KEY']:
+        logger.info("Initializing local face model as neither Groq nor Face++ is configured.")
+        init_face_model()
+    elif app.config['FACE_API_KEY']:
+        logger.info("Face++ API is configured. Local model/Groq will not be used for primary verification.")
+    elif app.config['USE_GROQ_API']:
+         logger.info("Groq API is configured. Local model will not be used.")
+
+    # Load the reference embedding at startup (only needed for local compare)
+    # load_reference_embedding() # Commented out as Face++ handles comparison
+    
+    # Load sample data for development (still useful for user info lookup)
+    load_sample_data()
+
+    # Import and register authentication endpoints (ensure they don't conflict)
+    try:
+        # Check if auth_handlers exists and has the function
+        if 'auth_handlers' in sys.modules and hasattr(sys.modules['auth_handlers'], 'register_endpoints'):
+            import auth_handlers
+            app = auth_handlers.register_endpoints(
+                app,
+                api_auth_required,
+                voter_database,
+                get_voter_key,
+                extract_face_from_image,
+                verify_voter_by_face, # This uses local/Groq, might need update for Face++
+                get_face_embedding,   # This uses local/Groq
+                register_voter,       # This uses local/Groq
+                TEMP_DIR
+            )
+            logger.info("Successfully registered additional authentication endpoints from auth_handlers")
+        else:
+             logger.warning("auth_handlers module or register_endpoints function not found. Skipping.")
+    except ImportError:
+        logger.warning("auth_handlers.py not found. Skipping additional endpoint registration.")
+    # Removed duplicated block here
+    except Exception as e:
+        logger.error(f"Error registering authentication endpoints from auth_handlers: {str(e)}") # Clarified error source
     
     # Start the server
-    port = int(os.environ.get("PORT", 5001)) # Changed port to 5001 to avoid potential conflicts
-    logger.info(f"Starting Facial Auth Server on port {port}")
-    app.run(host="0.0.0.0", port=port, debug=True)
+    port = int(os.getenv("PORT", 5000)) # Use port 5000 as expected by frontend config
+    debug_mode = os.getenv("FLASK_ENV", "development") == "development"
+    logger.info(f"Starting Facial Auth Server on port {port} (Debug: {debug_mode})")
+    # Use waitress or gunicorn in production instead of Flask's built-in server
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)

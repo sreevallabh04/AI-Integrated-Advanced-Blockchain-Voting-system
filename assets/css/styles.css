@@ -111,10 +111,16 @@ body {
   font-weight: 400;
   line-height: var(--line-height-base);
   color: var(--gray-900);
-  background-color: #ffffff;
+  /* background-color: #ffffff; */
+  background: linear-gradient(to bottom, #ffffff, var(--gray-100)); /* Subtle gradient */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* General SVG styling */
+svg {
+  fill: currentColor; /* Allow SVGs to inherit text color */
 }
 
 /* Remove default margin and styling from lists */
@@ -563,7 +569,8 @@ p {
  *--------------------------------------*/
 .site-header {
   background-color: #fff;
-  box-shadow: var(--box-shadow-sm);
+  box-shadow: var(--box-shadow); /* Slightly stronger shadow */
+  border-bottom: 1px solid var(--gray-200); /* Subtle border */
   position: sticky;
   top: 0;
   z-index: var(--z-index-sticky);
@@ -703,6 +710,98 @@ p {
 
 .auth-nav {
   display: flex;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0.25rem;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.form-control:focus {
+  color: #212529;
+  background-color: #fff;
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+}
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0.25rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.form-control:focus {
+    color: #212529;
+    background-color: #fff;
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+}
   align-items: center;
   margin-left: 2rem;
 }
@@ -1116,6 +1215,8 @@ p {
   background-size: 16px 12px;
 }
 
+/* Form Styles */
+
 /*--------------------------------------
  * 6. Buttons & Form Elements
  *--------------------------------------*/
@@ -1134,9 +1235,27 @@ input[type="submit"] {
   padding: 0.675rem 1.5rem;
   font-size: 1rem;
   line-height: 1.5;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-sm); /* Slightly less rounded */
   transition: all var(--transition-fast);
   cursor: pointer;
+}
+
+.button:hover,
+button:hover,
+input[type="button"]:hover,
+input[type="reset"]:hover,
+input[type="submit"]:hover {
+  transform: translateY(-2px); /* Add subtle lift on hover */
+  box-shadow: var(--box-shadow-sm);
+}
+
+.button:active,
+button:active,
+input[type="button"]:active,
+input[type="reset"]:active,
+input[type="submit"]:active {
+  transform: translateY(0px); /* Press down effect */
+  box-shadow: none;
 }
 
 .button:focus,
@@ -1351,9 +1470,12 @@ label {
   background-clip: border-box;
   border: 1px solid var(--gray-200);
   border-radius: var(--border-radius);
+  border: 1px solid var(--gray-200); /* Ensure border exists */
   box-shadow: var(--box-shadow-sm);
   transition: transform var(--transition-base), box-shadow var(--transition-base);
   overflow: hidden;
+  /* Subtle inner glow effect */
+  /* box-shadow: inset 0 1px 2px rgba(0,0,0,0.05), var(--box-shadow-sm); */
 }
 
 .card:hover {
@@ -1745,6 +1867,72 @@ label {
   opacity: 0;
 }
 
+/* Face Matching Styles (Added for Voting Page) */
+.face-match-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+}
+
+@media (min-width: 768px) {
+  .face-match-container {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: flex-start;
+  }
+}
+
+.reference-image-container,
+.live-camera-container {
+  width: 100%;
+  max-width: 350px;
+  text-align: center;
+}
+
+.reference-image-container img,
+.live-camera-container video {
+  border: 2px solid var(--gray-300);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-2);
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3; /* Maintain aspect ratio */
+  object-fit: cover; /* Cover the area */
+  background-color: var(--gray-200); /* Placeholder background */
+}
+
+.live-camera-container video {
+   transform: scaleX(-1); /* Mirror the camera feed */
+}
+
+.comparison-status {
+  text-align: center;
+  margin: var(--spacing-4) 0;
+  font-weight: 600;
+  min-height: 1.5em; /* Reserve space */
+}
+
+.comparison-status.match {
+  color: var(--success);
+}
+
+.comparison-status.no-match {
+  color: var(--danger);
+}
+
+.comparison-status.comparing {
+  color: var(--info);
+}
+
+.comparison-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
 @keyframes facescan {
   0% {
     opacity: 0;
@@ -1867,6 +2055,44 @@ label {
 .justification-field {
   margin-top: var(--spacing-4);
   margin-bottom: var(--spacing-4);
+}
+
+/* Voting Decision Buttons (Added for Voting Page) */
+.vote-decision-buttons {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-4);
+}
+
+.vote-decision-button {
+  padding: var(--spacing-3) var(--spacing-5);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.vote-decision-button.yes {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.vote-decision-button.yes:hover {
+  background-color: #1f7a34; /* Darker green */
+  border-color: #1f7a34;
+  color: white;
+}
+
+.vote-decision-button.no {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: white;
+}
+
+.vote-decision-button.no:hover {
+  background-color: #a71d2a; /* Darker red */
+  border-color: #a71d2a;
+  color: white;
 }
 
 .voting-actions {

@@ -25,9 +25,9 @@ const aiVoterAuthentication = (() => {
         
         // API endpoints for production environment
         endpoints: {
-            faceMatchEndpoint: '/api/face-match',
-            userDataEndpoint: '/api/user-data', 
-            verificationLogEndpoint: '/api/verification-log'
+            faceMatchEndpoint: 'http://localhost:5000/api/face-match',
+            userDataEndpoint: 'http://localhost:5000/api/user-data',
+            verificationLogEndpoint: 'http://localhost:5000/api/verification-log'
         },
         
         // Feature flags
@@ -47,7 +47,10 @@ const aiVoterAuthentication = (() => {
      * @returns {Promise<boolean>} - True if initialization was successful
      */
     const initialize = async (options = {}) => {
-        if (isInitialized) return true;
+        if (isInitialized) {
+            console.warn("AI Voter Authentication module is already initialized.");
+            return true;
+        }
         
         try {
             console.log("Initializing AI Voter Authentication module...");
@@ -270,58 +273,44 @@ const aiVoterAuthentication = (() => {
             isBusy = true;
             
             let result;
-            
-            // In production mode, use the secure API for verification
-            if (config.productionMode) {
-                const response = await fetch(config.endpoints.faceMatchEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        capturedImage: capturedImage,
-                        referenceImagePath: currentUserData.registeredFaceImage,
-                        userId: currentUserData.id,
-                        livenessCheck: config.enableLivenessDetection,
-                        spoofingCheck: config.enableSpoofingDetection
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`API error: ${response.status} ${response.statusText}`);
-                }
-                
-                result = await response.json();
-                
-                if (!result.success) {
-                    throw new Error(result.message || "Face verification failed");
-                }
-                
-                // Extract the actual result data
-                result = result.data;
-            } else {
-                // In development mode, simulate a server response
-                // This would normally be a sophisticated AI model matching faces
-                await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing time
-                
-                // For demo purposes, always return success
-                result = {
-                    isMatch: true,
-                    confidence: 0.92,
-                    livenessConfirmed: true,
-                    spoofingDetected: false,
-                    processing: {
-                        faceDetected: true,
-                        faceAligned: true,
-                        qualityCheck: {
-                            lighting: "good",
-                            resolution: "acceptable",
-                            faceOrientation: "frontal"
-                        }
-                    }
-                };
+
+            // Always use the backend API endpoint for verification
+            // The backend will handle Face++ API calls using credentials from .env
+            console.log(`Sending verification request to: ${config.endpoints.faceMatchEndpoint}`);
+            const response = await fetch(config.endpoints.faceMatchEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // No API key needed here; backend handles authentication
+                },
+                body: JSON.stringify({
+                    capturedImage: capturedImage, // Base64 image data
+                    userId: currentUserData.id, // Send user ID for backend lookup
+                    voterId: currentUserData.voterId, // Also send voterId for redundancy/lookup
+                    // Backend can decide if liveness/spoofing checks are needed based on its config
+                })
+            });
+
+            if (!response.ok) {
+                let errorMsg = `API error: ${response.status} ${response.statusText}`;
+                try {
+                    const errorData = await response.json();
+                    errorMsg = errorData.message || errorMsg;
+                } catch (e) { /* Ignore parsing error */ }
+                throw new Error(errorMsg);
             }
-            
+
+            result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || "Face verification failed via backend");
+            }
+
+            // Extract the actual result data returned by the backend
+            // Ensure the backend returns a structure like:
+            // { isMatch: boolean, confidence: number, livenessConfirmed: boolean, spoofingDetected: boolean, processing: object }
+            result = result.data;
+
             // Check if the verification passed our confidence threshold
             const passed = result.isMatch && 
                         result.confidence >= confidenceThreshold && 

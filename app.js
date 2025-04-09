@@ -2,7 +2,7 @@
 const networkConfig = window.productionConfig?.getNetwork?.() || {
   name: 'Local Hardhat Node',
   rpcUrl: 'http://127.0.0.1:8545',
-  contractAddress: '0x5fbdb2315678afecb367f032d93f642f64180aa3' // Default local address
+  contractAddress: '0x5FbDB2315678afecb367f032d93F642f64180aa3' // Updated local address
 };
 
 // Use logging from production config if available
@@ -233,306 +233,34 @@ const contractABI = [
 
 
 let provider, signer, contract;
-// RPC_URL is now primarily for reading contract state if needed, signing happens via wallet provider
-const RPC_URL = networkConfig.rpcUrl; 
+// RPC_URL is used to connect directly to the Hardhat node
+const RPC_URL = networkConfig.rpcUrl;
+// Hardhat default account private key (Account #0)
+const HARDHAT_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 let userAddress = null; // Store the connected user's address
 let justifications = []; // Array to store justifications locally
-
-/**
- * Setup facial authentication and connect it with the voting flow and wallet
- */
-function setupFacialAuthentication() {
-  // Get UI elements
-  const beginAuthButton = document.getElementById('beginAuthButton');
-  const votingContainer = document.getElementById('votingContainer');
-  const voteButton = document.getElementById('voteButton');
-  
-  // Initialize authentication if facial-auth.js is loaded
-  if (window.facialAuth) {
-    log.info("Facial authentication module detected");
-    
-    // Add event listener to the begin authentication button
-    if (beginAuthButton) {
-      beginAuthButton.addEventListener('click', async () => {
-        try {
-          // Get user ID from input (Assuming this maps to Aadhar/VoterID for backend verification)
-          const aadhar = document.getElementById('aadharInput')?.value; // Example ID
-          const voterId = document.getElementById('voterIdInput')?.value; // Example ID
-          const mobile = document.getElementById('mobileInput')?.value; // Example ID
-          
-          if (!aadhar || !voterId || !mobile) {
-            showAuthError("Please enter Aadhar, Voter ID, and Mobile Number.");
-            return;
-          }
-          
-          // Store credentials temporarily (or use facialAuth's internal state)
-          window.facialAuth.setCredentials(aadhar, voterId, mobile);
-              
-              // Prompt for wallet connection if not already connected
-              if (!isWalletConnected) {
-                setTimeout(() => {
-                  promptWalletConnection();
-                }, 1000);
-              }
-          
-          // Verify credentials and send OTP (assuming this is part of your login flow)
-          const credResult = await window.facialAuth.verifyCredentials(aadhar, voterId, mobile);
-          if (!credResult.success) {
-              showAuthError(credResult.message || "Credential verification failed.");
-              return;
-          }
-          
-          // Prompt for OTP (You'll need UI for this)
-          const otp = prompt(`OTP sent to ${mobile}. Please enter OTP: ${credResult.otp ? '(Dev OTP: ' + credResult.otp + ')' : ''}`);
-          if (!otp) {
-              showAuthError("OTP entry cancelled.");
-              return;
-          }
-          // Verify OTP
-          const otpResult = await window.facialAuth.verifyOtp(otp);
-          if (!otpResult.success) {
-              showAuthError(otpResult.message || "OTP verification failed.");
-              return;
-          }
-
-          // If OTP is verified, proceed to facial verification
-          log.info("OTP Verified. Starting facial verification...");
-          
-          // Start camera (assuming video/canvas elements exist in login.html)
-          const videoElement = document.getElementById('facialAuthVideo');
-          const canvasElement = document.getElementById('facialAuthCanvas');
-          await window.facialAuth.startCamera(videoElement, canvasElement);
-
-          // Capture and verify face (using stored credentials)
-          const faceResult = await window.facialAuth.captureAndVerify(); 
-          
-          // Stop camera after capture
-          window.facialAuth.stopCamera();
-
-          if (faceResult.success) {
-              // Update authentication state
-              isAuthenticated = true;
-              currentUser = { id: faceResult.userId, name: "Verified Voter" }; // Use Voter ID, maybe fetch name later
-              
-              // Show the voting section
-              if (votingContainer) {
-                votingContainer.style.display = 'block';
-                
-                // Enable the vote button
-                if (voteButton) {
-                  voteButton.disabled = false;
-                }
-                
-                // Hide login section
-                const loginSection = document.getElementById('loginSection');
-                if (loginSection) {
-                  loginSection.style.display = 'none';
-                }
-                
-                // Show authenticated user info
-                showAuthenticatedUserInfo(currentUser);
-              }
-              
-              log.info("User authenticated successfully", { userId: currentUser.id });
-          } else {
-              showAuthError(faceResult.message || "Facial verification failed.");
-              isAuthenticated = false;
-              currentUser = null;
-          }
-
-        } catch (error) {
-          log.error(error, { context: 'fullAuthFlow' });
-          showAuthError("An error occurred during authentication: " + error.message);
-          window.facialAuth?.stopCamera(); // Ensure camera stops on error
-        }
-      });
-    }
-    
-  } else {
-    // Facial authentication not available
-    log.warn("Facial authentication module not loaded. Adding fallback mechanism.");
-    
-    // Add fallback to skip authentication for development
-    if (beginAuthButton) {
-      beginAuthButton.addEventListener('click', () => {
-        // Get user ID
-        const userId = document.getElementById('voterIdInput')?.value || 'dev-user'; // Use Voter ID if available
-        
-        // Show message
-        const loginContainer = document.getElementById('facialLoginContainer'); // Assuming this exists in login.html
-        if (loginContainer) {
-          loginContainer.innerHTML = `
-            <div class="auth-success">
-              <div class="success-icon">✓</div>
-              <p>Development mode: Authentication skipped</p>
-              <p>User ID: ${userId}</p>
-              <button id="proceedToVoteButton" class="primary-button">Proceed to Vote</button>
-            </div>
-          `;
-          
-          // Add event listener
-          document.getElementById('proceedToVoteButton').addEventListener('click', () => {
-            isAuthenticated = true; // Set auth state for dev
-            currentUser = { id: userId, name: "Dev User" }; // Set user for dev
-            // Show voting section
-            if (votingContainer) {
-              votingContainer.style.display = 'block';
-              
-              // Enable vote button
-              if (voteButton) {
-                voteButton.disabled = false;
-              }
-              
-              // Hide login section
-              const loginSection = document.getElementById('loginSection');
-              if (loginSection) {
-                loginSection.style.display = 'none';
-              }
-              showAuthenticatedUserInfo(currentUser); // Show dev user info
-            }
-          });
-        }
-      });
-    }
-  }
-}
-
-/**
- * Show authentication error message
- */
-function showAuthError(message) {
-  const errorContainer = document.createElement('div');
-  errorContainer.className = 'auth-error';
-  errorContainer.innerHTML = `<p>${message}</p>`;
-  
-  // Find and remove any existing error message
-  const existingError = document.querySelector('.auth-error');
-  if (existingError) {
-    existingError.remove();
-  }
-  
-  // Add to the login container
-  const loginContainer = document.getElementById('facialLoginContainer'); // Assuming this exists in login.html
-  if (loginContainer) {
-    loginContainer.appendChild(errorContainer);
-    
-    // Remove after 5 seconds
-    setTimeout(() => {
-      errorContainer.remove();
-    }, 5000);
-  }
-}
-
-/**
- * Show authenticated user information
- */
-function showAuthenticatedUserInfo(user) {
-  // Create user info element if it doesn't exist
-  let userInfoElement = document.getElementById('userInfo');
-  
-  if (!userInfoElement) {
-    userInfoElement = document.createElement('div');
-    userInfoElement.id = 'userInfo';
-    userInfoElement.className = 'user-info';
-    
-    // Add to voting container
-    const votingContainer = document.getElementById('votingContainer');
-    if (votingContainer) {
-      votingContainer.insertBefore(userInfoElement, votingContainer.firstChild);
-    }
-  }
-  
-  // Update content
-  userInfoElement.innerHTML = `
-    <div class="user-info-container">
-      <div class="user-avatar">
-        <span>${user.name ? user.name.charAt(0).toUpperCase() : '?'}</span>
-      </div>
-      <div class="user-details">
-        <div class="user-name">${user.name || user.id}</div>
-        <div class="auth-status">Authenticated</div>
-      </div>
-    </div>
-  `;
-  
-  // Add styles if not already added
-  if (!document.getElementById('userInfoStyles')) {
-    const styleElement = document.createElement('style');
-    styleElement.id = 'userInfoStyles';
-    styleElement.textContent = `
-      .user-info {
-        background-color: #e8f5e9;
-        padding: 10px 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        border-left: 4px solid #4caf50;
-      }
-      
-      .user-info-container {
-        display: flex;
-        align-items: center;
-      }
-      
-      .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: #4caf50;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 18px;
-        margin-right: 10px;
-      }
-      
-      .user-details {
-        display: flex;
-        flex-direction: column;
-      }
-      
-      .user-name {
-        font-weight: bold;
-      }
-      
-      .auth-status {
-        font-size: 12px;
-        color: #4caf50;
-      }
-    `;
-    
-    document.head.appendChild(styleElement);
-  }
-}
 
 // 🚀 Connect Wallet and Initialize Blockchain Connection
 async function connectWallet() {
     const statusElement = document.getElementById("connectionStatus") || createStatusElement();
     statusElement.className = "notice-banner";
-    statusElement.innerHTML = `<p><strong>Connecting Wallet...</strong> Please approve the connection in your wallet (e.g., MetaMask).</p>`;
+    statusElement.innerHTML = `<p><strong>Connecting to Hardhat Node...</strong></p>`;
 
-    if (typeof window.ethereum !== 'undefined') {
-        try {
-            // Use Ethers v6 BrowserProvider
-            provider = new ethers.BrowserProvider(window.ethereum);
-            
-            // Request account access
-            await provider.send("eth_requestAccounts", []);
-            
-            // Get the signer
-            signer = await provider.getSigner();
-            userAddress = await signer.getAddress();
-            
-            log.info(`✅ Wallet connected: ${userAddress}`);
-            
-            // Update UI
-            updateWalletStatus(userAddress);
-            
-            // Initialize contract with the wallet's signer
-            // Check if we need to update the contract address from productionConfig
+    // Connect directly to Hardhat node using JsonRpcProvider
+    try {
+        provider = new ethers.JsonRpcProvider(RPC_URL);
+
+        // Create a signer using the default Hardhat private key
+        signer = new ethers.Wallet(HARDHAT_PRIVATE_KEY, provider);
+        userAddress = await signer.getAddress();
+
+        log.info(`✅ Connected to Hardhat Node as: ${userAddress}`);
+
+        // Update UI
+        updateWalletStatus(userAddress);
+
+        // Initialize contract with the Hardhat signer
+        // Check if we need to update the contract address from productionConfig
             if (window.productionConfig) {
                 // Try to detect the network and get the appropriate contract address
                 const network = await window.productionConfig.detectNetworkFromWallet();
@@ -553,9 +281,9 @@ async function connectWallet() {
             
             // Set wallet connection status
             isWalletConnected = true;
-            
-            // Setup listeners and load data
-            setupWalletListeners();
+
+            // Setup listeners and load data (Comment out MetaMask specific listeners)
+            // setupWalletListeners();
             justifications = []; // Clear local justifications on reconnect
             setupJustificationListener();
             displayJustifications(); // Initial display
@@ -570,51 +298,24 @@ async function connectWallet() {
         } catch (error) {
             log.error(error, { context: 'walletConnection' });
             statusElement.className = "notice-banner error";
-            statusElement.innerHTML = `<p><strong>Wallet Connection Failed:</strong> ${error.message}. Please ensure MetaMask (or another wallet) is installed and unlocked.</p>`;
+            statusElement.innerHTML = `<p><strong>Connection Failed:</strong> ${error.message}. Ensure Hardhat node is running at ${RPC_URL}.</p>`;
             updateWalletStatus(null); // Show disconnected state
             // Do not remove error immediately, let user see it
         }
-    } else {
-        log.error("MetaMask (or compatible wallet) not detected.");
-        statusElement.className = "notice-banner error";
-        statusElement.innerHTML = `
-            <p><strong>Wallet Not Detected:</strong> Please install MetaMask or a compatible Ethereum wallet to vote.</p>
-            <p>You can still explore AI features using Demo Mode.</p>
-            <button id="enableDemoModeButton" class="demo-button">Enable Demo Mode</button>
-        `;
-        updateWalletStatus(null);
-        setupDemoButtonListener('enableDemoModeButton');
-    }
+    // Remove the 'else' block for MetaMask detection
+    // } else {
+    //     log.error("MetaMask (or compatible wallet) not detected.");
+    //     ...
+    // }
 }
 /**
  * Prompt the user to connect their wallet after facial authentication
- */
+// Remove the promptWalletConnection function as it's MetaMask specific
+/*
 function promptWalletConnection() {
-  const walletPrompt = document.createElement('div');
-  walletPrompt.className = 'wallet-prompt notice-banner';
-  walletPrompt.innerHTML = `
-    <p><strong>Face Verified! 👤✓</strong> Now connect your Ethereum wallet to enable voting.</p>
-    <button id="promptConnectWalletBtn" class="button primary-button">Connect Wallet</button>
-  `;
-  
-  // Add to the page
-  const container = document.querySelector('.container') || document.body;
-  container.prepend(walletPrompt);
-  
-  // Add event listener
-  document.getElementById('promptConnectWalletBtn').addEventListener('click', () => {
-    connectWallet();
-    walletPrompt.remove();
-  });
-  
-  // Auto-remove after 30 seconds
-  setTimeout(() => {
-    if (document.body.contains(walletPrompt)) {
-      walletPrompt.classList.add('fade-out');
-      setTimeout(() => walletPrompt.remove(), 1000);
-    }
-  }, 30000);
+  ...
 }
+*/
 
 // Helper to create/get status element
 function createStatusElement() {
@@ -682,19 +383,19 @@ function updateVotingControls() {
                 <span>Connect your wallet to enable voting</span>
                 <button id="authConnectWalletBtn" class="button small-button">Connect Wallet</button>
             `;
-            voteButton.title = "Connect your wallet to enable voting";
+            voteButton.title = "Connect to Hardhat node to enable voting"; // Update title
         }
-        
+
         // Add to page if not already there
         if (!document.getElementById("authIndicator")) {
             voteButton.parentNode.insertBefore(authIndicator, voteButton);
         }
-        
-        // Add event listener for connect wallet button
-        const connectBtn = document.getElementById("authConnectWalletBtn");
-        if (connectBtn) {
-            connectBtn.addEventListener("click", connectWallet);
-        }
+
+        // Remove event listener for connect wallet button as connection is now automatic/different
+        // const connectBtn = document.getElementById("authConnectWalletBtn");
+        // if (connectBtn) {
+        //     connectBtn.addEventListener("click", connectWallet);
+        // }
     }
 }
 // Helper to setup demo button listener
@@ -715,13 +416,14 @@ function updateWalletStatus(address) {
     const connectButton = document.getElementById("connectWalletButton");
     const walletAddressElement = document.getElementById("walletAddress"); // Assuming an element with this ID exists or will be created
     if (address) {
-        // Wallet is connected
+        // Hardhat Node is connected
         if (connectButton) {
-            connectButton.textContent = `Connected: ${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-            connectButton.disabled = true; // Or change functionality
+            // Update button text to show connection status and address
+            connectButton.textContent = `Hardhat Node Connected: ${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+            connectButton.disabled = true; // Disable the button after connection
         }
         if (walletAddressElement) {
-            walletAddressElement.innerHTML = `<p><strong>Your Address:</strong> ${address}</p>`;
+            walletAddressElement.innerHTML = `<p><strong>Using Hardhat Account:</strong> ${address}</p>`;
             walletAddressElement.style.display = 'block';
         }
          // Hide the old account selector if it exists
@@ -729,9 +431,9 @@ function updateWalletStatus(address) {
          if (accountSelectorDiv) accountSelectorDiv.style.display = 'none';
 
     } else {
-        // Wallet is disconnected
+        // Hardhat Node is disconnected
         if (connectButton) {
-            connectButton.textContent = 'Connect Wallet';
+            connectButton.textContent = 'Connect to Hardhat Node'; // Update button text
             connectButton.disabled = false;
         }
         if (walletAddressElement) {
@@ -740,14 +442,15 @@ function updateWalletStatus(address) {
     }
 }
 
-// Listen for wallet events (account/network changes)
+// Comment out MetaMask specific listeners
+/*
 function setupWalletListeners() {
     if (window.ethereum && window.ethereum.on) {
         window.ethereum.on('accountsChanged', (accounts) => {
             log.info("Wallet account changed", { accounts });
             if (accounts.length > 0) {
                 // Reconnect with the new account
-                connectWallet(); 
+                connectWallet();
             } else {
                 // User disconnected all accounts
                 log.warn("Wallet disconnected by user.");
@@ -760,10 +463,11 @@ function setupWalletListeners() {
         window.ethereum.on('chainChanged', (chainId) => {
             log.info(`Network changed to ${chainId}. Reloading page.`);
             // Reload the page to ensure connection to the correct network and contract
-            window.location.reload(); 
+            window.location.reload();
         });
     }
 }
+*/
 
 
 // --- Remove Old Account Selection Logic ---
@@ -788,11 +492,11 @@ document.getElementById("selectAccount").addEventListener("click", async () => {
 
 // 🗳 Voting Function (Updated for Wallet Interaction)
 document.getElementById("voteButton").addEventListener("click", async () => {
-    // Check if wallet is connected
+    // Check if connected to Hardhat node
     if (!signer || !contract) {
          const errorNotice = createStatusElement();
          errorNotice.className = "notice-banner error";
-         errorNotice.innerHTML = `<p><strong>Wallet Not Connected:</strong> Please connect your wallet before voting.</p>`;
+         errorNotice.innerHTML = `<p><strong>Not Connected:</strong> Please connect to the Hardhat node before voting.</p>`; // Update message
          removeStatusElement(errorNotice, 7000);
          return;
     }
@@ -926,9 +630,9 @@ document.getElementById("voteButton").addEventListener("click", async () => {
     votingStatus.className = "notice-banner"; // Reset class
     votingStatus.innerHTML = `
         <div class="loading-container">
-            <p><strong>Submitting vote to blockchain...</strong></p>
+            <p><strong>Submitting vote to Hardhat node...</strong></p> <!-- Update message -->
             <div class="loading-spinner"></div>
-            <p>Please confirm the transaction in your wallet.</p>
+            <!-- Remove wallet confirmation message -->
         </div>
     `;
     // Insert after vote button (already handled by createStatusElement if it didn't exist)
@@ -939,16 +643,16 @@ document.getElementById("voteButton").addEventListener("click", async () => {
         const tx = await contract.vote(candidateIndex, justificationText); 
         
         // Update status while waiting for confirmation
+        // No need to show Etherscan link for local Hardhat node
         votingStatus.innerHTML = `
             <div class="loading-container">
                 <p><strong>Transaction sent!</strong> Waiting for confirmation...</p>
                 <div class="loading-spinner"></div>
-                <p><a href="https://sepolia.etherscan.io/tx/${tx.hash}" target="_blank" rel="noopener noreferrer">View on Etherscan</a></p>
             </div>
         `;
-        
+
         await tx.wait(); // Wait for transaction confirmation
-        log.info("Vote transaction confirmed!", { txHash: tx.hash });
+        log.info("Vote transaction confirmed on Hardhat node!", { txHash: tx.hash });
 
         // Update status
         votingStatus.className = "notice-banner success";
@@ -968,15 +672,13 @@ document.getElementById("voteButton").addEventListener("click", async () => {
     } catch (error) {
         log.error(error, { context: 'voting' });
         let userFriendlyError = error.message;
-        // Try to extract a more user-friendly message from common wallet errors
-        if (error.code === 4001) { // User rejected transaction
-            userFriendlyError = "Transaction rejected in wallet.";
-        } else if (error.message.includes("insufficient funds")) {
-            userFriendlyError = "Insufficient funds for gas fees.";
-        } else if (error.data?.message) {
-            userFriendlyError = error.data.message;
+        // Simplify error handling as wallet rejection codes don't apply
+        if (error.message.includes("insufficient funds")) {
+            userFriendlyError = "Insufficient funds in Hardhat account.";
+        } else if (error.reason) { // Ethers often includes a 'reason'
+            userFriendlyError = error.reason;
         }
-        
+
         // Display error message
         votingStatus.className = "notice-banner error";
         votingStatus.innerHTML = `<p><strong>Error casting vote:</strong> ${userFriendlyError}</p>`;
@@ -1582,9 +1284,13 @@ function createMockConsensusMap() {
 
 // Add a demo mode toggle to the UI
 document.addEventListener('DOMContentLoaded', () => {
-    // Setup facial authentication
-    setupFacialAuthentication();
-    
+    // NOTE: Facial authentication flow is handled by login.html script.
+    // This script (app.js) should primarily handle wallet connection and contract interaction
+    // on pages where it's included (like voting.html).
+
+    // Check authentication status from sessionStorage on page load
+    checkAuthenticationStatus();
+
     // Add a demo mode button to the header area if not already there
     if (!document.getElementById('demoModeToggle') && window.demoMode && demoModeDefault) {
         const demoButton = document.createElement('button');
@@ -1636,17 +1342,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Add ZKP toggle event handlers
-    if (document.getElementById("toggleZkpMode") && window.zkpIntegration) {
-        document.getElementById("toggleZkpMode").addEventListener("click", function() {
+    // Add ZKP toggle event handlers (only if element exists)
+    const toggleZkpButton = document.getElementById("toggleZkpMode");
+    if (toggleZkpButton && window.zkpIntegration) {
+        toggleZkpButton.addEventListener("click", function() {
             zkpModeActive = window.zkpIntegration.toggleZkpMode();
             updateZkpUI(zkpModeActive);
         });
     }
     
-    // Add ZKP demo button handler
-    if (document.getElementById("runZkpDemo") && window.zkpIntegration) {
-        document.getElementById("runZkpDemo").addEventListener("click", async function() {
+    // Add ZKP demo button handler (only if element exists)
+    const runZkpDemoButton = document.getElementById("runZkpDemo");
+    if (runZkpDemoButton && window.zkpIntegration) {
+        runZkpDemoButton.addEventListener("click", async function() {
             if (window.zkpIntegration) {
                 try {
                     this.disabled = true;
@@ -1725,16 +1433,18 @@ document.addEventListener('DOMContentLoaded', () => {
         log.info(`Application configured for ${window.productionConfig.isProd ? 'production' : 'development'}`);
     }
     
-    // Add Connect Wallet button listener
-    const connectButton = document.getElementById("connectWalletButton"); // Ensure this button exists in your HTML
+    // Add Connect to Hardhat Node button listener
+    const connectButton = document.getElementById("connectWalletButton"); // Reuse the same button ID
     if (connectButton) {
+        // Update button text initially
+        connectButton.textContent = 'Connect to Hardhat Node';
         connectButton.addEventListener("click", connectWallet);
     } else {
-        log.warn("Connect Wallet button not found in HTML.");
-        // Optionally, try to connect automatically on load if no button
-        // connectWallet(); 
+        log.warn("Connect Button (ID: connectWalletButton) not found in HTML.");
+        // Attempt to connect automatically on load since no user interaction is needed
+        connectWallet();
     }
-    
+
     // Initial UI state for voting controls
     updateVotingControls();
     // Initial UI state for wallet
@@ -1807,7 +1517,51 @@ document.addEventListener('DOMContentLoaded', () => {
     // Attempt to connect automatically if wallet is already approved (optional)
     // connectWallet(); // Uncomment this line if you want auto-connect attempt on load
 
+    // Initial UI state for voting controls
+    updateVotingControls();
+    // Initial UI state for wallet
+    updateWalletStatus(null);
+
 });
+
+/**
+ * Check authentication status from sessionStorage and update UI accordingly.
+ * This should be called on pages that require authentication (e.g., voting.html).
+ */
+function checkAuthenticationStatus() {
+    isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+    isWalletConnected = sessionStorage.getItem('walletConnected') === 'true'; // Check wallet status too
+    const userId = sessionStorage.getItem('userId');
+    const walletAddress = sessionStorage.getItem('walletAddress');
+
+    if (isAuthenticated && userId) {
+        currentUser = { id: userId, name: "Verified Voter" }; // Reconstruct basic user info
+        log.info("User is authenticated via session storage.", { userId });
+        showAuthenticatedUserInfo(currentUser); // Display user info if element exists
+
+        // If wallet was also connected, update its status
+        if (isWalletConnected && walletAddress) {
+            userAddress = walletAddress; // Restore wallet address
+            updateWalletStatus(userAddress);
+            // Attempt to re-initialize contract connection if needed
+            // This assumes connectWallet can handle being called multiple times or checks connection status
+            connectWallet();
+        } else {
+             // Prompt wallet connection if authenticated but wallet not connected
+             updateVotingControls(); // This will show the connect wallet prompt
+        }
+
+    } else {
+        // Not authenticated, potentially redirect to login or show login prompt
+        log.warn("User is not authenticated via session storage.");
+        isAuthenticated = false;
+        isWalletConnected = false;
+        currentUser = null;
+        userAddress = null;
+        // Hide voting elements, show login prompt/redirect (handled by page-specific logic or updateVotingControls)
+    }
+    updateVotingControls(); // Update UI based on loaded status
+}
 
 /**
  * Update UI based on ZKP mode state

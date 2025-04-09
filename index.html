@@ -3,700 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SecureVote - Decentralized Voting with AI and Blockchain</title>
-  <meta name="description" content="Next-generation decentralized voting platform combining blockchain security, zero-knowledge proofs, and AI-powered analysis for transparent, secure elections.">
-  <link rel="stylesheet" href="/assets/css/styles.css">
-  <link rel="stylesheet" href="/assets/css/icon-fonts.css">
-  <link rel="stylesheet" href="/assets/css/image-fallbacks.css">
-  <!-- Favicon is handled through icon-fonts.css -->
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+  <title>SecureVote - AI-Powered Secure Voting Platform</title>
+  <meta name="description" content="Next-generation decentralized voting platform with AI-powered facial recognition and blockchain security.">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="page-container">
-  <!-- Header will be loaded here -->
-  <div id="header-container"></div>
-  
-  <main class="main-content">
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-lg-6">
-            <h1 class="hero-title">Secure Voting for the Modern World</h1>
-            <p class="hero-subtitle">Combining blockchain, zero-knowledge proofs, and AI to create the most secure, transparent, and intelligent voting platform.</p>
-            <div class="hero-buttons">
-              <a href="/pages/login.html" class="button primary-button button-lg">Get Started</a>
-              <a href="#features" class="button outline-button button-lg">Learn More</a>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="hero-image">
-              <img src="/assets/images/hero-illustration.svg" alt="SecureVote Platform Illustration" onerror="this.src='/assets/images/hero-fallback.png'; this.onerror=null;">
-            </div>
-          </div>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <i class="fas fa-vote-yea"></i>
+          <span>SecureVote</span>
         </div>
+        <nav class="nav-menu">
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#how-it-works" class="nav-link">How It Works</a>
+          <a href="#security" class="nav-link">Security</a>
+          <a href="/pages/login.html" class="nav-link login-btn">Login</a>
+        </nav>
       </div>
-    </section>
-    
-    <!-- Partners Section -->
-    <section class="partners-section">
-      <div class="container">
-        <div class="partners-wrapper">
-          <p class="partners-text">Trusted by leading organizations</p>
-          <div class="partners-logos">
-            <img src="/assets/images/partner1.svg" alt="Partner" onerror="this.src='/assets/images/partner1-fallback.png'; this.onerror=null;">
-            <img src="/assets/images/partner2.svg" alt="Partner" onerror="this.src='/assets/images/partner2-fallback.png'; this.onerror=null;">
-            <img src="/assets/images/partner3.svg" alt="Partner" onerror="this.src='/assets/images/partner3-fallback.png'; this.onerror=null;">
-            <img src="/assets/images/partner4.svg" alt="Partner" onerror="this.src='/assets/images/partner4-fallback.png'; this.onerror=null;">
-            <img src="/assets/images/partner5.svg" alt="Partner" onerror="this.src='/assets/images/partner5-fallback.png'; this.onerror=null;">
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-content">
+          <h1>Secure Voting for the Digital Age</h1>
+          <p>Experience the future of voting with AI-powered facial recognition and blockchain security.</p>
+          <div class="hero-buttons">
+            <a href="/pages/login.html" class="primary-button">Start Voting</a>
+            <a href="#features" class="secondary-button">Learn More</a>
           </div>
         </div>
-      </div>
-    </section>
-    
-    <!-- Features Section -->
-    <section id="features" class="features-section section-lg">
-      <div class="container">
-        <div class="section-header text-center">
-          <h2>Revolutionary Voting Technology</h2>
-          <p class="section-description">Our platform combines cutting-edge technologies to reinvent the voting experience</p>
-        </div>
-        
+        <!-- <div class="hero-image">
+          <img src="assets/images/hero-illustration.svg" alt="Secure Voting Illustration">
+        </div> -->
+      </section>
+
+      <!-- Features Section -->
+      <section id="features" class="features-section">
+        <h2>Why Choose SecureVote?</h2>
         <div class="features-grid">
           <div class="feature-card">
-            <div class="feature-icon">
-              <i class="icon-lock"></i>
-            </div>
-            <h3 class="feature-title">Blockchain Security</h3>
-            <p>Every vote is recorded on the Ethereum blockchain, ensuring immutable, verifiable records that cannot be tampered with.</p>
+            <i class="fas fa-shield-alt"></i>
+            <h3>Advanced Security</h3>
+            <p>Blockchain technology ensures tamper-proof voting records</p>
           </div>
-          
           <div class="feature-card">
-            <div class="feature-icon">
-              <i class="icon-user"></i>
-            </div>
-            <h3 class="feature-title">Biometric Authentication</h3>
-            <p>Advanced facial recognition ensures that only authorized individuals can cast their votes, eliminating fraud.</p>
+            <i class="fas fa-user-shield"></i>
+            <h3>AI Verification</h3>
+            <p>Facial recognition technology for secure voter authentication</p>
           </div>
-          
           <div class="feature-card">
-            <div class="feature-icon">
-              <i class="icon-vote"></i>
-            </div>
-            <h3 class="feature-title">Zero-Knowledge Proofs</h3>
-            <p>Cast private, verifiable votes using cryptographic zero-knowledge proofs that maintain your voting privacy.</p>
+            <i class="fas fa-chart-line"></i>
+            <h3>Real-time Results</h3>
+            <p>Instant vote counting and result verification</p>
           </div>
-          
           <div class="feature-card">
-            <div class="feature-icon">
-              <i class="icon-chart"></i>
-            </div>
-            <h3 class="feature-title">AI-Powered Analysis</h3>
-            <p>Real-time vote analysis provides insights into voting patterns and detects anomalies for enhanced security.</p>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="icon-dashboard"></i>
-            </div>
-            <h3 class="feature-title">Real-time Results</h3>
-            <p>View election results as they happen with interactive dashboards and comprehensive data visualization.</p>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="icon-settings"></i>
-            </div>
-            <h3 class="feature-title">Smart Contract Automation</h3>
-            <p>Automate the entire election process with customizable smart contracts that enforce election rules.</p>
+            <i class="fas fa-mobile-alt"></i>
+            <h3>Easy to Use</h3>
+            <p>Simple and intuitive interface for all users</p>
           </div>
         </div>
-      </div>
-    </section>
-    
-    <!-- How It Works Section -->
-    <section class="how-it-works-section section">
-      <div class="container">
-        <div class="section-header text-center">
-          <h2>How SecureVote Works</h2>
-          <p class="section-description">A seamless process from registration to results</p>
-        </div>
-        
-        <div class="process-steps">
-          <div class="process-step">
+      </section>
+
+      <!-- How It Works Section -->
+      <section id="how-it-works" class="how-it-works-section">
+        <h2>How It Works</h2>
+        <div class="steps-container">
+          <div class="step">
             <div class="step-number">1</div>
-            <div class="step-content">
-              <h3>Secure Authentication</h3>
-              <p>Verify your identity using our AI-powered facial recognition system to ensure only authorized voters participate.</p>
-            </div>
+            <h3>Register</h3>
+            <p>Enter your Aadhar and Voter ID details</p>
           </div>
-          
-          <div class="process-step">
+          <div class="step">
             <div class="step-number">2</div>
-            <div class="step-content">
-              <h3>Cast Your Vote</h3>
-              <p>Vote securely using our intuitive interface. Choose to vote publicly or privately using zero-knowledge proofs.</p>
-            </div>
+            <h3>Verify</h3>
+            <p>Complete facial recognition verification</p>
           </div>
-          
-          <div class="process-step">
+          <div class="step">
             <div class="step-number">3</div>
-            <div class="step-content">
-              <h3>Blockchain Verification</h3>
-              <p>Your vote is recorded on the Ethereum blockchain, creating an immutable and transparent record.</p>
-            </div>
+            <h3>Vote</h3>
+            <p>Cast your vote securely</p>
           </div>
-          
-          <div class="process-step">
-            <div class="step-number">4</div>
-            <div class="step-content">
-              <h3>AI Analysis</h3>
-              <p>Our AI algorithms analyze justifications, detect biases, and generate research insights from voting data.</p>
-            </div>
+        </div>
+      </section>
+
+      <!-- Security Section -->
+      <section id="security" class="security-section">
+        <h2>Security Features</h2>
+        <div class="security-grid">
+          <div class="security-card">
+            <i class="fas fa-fingerprint"></i>
+            <h3>Biometric Verification</h3>
+            <p>Advanced facial recognition technology</p>
           </div>
-          
-          <div class="process-step">
-            <div class="step-number">5</div>
-            <div class="step-content">
-              <h3>View Results</h3>
-              <p>Access comprehensive dashboards with real-time results, analytics, and visualization of voting patterns.</p>
-            </div>
+          <div class="security-card">
+            <i class="fas fa-lock"></i>
+            <h3>Blockchain Security</h3>
+            <p>Immutable voting records</p>
           </div>
+          <div class="security-card">
+            <i class="fas fa-user-lock"></i>
+            <h3>Privacy Protection</h3>
+            <p>Your vote remains anonymous</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>SecureVote</h4>
+          <p>Making voting secure and accessible for everyone.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <a href="#features">Features</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#security">Security</a>
+        </div>
+        <div class="footer-section">
+          <h4>Contact</h4>
+          <p>Email: support@securevote.com</p>
+          <p>Phone: +1 (555) 123-4567</p>
         </div>
       </div>
-    </section>
-    
-    <!-- MADD Section -->
-    <section class="madd-section section bg-light">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-lg-6">
-            <div class="madd-image">
-              <img src="/assets/images/madd-illustration.svg" alt="Multi-Agent Deliberative Democracy" onerror="this.src='/assets/images/madd-fallback.png'; this.onerror=null;">
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="madd-content">
-              <h2>Multi-Agent Deliberative Democracy</h2>
-              <p class="lead">Our revolutionary MADD system uses AI to simulate democratic deliberation across different reasoning perspectives.</p>
-              
-              <div class="madd-features">
-                <div class="madd-feature">
-                  <h4>Diverse AI Agents</h4>
-                  <p>Automated agents represent different reasoning frameworks including consequentialist, deontological, and rights-based perspectives.</p>
-                </div>
-                
-                <div class="madd-feature">
-                  <h4>Dynamic Consensus Mapping</h4>
-                  <p>Visualize areas of agreement, disagreement, and potential bridge positions as deliberation progresses.</p>
-                </div>
-                
-                <div class="madd-feature">
-                  <h4>Research Metrics</h4>
-                  <p>Quantitative analysis of deliberation quality, consensus formation, and reasoning patterns.</p>
-                </div>
-              </div>
-              
-              <a href="/pages/deliberative.html" class="button primary-button">Explore MADD</a>
-            </div>
-          </div>
-        </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 SecureVote. All rights reserved.</p>
       </div>
-    </section>
-    
-    <!-- ZKP Section -->
-    <section class="zkp-section section">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-lg-6">
-            <div class="zkp-content">
-              <h2>Private Voting with Zero-Knowledge Proofs</h2>
-              <p class="lead">Cast confidential votes that remain verifiable without revealing your choices.</p>
-              
-              <div class="zkp-features">
-                <div class="zkp-feature">
-                  <h4>Complete Privacy</h4>
-                  <p>Your vote remains private while still being counted in the total - not even the system administrators can see your choice.</p>
-                </div>
-                
-                <div class="zkp-feature">
-                  <h4>Cryptographic Verification</h4>
-                  <p>Zero-knowledge proofs mathematically verify that your vote is legitimate without revealing its content.</p>
-                </div>
-                
-                <div class="zkp-feature">
-                  <h4>Coercion Resistance</h4>
-                  <p>Prevent vote buying and coercion by making it impossible for anyone to verify how you voted.</p>
-                </div>
-              </div>
-              
-              <a href="/pages/zkp.html" class="button primary-button">Learn About ZKP</a>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="zkp-image">
-              <img src="/assets/images/zkp-illustration.svg" alt="Zero-Knowledge Proofs" onerror="this.src='/assets/images/zkp-fallback.png'; this.onerror=null;">
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    
-    <!-- Testimonials Section -->
-    <section class="testimonials-section section bg-light">
-      <div class="container">
-        <div class="section-header text-center">
-          <h2>What Our Users Say</h2>
-          <p class="section-description">Organizations and individuals that trust SecureVote for their electoral needs</p>
-        </div>
-        
-        <div class="testimonials-slider">
-          <div class="testimonial-card">
-            <div class="testimonial-content">
-              <p>"SecureVote transformed our organizational elections with unparalleled security and transparency. The AI analysis provided insights we never had access to before."</p>
-            </div>
-            <div class="testimonial-author">
-              <img src="/assets/images/testimonial1.jpg" alt="Testimonial Author" class="author-image" onerror="this.src='/assets/images/testimonial-fallback.png'; this.onerror=null;">
-              <div class="author-details">
-                <h4>Sarah Johnson</h4>
-                <p>Election Commissioner, Tech Association</p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="testimonial-card">
-            <div class="testimonial-content">
-              <p>"The zero-knowledge proof feature gave our members confidence that their votes remained private while still being counted correctly. It's revolutionary."</p>
-            </div>
-            <div class="testimonial-author">
-              <img src="/assets/images/testimonial2.jpg" alt="Testimonial Author" class="author-image" onerror="this.src='/assets/images/testimonial-fallback.png'; this.onerror=null;">
-              <div class="author-details">
-                <h4>Michael Chen</h4>
-                <p>Board President, Community Foundation</p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="testimonial-card">
-            <div class="testimonial-content">
-              <p>"The facial authentication system eliminated voter fraud concerns completely, and the blockchain verification gave everyone confidence in the results."</p>
-            </div>
-            <div class="testimonial-author">
-              <img src="/assets/images/testimonial3.jpg" alt="Testimonial Author" class="author-image" onerror="this.src='/assets/images/testimonial-fallback.png'; this.onerror=null;">
-              <div class="author-details">
-                <h4>Dr. Amelia Rodriguez</h4>
-                <p>University Governance Chair</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    
-    <!-- CTA Section -->
-    <section class="cta-section">
-      <div class="container">
-        <div class="cta-content text-center">
-          <h2>Ready to Transform Your Voting Process?</h2>
-          <p>Join thousands of organizations using SecureVote for secure, transparent, and intelligent elections.</p>
-          <div class="cta-buttons">
-            <a href="/pages/login.html" class="button primary-button button-lg">Get Started</a>
-            <a href="/pages/contact.html" class="button outline-button button-lg">Contact Sales</a>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-  
-  <!-- Footer will be loaded here -->
-  <div id="footer-container"></div>
-  
-  <!-- Scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js"></script>
-  <script src="/production-config.js"></script>
-  
-  <!-- Component Loader Script -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Load header component
-      fetch('/components/header.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('header-container').innerHTML = html;
-          
-          // Execute any scripts in the header
-          const headerScripts = document.getElementById('header-container').querySelectorAll('script');
-          headerScripts.forEach(script => {
-            const newScript = document.createElement('script');
-            if (script.src) {
-              newScript.src = script.src;
-            } else {
-              newScript.textContent = script.textContent;
-            }
-            document.head.appendChild(newScript);
-          });
-          
-          // Update active navigation item
-          const navLinks = document.querySelectorAll('.nav-link');
-          navLinks.forEach(link => {
-            if (link.getAttribute('href') === '/' || link.getAttribute('href') === '/index.html') {
-              link.parentElement.classList.add('active');
-            }
-          });
-        })
-        .catch(error => console.error('Error loading header:', error));
-      
-      // Load footer component
-      fetch('/components/footer.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('footer-container').innerHTML = html;
-          
-          // Execute any scripts in the footer
-          const footerScripts = document.getElementById('footer-container').querySelectorAll('script');
-          footerScripts.forEach(script => {
-            const newScript = document.createElement('script');
-            if (script.src) {
-              newScript.src = script.src;
-            } else {
-              newScript.textContent = script.textContent;
-            }
-            document.head.appendChild(newScript);
-          });
-        })
-        .catch(error => console.error('Error loading footer:', error));
-      
-      // Check if user is already authenticated
-      const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
-      if (isAuthenticated) {
-        // Redirect authenticated users to dashboard
-        const getStartedButtons = document.querySelectorAll('a[href="/pages/login.html"]');
-        getStartedButtons.forEach(button => {
-          button.setAttribute('href', '/pages/dashboard.html');
-          button.textContent = 'Go to Dashboard';
-        });
-      }
-      
-      // Handle testimonials slider
-      const testimonialCards = document.querySelectorAll('.testimonial-card');
-      let currentIndex = 0;
-      
-      function showTestimonial(index) {
-        testimonialCards.forEach((card, i) => {
-          card.style.display = i === index ? 'block' : 'none';
-        });
-      }
-      
-      // Initialize the slider
-      if (testimonialCards.length > 0) {
-        showTestimonial(currentIndex);
-        
-        // Change testimonial every 5 seconds
-        setInterval(() => {
-          currentIndex = (currentIndex + 1) % testimonialCards.length;
-          showTestimonial(currentIndex);
-        }, 5000);
-      }
-    });
-  </script>
-  
-  <!-- Additional Styles -->
-  <style>
-    /* Hero Section Styles */
-    .hero-section {
-      padding: 120px 0;
-      background: linear-gradient(135deg, #f5f7ff 0%, #e8eafd 100%);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .hero-title {
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      color: var(--gray-900);
-    }
-    
-    .hero-subtitle {
-      font-size: 1.25rem;
-      color: var(--gray-700);
-      margin-bottom: 2rem;
-      line-height: 1.6;
-    }
-    
-    .hero-buttons {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    
-    .hero-image {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    
-    .hero-image img {
-      max-width: 100%;
-      height: auto;
-    }
-    
-    /* Partners Section */
-    .partners-section {
-      padding: 2rem 0;
-      background-color: white;
-      border-bottom: 1px solid var(--gray-200);
-    }
-    
-    .partners-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    
-    .partners-text {
-      font-size: 0.875rem;
-      color: var(--gray-600);
-      margin-bottom: 1.5rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    
-    .partners-logos {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 3rem;
-    }
-    
-    .partners-logos img {
-      height: 40px;
-      opacity: 0.7;
-      transition: opacity var(--transition-fast);
-    }
-    
-    .partners-logos img:hover {
-      opacity: 1;
-    }
-    
-    /* Features Section */
-    .features-section {
-      background-color: white;
-    }
-    
-    .section-header {
-      margin-bottom: 4rem;
-    }
-    
-    .section-description {
-      font-size: 1.25rem;
-      color: var(--gray-600);
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 2rem;
-    }
-    
-    /* How It Works Section */
-    .process-steps {
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    .process-step {
-      display: flex;
-      gap: 1.5rem;
-      align-items: flex-start;
-    }
-    
-    .step-number {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      background-color: var(--primary);
-      color: white;
-      font-weight: 600;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    
-    .step-content h3 {
-      margin-bottom: 0.5rem;
-    }
-    
-    /* MADD and ZKP Sections */
-    .bg-light {
-      background-color: var(--gray-100);
-    }
-    
-    .madd-section, .zkp-section {
-      padding: 100px 0;
-    }
-    
-    .madd-image, .zkp-image {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-    
-    .madd-image img, .zkp-image img {
-      max-width: 100%;
-      height: auto;
-    }
-    
-    .madd-features, .zkp-features {
-      margin: 2rem 0;
-    }
-    
-    .madd-feature, .zkp-feature {
-      margin-bottom: 1.5rem;
-    }
-    
-    .madd-feature h4, .zkp-feature h4 {
-      color: var(--primary);
-      margin-bottom: 0.5rem;
-    }
-    
-    /* Testimonials Section */
-    .testimonials-slider {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    .testimonial-card {
-      background-color: white;
-      border-radius: var(--border-radius);
-      box-shadow: var(--box-shadow);
-      padding: 2rem;
-      margin-bottom: 1rem;
-    }
-    
-    .testimonial-content {
-      font-size: 1.125rem;
-      color: var(--gray-700);
-      font-style: italic;
-      margin-bottom: 1.5rem;
-    }
-    
-    .testimonial-author {
-      display: flex;
-      align-items: center;
-    }
-    
-    .author-image {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      margin-right: 1rem;
-    }
-    
-    .author-details h4 {
-      margin-bottom: 0.25rem;
-    }
-    
-    .author-details p {
-      color: var(--gray-600);
-      margin-bottom: 0;
-    }
-    
-    /* CTA Section */
-    .cta-section {
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-      color: white;
-      padding: 80px 0;
-    }
-    
-    .cta-content h2 {
-      color: white;
-      margin-bottom: 1rem;
-    }
-    
-    .cta-content p {
-      font-size: 1.25rem;
-      margin-bottom: 2rem;
-      opacity: 0.9;
-    }
-    
-    .cta-buttons {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-    }
-    
-    .cta-buttons .outline-button {
-      color: white;
-      border-color: white;
-    }
-    
-    .cta-buttons .outline-button:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-      border-color: white;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 991px) {
-      .hero-section {
-        padding: 80px 0;
-      }
-      
-      .hero-title {
-        font-size: 2.5rem;
-      }
-      
-      .hero-image {
-        margin-top: 3rem;
-      }
-      
-      .process-step {
-        flex-direction: column;
-      }
-      
-      .step-number {
-        margin-bottom: 1rem;
-      }
-      
-      .cta-buttons {
-        flex-direction: column;
-        gap: 1rem;
-      }
-      
-      .cta-buttons .button {
-        width: 100%;
-      }
-    }
-    
-    @media (max-width: 767px) {
-      .hero-title {
-        font-size: 2rem;
-      }
-      
-      .hero-buttons {
-        flex-direction: column;
-      }
-      
-      .hero-buttons .button {
-        width: 100%;
-      }
-      
-      .partners-logos {
-        gap: 1.5rem;
-      }
-      
-      .partners-logos img {
-        height: 30px;
-      }
-    }
-  </style>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

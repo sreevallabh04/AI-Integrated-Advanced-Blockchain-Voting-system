@@ -59,14 +59,18 @@ async function main() {
         console.log(`\n✅ Voting contract deployed successfully!`);
         console.log(`📍 Contract address: ${contractAddress}`);
         console.log(`🌐 Network: ${network.name}`);
-        
-        // Save the contract address to configuration
+
+        // Always update the .env file with the latest contract address
+        updateEnvFile(contractAddress, network.name);
+
+        // Update production-config.js only for non-local networks if needed
         if (isProduction) {
-            updateEnvFile(contractAddress, network.name);
             updateProductionConfig(contractAddress, network.name);
-            console.log(`\n💾 Contract address saved to configuration files`);
+            console.log(`\n💾 Production configuration files updated`);
+        } else {
+             console.log(`\n💾 .env file updated with local contract address`);
         }
-        
+
         return {
             success: true,
             contractAddress,
