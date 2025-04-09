@@ -676,7 +676,7 @@ window.facialAuth = (function() {
 
        // Validate input
        if (!aadhar || !voterId || !mobile || !hardhatAccount) {
-           throw new Error('Please fill in all the required fields.');
+           throw new Error('Please fill in all the required fields: Aadhar, Voter ID, Mobile Number, and Ethereum Account.');
        }
         if (hasAiVoterAuthentication) {
             try {
