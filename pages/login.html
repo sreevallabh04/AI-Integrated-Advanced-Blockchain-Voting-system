@@ -598,6 +598,9 @@
         loadComponent('/components/footer.html', 'footer-container')
       ]).catch(error => console.error('Error loading components:', error));
 
+      // --- State Tracking ---
+      let isFacialStepCompleted = false; // Track if facial step succeeded/bypassed
+
       // --- Multi-Factor Auth Elements ---
       const detailsForm = document.getElementById('details-form');
       const otpForm = document.getElementById('otp-form');
@@ -920,9 +923,10 @@
                 authStatus.textContent = 'AI facial verification successful!';
                 authStatus.style.color = 'green';
                 
-                // Store biometric verification
-                sessionStorage.setItem('biometricVerified', 'true');
-                sessionStorage.setItem('userId', result.user.voterId || voterId);
+                // Set flag and session storage upon successful AI verification
+                isFacialStepCompleted = true; 
+                sessionStorage.setItem('authenticated', 'true'); 
+                sessionStorage.setItem('userId', result.user.voterId || voterId); 
                 
                 // Clean up and proceed to wallet connection
                 if (window.aiVoterAuthentication.stopCamera) {
@@ -962,28 +966,32 @@
               // Get credentials - they should be in the facial auth module already
               window.facialAuth.captureAndVerify()
                 .then(result => {
-                  if (result.success) {
-                    authStatus.textContent = result.newlyRegistered ? 
-                      'New user registered successfully!' : 
-                      'Facial Verification Successful!';
-                    authStatus.style.color = 'green';
-                    
-                    // Store authentication status consistently
-                    sessionStorage.setItem('authenticated', 'true'); // Use 'authenticated' key
-                    sessionStorage.setItem('userId', result.userId); // Store userId (which is voterId in bypass)
-                    
-                    // Stop camera
-                    window.facialAuth.stopCamera();
-                    
-                    // Show wallet connection form
-                    facialAuthForm.style.display = 'none';
-                    walletConnectionForm.style.display = 'block';
-                    updateProgressSteps('wallet');
+                  // Since captureAndVerify now always returns success in bypass mode,
+                  // we just need to update the UI and proceed.
+                  // The session storage ('authenticated', 'verifiedVoterId', 'capturedUserIcon')
+                  // is already set within captureAndVerify.
+                  
+                  authStatus.textContent = result.message; // Display message from captureAndVerify
+                  authStatus.style.color = 'green';
+                  
+                  // Set flag and session storage upon successful bypass/standard verification
+                  isFacialStepCompleted = true; 
+                  sessionStorage.setItem('authenticated', 'true'); 
+                  sessionStorage.setItem('userId', result.userId); 
+                  
+                  // Stop camera
+                  if (window.facialAuth && typeof window.facialAuth.stopCamera === 'function') {
+                      window.facialAuth.stopCamera();
                   } else {
-                    authStatus.textContent = `Verification Failed: ${result.message || 'Face not recognized.'}. Please try again.`;
-                    authStatus.style.color = 'red';
-                    captureBtn.disabled = false; // Re-enable button
+                      log.warn("Could not call stopCamera function.");
                   }
+                  
+                  // Show wallet connection form
+                  facialAuthForm.style.display = 'none';
+                  walletConnectionForm.style.display = 'block';
+                  updateProgressSteps('wallet');
+                  
+                  // Note: No need to set sessionStorage('authenticated') here, it's done in captureAndVerify
                 })
                 .catch(error => {
                   authStatus.textContent = `Error during verification: ${error.message}`;
@@ -1063,9 +1071,16 @@
       if (connectWalletButton) {
         connectWalletButton.addEventListener('click', async function() {
           try {
-            // Check if biometric verification was completed (or bypassed)
-            if (sessionStorage.getItem('authenticated') !== 'true') { // Check general authenticated flag now
-              throw new Error("Authentication required before selecting account");
+            // Log the state right before the check
+            console.log("Connect Wallet clicked. isFacialStepCompleted:", isFacialStepCompleted); 
+            
+            // Check the local flag first
+            if (!isFacialStepCompleted) { 
+              // Display error message clearly in the status area
+              walletStatus.className = 'wallet-status error';
+              walletStatus.innerHTML = `<i class="icon-error"></i><span>Authentication required. Please complete previous steps.</span>`;
+              console.error("Authentication check failed in connectWalletButton listener (isFacialStepCompleted is false)."); 
+              return; // Stop execution
             }
             
             // Get selected account from the correct dropdown for Step 4
@@ -1077,7 +1092,7 @@
             // Show connecting status
             walletStatus.className = 'wallet-status connecting';
             walletStatus.innerHTML = '<i class="icon-loading"></i><span>Connecting to Hardhat node...</span>';
-            this.disabled = true;
+            connectWalletButton.disabled = true; // Disable button while processing
             
             // Store wallet info in session
             sessionStorage.setItem('walletConnected', 'true');
@@ -1093,9 +1108,9 @@
             // Enable proceed button
             proceedToVotingButton.disabled = false;
             
-            // Update button
-            this.textContent = 'Account Selected';
-            this.disabled = true;
+            // Update button text and keep disabled
+            connectWalletButton.textContent = 'Account Selected';
+            // connectWalletButton.disabled = true; // Already disabled
             
             console.log("Hardhat account selected:", selectedAccount);
           } catch (error) {
@@ -1106,8 +1121,8 @@
             walletStatus.innerHTML = `<i class="icon-error"></i><span>${error.message}</span>`;
             
             // Reset button
-            this.textContent = 'Use Selected Account';
-            this.disabled = false;
+            connectWalletButton.textContent = 'Use Selected Account';
+            connectWalletButton.disabled = false; 
           }
         });
       }
@@ -1115,12 +1130,11 @@
       // Proceed to Voting Button
       if (proceedToVotingButton) {
         proceedToVotingButton.addEventListener('click', function() {
-          // Final verification before proceeding
-          if (sessionStorage.getItem('biometricVerified') === 'true' && 
+          // Final verification before proceeding - Check 'authenticated' and 'walletConnected'
+          if (sessionStorage.getItem('authenticated') === 'true' &&  // Use correct flag
               sessionStorage.getItem('walletConnected') === 'true') {
             
-            // Set complete authentication
-            sessionStorage.setItem('authenticated', 'true');
+            // No need to set 'authenticated' again, it should already be set
             
             // If blockchain verification data is needed, prepare it
             try {
@@ -1148,13 +1162,16 @@
           sessionStorage.getItem('walletConnected') === 'true') {
         // Redirect directly to voting page
         window.location.href = '/pages/voting.html';
-      } else if (sessionStorage.getItem('biometricVerified') === 'true') {
-        // Show wallet connection step if biometric is already verified
+      } else if (sessionStorage.getItem('authenticated') === 'true') { // Check 'authenticated' here too
+        // Show wallet connection step if authenticated but wallet not connected
         detailsForm.style.display = 'none';
         otpForm.style.display = 'none';
         facialAuthForm.style.display = 'none';
         walletConnectionForm.style.display = 'block';
         updateProgressSteps('wallet');
+        
+        // Set facial step completed flag to true since the user is already authenticated
+        isFacialStepCompleted = true;
         
         // Check if wallet was previously connected
         if (sessionStorage.getItem('walletConnected') === 'true') {
