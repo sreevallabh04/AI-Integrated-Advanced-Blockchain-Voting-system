@@ -69,6 +69,7 @@ const facialAuthConfig = {
     tensorMemoryLimit: config?.facialAuth?.tensorMemoryLimit || 50, // Limit tensor memory usage (MB)
     detectionInterval: config?.facialAuth?.detectionInterval || 100, // Face detection interval in ms
     verificationValidityPeriod: config?.verificationValidityPeriod || 24 * 60 * 60 * 1000, // 24 hours
+    useFallbackAuthentication: true, // Always enable fallback authentication for reliability
 };
 
 // Log module initialization with safe data
@@ -287,8 +288,6 @@ class FacialAuthentication {
     }
 }
 
-module.exports = FacialAuthentication;
-
 // Facial Authentication namespace - Enhanced for blockchain voting integration
 window.facialAuth = (function() {
     // --- Private variables ---
@@ -303,6 +302,10 @@ window.facialAuth = (function() {
 
     let modelLoadingPromise = null; // Cache model loading promise
     let isDestroying = false; // Flag to prevent operations during cleanup
+    
+    // Track server availability
+    let serverAvailable = null; // null = unknown, true = available, false = unavailable
+    let serverCheckInProgress = false;
 
     // --- Constants ---
     // Backend endpoints for multi-factor authentication
@@ -313,6 +316,7 @@ window.facialAuth = (function() {
     const OTP_VERIFY_API_ENDPOINT = `${API_BASE_URL}/auth/verify-otp`;
     const VOTER_VERIFY_API_ENDPOINT = `${API_BASE_URL}/auth/verify-voter`;
     const RANDOM_VOTER_API_ENDPOINT = `${API_BASE_URL}/voters/random`;
+    const HEALTH_CHECK_ENDPOINT = `${API_BASE_URL}/health`;
 
     // Authentication state
     let currentAadhar = '';
