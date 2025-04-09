@@ -205,6 +205,80 @@
   <script src="/ai-voter-authentication.js"></script>
   <script src="/facial-auth.js"></script>
   
+  <!-- Script for Dynamic Hardhat Account Fetching -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Hardhat node RPC URL (default)
+      const HARDHAT_RPC_URL = 'http://127.0.0.1:8545';
+      
+      // Reference the account dropdowns and UI elements
+      const credentialsHardhatSelect = document.getElementById('hardhat-account');
+      const refreshAccountsBtn = document.getElementById('refresh-accounts');
+      const hardhatStatusEl = document.getElementById('hardhat-status');
+      
+      // Function to fetch accounts from running Hardhat node
+      async function fetchHardhatAccounts() {
+        try {
+          // Update status
+          if (hardhatStatusEl) {
+            hardhatStatusEl.innerHTML = '<span class="text-muted">Connecting to Hardhat node...</span>';
+          }
+          
+          // Clear dropdown
+          if (credentialsHardhatSelect) {
+            credentialsHardhatSelect.innerHTML = '<option value="">-- Connecting to Hardhat node... --</option>';
+          }
+          
+          // Connect to the Hardhat node
+          const provider = new ethers.JsonRpcProvider(HARDHAT_RPC_URL);
+          
+          // Verify connection by getting a block
+          await provider.getBlockNumber();
+          
+          // Get accounts from the node
+          const accounts = await provider.send("eth_accounts", []);
+          
+          // Update dropdown
+          if (credentialsHardhatSelect) {
+            credentialsHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
+            
+            // Add each account to the dropdown
+            accounts.forEach((account, index) => {
+              const option = document.createElement('option');
+              option.value = account;
+              option.textContent = `Account #${index}: ${account}`;
+              credentialsHardhatSelect.appendChild(option);
+            });
+          }
+          
+          // Update status
+          if (hardhatStatusEl) {
+            hardhatStatusEl.innerHTML = `<span class="text-success">✓ Connected to Hardhat node - ${accounts.length} accounts found</span>`;
+          }
+        } catch (error) {
+          console.error('Failed to fetch Hardhat accounts:', error);
+          
+          // Update dropdown and status
+          if (credentialsHardhatSelect) {
+            credentialsHardhatSelect.innerHTML = '<option value="">-- Hardhat node not running --</option>';
+          }
+          
+          if (hardhatStatusEl) {
+            hardhatStatusEl.innerHTML = '<span class="text-danger">❌ Cannot connect to Hardhat node. Make sure to run "npx hardhat node" in your terminal.</span>';
+          }
+        }
+      }
+      
+      // Fetch accounts on page load
+      fetchHardhatAccounts();
+      
+      // Add refresh button event listener
+      if (refreshAccountsBtn) {
+        refreshAccountsBtn.addEventListener('click', fetchHardhatAccounts);
+      }
+    });
+  </script>
+  
   <!-- Component Loader Script & Multi-Factor Auth Logic -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
