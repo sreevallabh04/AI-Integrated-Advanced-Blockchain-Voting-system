@@ -7,20 +7,44 @@
  * before allowing blockchain transactions.
  */
 
-const ethers = require('ethers');
-const { createHash } = require('crypto');
-require('dotenv').config();
+// Browser-compatible version of modules
+// Import ethers from the global scope (loaded via CDN)
+const ethers = window.ethers || {};
+
+// Simple createHash polyfill for browser
+const createHash = (algo) => {
+    return {
+        update: (data) => {
+            return {
+                digest: (format) => {
+                    // Simple hash function for browsers
+                    // In production, use a proper crypto library
+                    const str = String(data);
+                    let hash = 0;
+                    for (let i = 0; i < str.length; i++) {
+                        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                        hash |= 0; // Convert to 32-bit integer
+                    }
+                    return Math.abs(hash).toString(16).padStart(64, '0');
+                }
+            };
+        }
+    };
+};
 
 // Use the enhanced AI voter authentication module if available
 const hasAiVoterAuthentication = typeof window.aiVoterAuthentication !== 'undefined';
 
-// Load configuration safely
+// Load configuration safely - from window.productionConfig if available
 const config = window.productionConfig || {};
-// Use the logger from productionConfig or fallback to console (defined in app.js or production-config.js)
+// Use the logger from productionConfig or fallback to console
 const log = window.productionConfig?.log || console;
 
 // Determine environment
 const isProd = config?.isProd || (window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1'));
+
+// Log initialization - make safe for all browsers
+console.log("Facial Authentication Module initializing...");
 
 // Log module initialization
 log.info("Initializing Facial Authentication Module", { 
