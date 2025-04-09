@@ -290,13 +290,22 @@
         } catch (error) {
           console.error('Failed to fetch Hardhat accounts:', error);
           
-          // Update dropdown and status
+          // Error message
+          const errorMessage = '<span class="text-danger">❌ Cannot connect to Hardhat node. Make sure to run "npx hardhat node" in your terminal.</span>';
+          
+          // Update both dropdowns and status areas
           if (credentialsHardhatSelect) {
             credentialsHardhatSelect.innerHTML = '<option value="">-- Hardhat node not running --</option>';
           }
+          if (walletHardhatSelect) {
+            walletHardhatSelect.innerHTML = '<option value="">-- Hardhat node not running --</option>';
+          }
           
           if (hardhatStatusEl) {
-            hardhatStatusEl.innerHTML = '<span class="text-danger">❌ Cannot connect to Hardhat node. Make sure to run "npx hardhat node" in your terminal.</span>';
+            hardhatStatusEl.innerHTML = errorMessage;
+          }
+          if (walletHardhatStatusEl) {
+            walletHardhatStatusEl.innerHTML = errorMessage;
           }
         }
       }
