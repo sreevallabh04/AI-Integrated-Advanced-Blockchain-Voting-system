@@ -20,3 +20,4 @@
 2025-04-09 12:04:28,622 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:04:28] "OPTIONS /api/face-match HTTP/1.1" 200 -
 2025-04-09 12:04:57,029 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:04:57] "OPTIONS /api/face-match HTTP/1.1" 200 -
 2025-04-09 12:07:45,085 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:07:45] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:16:56,896 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:16:56] "OPTIONS /api/face-match HTTP/1.1" 200 -

@@ -968,9 +968,9 @@
                       'Facial Verification Successful!';
                     authStatus.style.color = 'green';
                     
-                    // Store biometric verification
-                    sessionStorage.setItem('biometricVerified', 'true');
-                    sessionStorage.setItem('userId', result.userId);
+                    // Store authentication status consistently
+                    sessionStorage.setItem('authenticated', 'true'); // Use 'authenticated' key
+                    sessionStorage.setItem('userId', result.userId); // Store userId (which is voterId in bypass)
                     
                     // Stop camera
                     window.facialAuth.stopCamera();
