@@ -8,6 +8,44 @@ const networkConfig = window.productionConfig?.getNetwork?.() || {
 // Use logging from production config if available
 const log = window.productionConfig?.log || console;
 
+// Define ethers globally if it doesn't exist yet
+if (typeof window.ethers === 'undefined') {
+  window.ethers = null; // Will be populated once script loads
+  
+  // Create a function to load ethers.js if not already loaded
+  window.loadEthers = function() {
+    return new Promise((resolve, reject) => {
+      if (window.ethers) {
+        resolve(window.ethers);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.3/ethers.umd.min.js';
+      script.async = true;
+      
+      script.onload = function() {
+        if (window.ethers) {
+          log.info("Ethers.js successfully loaded");
+          resolve(window.ethers);
+        } else {
+          const error = new Error("Ethers.js loaded but window.ethers is not defined");
+          log.error(error);
+          reject(error);
+        }
+      };
+      
+      script.onerror = function() {
+        const error = new Error("Failed to load Ethers.js from CDN");
+        log.error(error);
+        reject(error);
+      };
+      
+      document.head.appendChild(script);
+    });
+  };
+}
+
 /**
  * Ensure facial authentication module is initialized and available
  * even when the server isn't running
@@ -385,6 +423,14 @@ async function connectWallet() {
     const statusElement = document.getElementById("connectionStatus") || createStatusElement();
     statusElement.className = "notice-banner";
     statusElement.innerHTML = `<p><strong>Connecting to Hardhat Node...</strong></p>`;
+
+    // Ensure ethers library is loaded
+    if (typeof ethers === 'undefined') {
+        log.error("Ethers.js library is not loaded. Cannot connect to blockchain.");
+        statusElement.className = "notice-banner error";
+        statusElement.innerHTML = `<p><strong>Error:</strong> Required blockchain library (ethers.js) failed to load. Please check your internet connection and refresh.</p>`;
+        return; // Stop execution if ethers is missing
+    }
 
     // Connect directly to Hardhat node using JsonRpcProvider
     try {
