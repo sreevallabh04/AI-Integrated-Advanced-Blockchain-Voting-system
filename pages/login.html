@@ -260,21 +260,94 @@
           const rpcUrl = `http://127.0.0.1:${port}`;
           console.log(`Attempting to connect to Hardhat node at: ${rpcUrl}`);
           
-          // Test connection with a simple fetch first
-          const testResponse = await fetch(rpcUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              id: 1,
-              method: 'net_version',
-              params: []
-            })
-          });
+      // Test connection with a complete JSON-RPC request
+      const testRequest = {
+        jsonrpc: "2.0",
+        id: Date.now(),
+        method: "eth_accounts",
+        params: []
+      };
+      
+      console.log('Sending JSON-RPC request:', JSON.stringify(testRequest));
+      
+      const testResponse = await fetch(rpcUrl, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(testRequest)
+      });
+      
+      // Handle HTTP errors
+      if (!testResponse.ok) {
+        const errorText = await testResponse.text();
+        console.warn(`HTTP error from Hardhat node: ${testResponse.status}`, errorText);
+        throw new Error(`HTTP error! status: ${testResponse.status}`);
+      }
+      
+      // Parse the response text first to debug
+      const responseText = await testResponse.text();
+      console.log('Raw response from Hardhat:', responseText);
+      
+      // Try to parse the JSON and get accounts directly
+      try {
+        const jsonResponse = JSON.parse(responseText);
+        console.log('Parsed JSON response:', jsonResponse);
+        
+        if (jsonResponse && jsonResponse.result && Array.isArray(jsonResponse.result)) {
+          const accounts = jsonResponse.result;
+          console.log(`Found ${accounts.length} accounts from direct RPC:`, accounts);
           
-          if (!testResponse.ok) {
-            throw new Error(`HTTP error! status: ${testResponse.status}`);
+          if (accounts.length === 0) {
+            throw new Error('No accounts found on Hardhat node');
           }
+          
+          // Update credentials dropdown
+          if (credentialsHardhatSelect) {
+            credentialsHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
+            
+            // Add each account to the dropdown
+            accounts.forEach((account, index) => {
+              const option = document.createElement('option');
+              option.value = account;
+              option.textContent = `Account #${index}: ${account}`;
+              credentialsHardhatSelect.appendChild(option);
+            });
+          }
+          
+          // Update wallet dropdown
+          if (walletHardhatSelect) {
+            walletHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
+            
+            // Add each account to the dropdown
+            accounts.forEach((account, index) => {
+              const option = document.createElement('option');
+              option.value = account;
+              option.textContent = `Account #${index}: ${account}`;
+              walletHardhatSelect.appendChild(option);
+            });
+          }
+          
+          // Update status for both areas
+          const successMessage = `<span class="text-success">✓ Connected to Hardhat node - ${accounts.length} accounts found</span>`;
+          if (hardhatStatusEl) {
+            hardhatStatusEl.innerHTML = successMessage;
+          }
+          if (walletHardhatStatusEl) {
+            walletHardhatStatusEl.innerHTML = successMessage;
+          }
+          
+          // Store connection details for future use
+          window.hardhatConnected = true;
+          window.hardhatPort = port;
+          
+          return true;
+        }
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Raw text:', responseText);
+        throw new Error('Failed to parse JSON response from Hardhat node: ' + parseError.message);
+      }
           
           // If fetch works, continue with ethers provider
           const provider = new ethers.JsonRpcProvider(rpcUrl);
