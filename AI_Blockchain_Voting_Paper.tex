@@ -119,58 +119,25 @@ The proposed conceptual framework consists of five key layers, each serving spec
 
 \begin{figure}[!h]
 \centering
-\resizebox{0.9\columnwidth}{!}{%
 \begin{tikzpicture}[
-    box/.style={rectangle, draw, fill=blue!10, text width=3.5cm, minimum height=1cm, text centered, rounded corners},
-    arrow/.style={->, very thick, >=stealth},
-    layer/.style={rectangle, draw, fill=gray!10, text width=11cm, minimum height=1.8cm, text centered},
-    component/.style={rectangle, draw, fill=green!10, text width=2.1cm, minimum height=0.7cm, text centered, font=\small},
-    node distance=0.4cm and 0.2cm
+    box/.style={rectangle, draw, fill=blue!10, minimum width=1.5cm, minimum height=0.7cm, text centered},
+    arrow/.style={->, thick},
+    layer/.style={rectangle, draw, fill=gray!10, minimum width=7cm, minimum height=1cm, text centered}
 ]
 
 % Layers
-\node[layer] (l5) at (0,0) {};
-\node[layer] (l4) at (0,-2) {};
-\node[layer] (l3) at (0,-4) {};
-\node[layer] (l2) at (0,-6) {};
-\node[layer] (l1) at (0,-8) {};
+\node[layer] (l5) at (0,0) {User Interface Layer};
+\node[layer] (l4) at (0,-1.5) {Authentication Layer};
+\node[layer] (l3) at (0,-3) {Blockchain Layer};
+\node[layer] (l2) at (0,-4.5) {AI Services Layer};
+\node[layer] (l1) at (0,-6) {Data Storage Layer};
 
-% Layer labels
-\node[right] at (-5.4,0) {User Interface Layer};
-\node[right] at (-5.4,-2) {Authentication Layer};
-\node[right] at (-5.4,-4) {Blockchain Layer};
-\node[right] at (-5.4,-6) {AI Services Layer};
-\node[right] at (-5.4,-8) {Data Storage Layer};
-
-% Layer 5 components
-\node[component] (ui1) at (-3.5,0) {Web Interface};
-\node[component] (ui2) at (-1,0) {Mobile App};
-\node[component] (ui3) at (1.5,0) {Kiosk Interface};
-\node[component] (ui4) at (4,0) {Admin Dashboard};
-
-% Layer 4 components
-\node[component] (auth1) at (-3.5,-2) {Facial Recognition};
-\node[component] (auth2) at (-1,-2) {Biometric Verification};
-\node[component] (auth3) at (1.5,-2) {Zero-Knowledge Proofs};
-\node[component] (auth4) at (4,-2) {Multi-factor Auth};
-
-% Layer 3 components
-\node[component] (bc1) at (-3.5,-4) {Smart Contracts};
-\node[component] (bc2) at (-1,-4) {Consensus Protocol};
-\node[component] (bc3) at (1.5,-4) {Distributed Ledger};
-\node[component] (bc4) at (4,-4) {Voting Tokens};
-
-% Layer 2 components
-\node[component] (ai1) at (-3.5,-6) {Fraud Detection};
-\node[component] (ai2) at (-1,-6) {Pattern Analysis};
-\node[component] (ai3) at (1.5,-6) {Anomaly Detection};
-\node[component] (ai4) at (4,-6) {Predictive Models};
-
-% Layer 1 components
-\node[component] (data1) at (-3.5,-8) {IPFS Storage};
-\node[component] (data2) at (-1,-8) {Encrypted DB};
-\node[component] (data3) at (1.5,-8) {Backup Systems};
-\node[component] (data4) at (4,-8) {Audit Logs};
+% Components (simplified)
+\node[box, right=1cm of l5] {Web/Mobile/Kiosk};
+\node[box, right=1cm of l4] {Biometric/ZKP Auth};
+\node[box, right=1cm of l3] {Smart Contracts/Ledger};
+\node[box, right=1cm of l2] {Fraud/Anomaly Detection};
+\node[box, right=1cm of l1] {Secure Storage/Logs};
 
 % Arrows between layers
 \draw[arrow] (l5) -- (l4);
@@ -178,16 +145,7 @@ The proposed conceptual framework consists of five key layers, each serving spec
 \draw[arrow] (l3) -- (l2);
 \draw[arrow] (l2) -- (l1);
 
-% Some connections between components (vertical)
-\draw[arrow, dashed, blue] (ui2) -- (auth1);
-\draw[arrow, dashed, blue] (ui3) -- (auth2);
-\draw[arrow, dashed, red] (auth3) -- (bc1);
-\draw[arrow, dashed, red] (bc2) -- (ai1);
-\draw[arrow, dashed, green] (ai3) -- (data3);
-\draw[arrow, dashed, green] (bc3) -- (data2);
-
-\end{tikzpicture}%
-}
+\end{tikzpicture}
 \caption{Conceptual Layered Architecture for AI-Blockchain Integrated Voting System}
 \label{fig:architecture}
 \end{figure}
@@ -212,59 +170,33 @@ Our framework identifies several key integration points where AI and blockchain 
 
 \begin{figure}[!h]
 \centering
-\resizebox{0.9\columnwidth}{!}{%
 \begin{tikzpicture}[
-    bc/.style={rectangle, draw, fill=blue!20, text width=2.7cm, text centered, rounded corners, minimum height=0.8cm},
-    ai/.style={rectangle, draw, fill=red!20, text width=2.7cm, text centered, rounded corners, minimum height=0.8cm},
-    integration/.style={ellipse, draw, fill=green!15, text width=2.5cm, text centered, minimum height=0.7cm, font=\small},
-    line/.style={draw, -latex},
-    dashed/.style={draw, -latex, dashed},
-    node distance=1.8cm
+    box/.style={rectangle, draw, minimum width=2cm, minimum height=0.7cm, text centered},
+    circle/.style={circle, draw, minimum size=1.8cm, text centered},
+    arrow/.style={->, thick}
 ]
 
-% Blockchain components
-\node[bc] (smart) at (0,0) {Smart Contracts};
-\node[bc] (consensus) at (0,-2) {Consensus Mechanism};
-\node[bc] (ledger) at (0,-4) {Distributed Ledger};
-
-% AI components
-\node[ai] (auth) at (6,0) {Identity Verification};
-\node[ai] (fraud) at (6,-2) {Fraud Detection};
-\node[ai] (analytics) at (6,-4) {Predictive Analytics};
+% Main components
+\node[box, fill=blue!20] (bc) at (0,0) {Blockchain Technology};
+\node[box, fill=red!20] (ai) at (6,0) {AI Capabilities};
 
 % Integration points
-\node[integration] (i1) at (3,0) {Intelligent Verification};
-\node[integration] (i2) at (3,-2) {Anomaly Detection};
-\node[integration] (i3) at (3,-4) {Optimized Consensus};
-\node[integration] (i4) at (3,-6) {Transparent Auditing};
-
-% Additional components for context
-\node[bc] (audit) at (0,-6) {Audit Mechanism};
-\node[ai] (learning) at (6,-6) {Continuous Learning};
+\node[circle, fill=green!10] (iv) at (3,1.5) {Intelligent Verification};
+\node[circle, fill=green!10] (ad) at (3,0) {Anomaly Detection};
+\node[circle, fill=green!10] (oc) at (3,-1.5) {Optimized Consensus};
+\node[circle, fill=green!10] (ta) at (3,-3) {Transparent Auditing};
 
 % Connections
-\draw[line] (smart) -- (i1);
-\draw[line] (auth) -- (i1);
-\draw[line] (consensus) -- (i2);
-\draw[line] (fraud) -- (i2);
-\draw[line] (ledger) -- (i3);
-\draw[line] (analytics) -- (i3);
-\draw[line] (audit) -- (i4);
-\draw[line] (learning) -- (i4);
+\draw[arrow] (bc) -- (iv);
+\draw[arrow] (ai) -- (iv);
+\draw[arrow] (bc) -- (ad);
+\draw[arrow] (ai) -- (ad);
+\draw[arrow] (bc) -- (oc);
+\draw[arrow] (ai) -- (oc);
+\draw[arrow] (bc) -- (ta);
+\draw[arrow] (ai) -- (ta);
 
-% Data flows
-\draw[dashed, blue] (i1) -- (consensus);
-\draw[dashed, blue] (i2) -- (audit);
-\draw[dashed, red] (i3) -- (smart);
-\draw[dashed, red] (i4) -- (analytics);
-
-% Cross-connections
-\draw[dashed, green] (i1) -- (i2);
-\draw[dashed, green] (i2) -- (i3);
-\draw[dashed, green] (i3) -- (i4);
-
-\end{tikzpicture}%
-}
+\end{tikzpicture}
 \caption{Key Integration Points Between AI and Blockchain Components}
 \label{fig:integration}
 \end{figure}
@@ -286,66 +218,34 @@ The conceptual framework includes processes that span multiple layers and compon
 
 \begin{figure}[!h]
 \centering
-\resizebox{0.9\columnwidth}{!}{%
 \begin{tikzpicture}[
-    process/.style={rectangle, draw, fill=blue!5, minimum width=2cm, minimum height=0.8cm, text centered},
-    block/.style={rectangle, draw, fill=green!5, minimum width=2.5cm, minimum height=0.6cm, text centered, font=\small},
-    ai/.style={rectangle, draw, fill=red!5, minimum width=2cm, minimum height=0.5cm, text centered, font=\scriptsize},
-    bc/.style={rectangle, draw, fill=yellow!5, minimum width=2cm, minimum height=0.5cm, text centered, font=\scriptsize},
-    arrow/.style={->, >=stealth},
-    node distance=0.5cm
+    process/.style={rectangle, draw, fill=blue!5, minimum width=2cm, minimum height=0.7cm, text centered},
+    arrow/.style={->, thick}
 ]
 
-% Phases
-\node[process] (p1) at (0,0) {Registration Phase};
-\node[process] (p2) at (0,-3) {Authentication Phase};
-\node[process] (p3) at (0,-6) {Voting Phase};
-\node[process] (p4) at (0,-9) {Counting \& Verification Phase};
+% Main process flow
+\node[process] (reg) at (0,0) {Registration};
+\node[process] (auth) at (0,-1.5) {Authentication};
+\node[process] (vote) at (0,-3) {Voting};
+\node[process] (verify) at (0,-4.5) {Verification};
 
-% Registration phase blocks
-\node[block, below=of p1] (r1) {ID Verification};
-\node[ai, below left=0.3cm and 0.7cm of r1] {Document OCR};
-\node[block, below=of r1] (r2) {Biometric Enrollment};
-\node[ai, below right=0.3cm and 0.7cm of r2] {Facial Encoding};
-\node[bc, right=of r2] {ZKP Generation};
-
-% Authentication phase blocks
-\node[block, below=of p2] (a1) {Facial \& Biometric Scan};
-\node[ai, below left=0.3cm and 0.3cm of a1] {CNN Verification};
-\node[block, below=of a1] (a2) {Multi-factor Authentication};
-\node[bc, below right=0.3cm and 0.3cm of a2] {Eligibility Verification};
-
-% Voting phase blocks
-\node[block, below=of p3] (v1) {Ballot Presentation};
-\node[block, below=of v1] (v2) {Vote Casting};
-\node[bc, below left=0.3cm and 0.7cm of v2] {Homomorphic Encryption};
-\node[ai, below right=0.3cm and 0.7cm of v2] {Fraud Detection};
-
-% Counting phase blocks
-\node[block, below=of p4] (c1) {Tally Computation};
-\node[bc, below left=0.3cm and 0.7cm of c1] {Smart Contract Execution};
-\node[block, below=of c1] (c2) {Result Verification};
-\node[ai, below right=0.3cm and 0.7cm of c2] {Statistical Validation};
+% AI and Blockchain elements
+\node[draw, fill=red!10, right=1.5cm of reg] (ai1) {AI: ID Verification};
+\node[draw, fill=yellow!10, right=1.5cm of auth] (bc1) {Blockchain: Eligibility};
+\node[draw, fill=yellow!10, right=1.5cm of vote] (bc2) {Blockchain: Secure Vote};
+\node[draw, fill=red!10, right=1.5cm of verify] (ai2) {AI: Fraud Detection};
 
 % Connections
-\draw[arrow] (p1) -- (r1);
-\draw[arrow] (r1) -- (r2);
-\draw[arrow] (r2) -- (p2);
-\draw[arrow] (p2) -- (a1);
-\draw[arrow] (a1) -- (a2);
-\draw[arrow] (a2) -- (p3);
-\draw[arrow] (p3) -- (v1);
-\draw[arrow] (v1) -- (v2);
-\draw[arrow] (v2) -- (p4);
-\draw[arrow] (p4) -- (c1);
-\draw[arrow] (c1) -- (c2);
+\draw[arrow] (reg) -- (auth);
+\draw[arrow] (auth) -- (vote);
+\draw[arrow] (vote) -- (verify);
 
-% AI and Blockchain connections
-\foreach \source/\target in {r1/Document OCR, r2/Facial Encoding, r2/ZKP Generation, a1/CNN Verification, a2/Eligibility Verification, v2/Homomorphic Encryption, v2/Fraud Detection, c1/Smart Contract Execution, c2/Statistical Validation}
-    \draw[arrow, dashed] (\source) -- (\target);
+\draw[arrow, dashed] (reg) -- (ai1);
+\draw[arrow, dashed] (auth) -- (bc1);
+\draw[arrow, dashed] (vote) -- (bc2);
+\draw[arrow, dashed] (verify) -- (ai2);
 
-\end{tikzpicture}%
-}
+\end{tikzpicture}
 \caption{Information Flow Through an Integrated AI-Blockchain Voting System}
 \label{fig:workflow}
 \end{figure}
@@ -561,47 +461,48 @@ As societies increasingly explore digital solutions for democratic processes, th
 
 By providing a conceptual framework and research roadmap, this study aims to contribute to the development of voting technologies that leverage the complementary strengths of AI and blockchain while addressing their limitations, ultimately supporting the evolution of more robust democratic systems in the digital age.
 
-\begin{thebibliography}{10}
+% Manually define each reference
+\begin{thebibliography}{20}
 
-\bibitem{b1} P. Y. Ryan, D. Bismark, J. Heather, S. Schneider, and Z. Xia, "Prêt à Voter: a voter-verifiable voting system," IEEE Transactions on Information Forensics and Security, vol. 4, no. 4, pp. 662-673, 2009.
+\bibitem{b1} P. Y. Ryan, D. Bismark, J. Heather, S. Schneider, and Z. Xia, ``Prêt à Voter: a voter-verifiable voting system,'' \textit{IEEE Transactions on Information Forensics and Security}, vol. 4, no. 4, pp. 662-673, 2009.
 
-\bibitem{b2} J. A. Halderman and V. Teague, "The New South Wales iVote system: Security failures and verification flaws in a live online election," in International Conference on E-Voting and Identity, 2015, pp. 35-53.
+\bibitem{b2} J. A. Halderman and V. Teague, ``The New South Wales iVote system: Security failures and verification flaws in a live online election,'' in \textit{International Conference on E-Voting and Identity}, 2015, pp. 35-53.
 
-\bibitem{b3} M. Atzori, "Blockchain technology and decentralized governance: Is the state still necessary?," Journal of Governance and Regulation, vol. 6, no. 1, pp. 45-62, 2017.
+\bibitem{b3} M. Atzori, ``Blockchain technology and decentralized governance: Is the state still necessary?,'' \textit{Journal of Governance and Regulation}, vol. 6, no. 1, pp. 45-62, 2017.
 
-\bibitem{b4} D. Khoury, E. F. Kfoury, A. Kassem, and H. Harb, "Decentralized voting platform based on Ethereum blockchain," in 2018 IEEE International Multidisciplinary Conference on Engineering Technology (IMCET), 2018, pp. 1-6.
+\bibitem{b4} D. Khoury, E. F. Kfoury, A. Kassem, and H. Harb, ``Decentralized voting platform based on Ethereum blockchain,'' in \textit{2018 IEEE International Multidisciplinary Conference on Engineering Technology (IMCET)}, 2018, pp. 1-6.
 
-\bibitem{b5} F. Hao, P. Y. Ryan, and P. Zieliński, "Anonymous voting by two-round public discussion," IET Information Security, vol. 4, no. 2, pp. 62-67, 2010.
+\bibitem{b5} F. Hao, P. Y. Ryan, and P. Zieliński, ``Anonymous voting by two-round public discussion,'' \textit{IET Information Security}, vol. 4, no. 2, pp. 62-67, 2010.
 
-\bibitem{b6} J. S. Hsiao, S. Tezos, S. N. Peyton, R. Baldimtsi, and T. H. K. Kim, "Voting with transparent verifiability and coercion-mitigation using blockchain," in 2017 IEEE International Conference on Internet of Things (iThings) and IEEE Green Computing and Communications (GreenCom), 2017, pp. 965-972.
+\bibitem{b6} J. S. Hsiao, S. Tezos, S. N. Peyton, R. Baldimtsi, and T. H. K. Kim, ``Voting with transparent verifiability and coercion-mitigation using blockchain,'' in \textit{2017 IEEE International Conference on Internet of Things (iThings) and IEEE Green Computing and Communications (GreenCom)}, 2017, pp. 965-972.
 
-\bibitem{b7} H. Wu, D. Liu, and Y. Zhang, "Scalable blockchain-based e-voting system for large-scale elections," in 2020 IEEE International Conference on Blockchain (Blockchain), 2020, pp. 296-303.
+\bibitem{b7} H. Wu, D. Liu, and Y. Zhang, ``Scalable blockchain-based e-voting system for large-scale elections,'' in \textit{2020 IEEE International Conference on Blockchain (Blockchain)}, 2020, pp. 296-303.
 
-\bibitem{b8} C. Meter, A. Schneider, and M. Hagemeister, "The privacy-preserving blockchain-based electronic voting system," in International Conference on Financial Cryptography and Data Security, 2019, pp. 258-268.
+\bibitem{b8} C. Meter, A. Schneider, and M. Hagemeister, ``The privacy-preserving blockchain-based electronic voting system,'' in \textit{International Conference on Financial Cryptography and Data Security}, 2019, pp. 258-268.
 
-\bibitem{b9} T. M. Fernández-Caramés and P. Fraga-Lamas, "A review on the application of blockchain to the next generation of cybersecure industry 4.0 smart factories," IEEE Access, vol. 7, pp. 45201-45218, 2019.
+\bibitem{b9} T. M. Fernández-Caramés and P. Fraga-Lamas, ``A review on the application of blockchain to the next generation of cybersecure industry 4.0 smart factories,'' \textit{IEEE Access}, vol. 7, pp. 45201-45218, 2019.
 
-\bibitem{b10} D. Khoury, E. F. Kfoury, A. Kassem, and H. Harb, "Decentralized voting platform based on Ethereum blockchain," in IEEE International Multidisciplinary Conference on Engineering Technology, 2018, pp. 1-6.
+\bibitem{b10} D. Khoury, E. F. Kfoury, A. Kassem, and H. Harb, ``Decentralized voting platform based on Ethereum blockchain,'' in \textit{IEEE International Multidisciplinary Conference on Engineering Technology}, 2018, pp. 1-6.
 
-\bibitem{b11} Y. Wang, X. Duan, D. Liu, and C. Chen, "FaceChain: A deep learning framework for face verification in blockchain-based e-voting," in 2020 IEEE Conference on Multimedia Information Processing and Retrieval (MIPR), 2020, pp. 239-244.
+\bibitem{b11} Y. Wang, X. Duan, D. Liu, and C. Chen, ``FaceChain: A deep learning framework for face verification in blockchain-based e-voting,'' in \textit{2020 IEEE Conference on Multimedia Information Processing and Retrieval (MIPR)}, 2020, pp. 239-244.
 
-\bibitem{b12} R. Ghadi, A. Singh, and S. Solanki, "A novel approach for multimodal biometric-based secure authentication system using blockchain technology," in 2021 IEEE International Conference on Computing, Power and Communication Technologies (GUCON), 2021, pp. 1-6.
+\bibitem{b12} R. Ghadi, A. Singh, and S. Solanki, ``A novel approach for multimodal biometric-based secure authentication system using blockchain technology,'' in \textit{2021 IEEE International Conference on Computing, Power and Communication Technologies (GUCON)}, 2021, pp. 1-6.
 
-\bibitem{b13} K. Raja, R. Raghavendra, and C. Busch, "Presentation attack detection for face recognition using deep features," in 2018 26th European Signal Processing Conference (EUSIPCO), 2018, pp. 697-701.
+\bibitem{b13} K. Raja, R. Raghavendra, and C. Busch, ``Presentation attack detection for face recognition using deep features,'' in \textit{2018 26th European Signal Processing Conference (EUSIPCO)}, 2018, pp. 697-701.
 
-\bibitem{b14} F. Tian, X. Chen, S. Liu, X. Yuan, and D. Li, "Machine learning-based intrusion detection for blockchain voting system," in 2019 IEEE World Congress on Services (SERVICES), 2019, vol. 2642, pp. 117-121.
+\bibitem{b14} F. Tian, X. Chen, S. Liu, X. Yuan, and D. Li, ``Machine learning-based intrusion detection for blockchain voting system,'' in \textit{2019 IEEE World Congress on Services (SERVICES)}, 2019, vol. 2642, pp. 117-121.
 
-\bibitem{b15} F. Hao and P. Y. Ryan, "Real-world electronic voting: Design, analysis and deployment," CRC Press, 2016.
+\bibitem{b15} F. Hao and P. Y. Ryan, ``Real-world electronic voting: Design, analysis and deployment,'' \textit{CRC Press}, 2016.
 
-\bibitem{b16} R. Zhang, R. Xue, and L. Liu, "Security and privacy on blockchain," ACM Computing Surveys (CSUR), vol. 52, no. 3, pp. 1-34, 2019.
+\bibitem{b16} R. Zhang, R. Xue, and L. Liu, ``Security and privacy on blockchain,'' \textit{ACM Computing Surveys (CSUR)}, vol. 52, no. 3, pp. 1-34, 2019.
 
-\bibitem{b17} A. Kosba, A. Miller, E. Shi, Z. Wen, and C. Papamanthou, "Hawk: The blockchain model of cryptography and privacy-preserving smart contracts," in 2016 IEEE Symposium on Security and Privacy (SP), 2016, pp. 839-858.
+\bibitem{b17} A. Kosba, A. Miller, E. Shi, Z. Wen, and C. Papamanthou, ``Hawk: The blockchain model of cryptography and privacy-preserving smart contracts,'' in \textit{2016 IEEE Symposium on Security and Privacy (SP)}, 2016, pp. 839-858.
 
-\bibitem{b18} K. Peng, R. Aditya, C. Boyd, E. Dawson, and B. Lee, "Multiplicative homomorphic e-voting," in International Conference on Cryptology in India, 2004, pp. 61-72.
+\bibitem{b18} K. Peng, R. Aditya, C. Boyd, E. Dawson, and B. Lee, ``Multiplicative homomorphic e-voting,'' in \textit{International Conference on Cryptology in India}, 2004, pp. 61-72.
 
-\bibitem{b19} C. H. Chiang, Y. H. Chou, and Z. Y. Hou, "A machine learning-based method for voter turnout prediction in taiwanese elections," in 2020 International Conference on Advanced Information Technologies (ICAIT), 2020, pp. 167-172.
+\bibitem{b19} C. H. Chiang, Y. H. Chou, and Z. Y. Hou, ``A machine learning-based method for voter turnout prediction in taiwanese elections,'' in \textit{2020 International Conference on Advanced Information Technologies (ICAIT)}, 2020, pp. 167-172.
 
-\bibitem{b20} M. Silva, L. Calado, and N. Mamede, "Natural language processing for election monitoring on twitter," Information Processing & Management, vol. 58, no. 4, p. 102596, 2021.
+\bibitem{b20} M. Silva, L. Calado, and N. Mamede, ``Natural language processing for election monitoring on twitter,'' \textit{Information Processing \& Management}, vol. 58, no. 4, p. 102596, 2021.
 
 \end{thebibliography}
 
