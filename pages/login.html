@@ -334,37 +334,10 @@
             throw new Error('No accounts found on Hardhat node');
           }
           
-          // IMMEDIATE UPDATE: Directly update dropdown UI elements
+          // IMMEDIATE UPDATE: Directly update dropdown UI elements with the 
+          // accounts we found - using the globally defined function
+          console.log("About to update dropdowns with", accounts.length, "accounts");
           updateAccountDropdowns(accounts);
-          
-          // Function to update both dropdown menus with accounts
-          function updateAccountDropdowns(accounts) {
-            // Update credentials dropdown
-            if (credentialsHardhatSelect) {
-              credentialsHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
-              
-              // Add each account to the dropdown
-              accounts.forEach((account, index) => {
-                const option = document.createElement('option');
-                option.value = account;
-                option.textContent = `Account #${index}: ${account}`;
-                credentialsHardhatSelect.appendChild(option);
-              });
-            }
-            
-            // Update wallet dropdown
-            if (walletHardhatSelect) {
-              walletHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
-              
-              // Add each account to the dropdown
-              accounts.forEach((account, index) => {
-                const option = document.createElement('option');
-                option.value = account;
-                option.textContent = `Account #${index}: ${account}`;
-                walletHardhatSelect.appendChild(option);
-              });
-            }
-          }
           
           // Update status for both areas
           const successMessage = `<span class="text-success">✓ Connected to Hardhat node - ${accounts.length} accounts found</span>`;
