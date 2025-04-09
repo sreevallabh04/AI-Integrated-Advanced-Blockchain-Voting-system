@@ -124,18 +124,35 @@
               </div>
               
               <div class="wallet-connection-section">
-                <h3>Connect Your Ethereum Wallet</h3>
-                <p>To securely cast your vote on the blockchain, you need to connect your Ethereum wallet (like MetaMask).</p>
+                <h3>Select Your Hardhat Account</h3>
+                <p>Please select one of the Hardhat accounts below to use for voting on the blockchain.</p>
+                
+                <div class="hardhat-account-selection">
+                  <label for="hardhat-account">Select Hardhat Account:</label>
+                  <select id="hardhat-account" class="form-control mb-3">
+                    <option value="">-- Select an account --</option>
+                    <option value="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266">Account #0: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266</option>
+                    <option value="0x70997970C51812dc3A010C7d01b50e0d17dc79C8">Account #1: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8</option>
+                    <option value="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC">Account #2: 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC</option>
+                    <option value="0x90F79bf6EB2c4f870365E785982E1f101E93b906">Account #3: 0x90F79bf6EB2c4f870365E785982E1f101E93b906</option>
+                    <option value="0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65">Account #4: 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65</option>
+                  </select>
+                  
+                  <div class="account-note">
+                    <i class="icon-info"></i>
+                    <p class="text-small">These accounts are automatically created when you run <code>npx hardhat node</code>. Select the account you wish to use for voting.</p>
+                  </div>
+                </div>
                 
                 <div class="wallet-status-container" id="wallet-status-container">
                   <div id="wallet-status" class="wallet-status not-connected">
                     <i class="icon-wallet"></i>
-                    <span>Wallet not connected</span>
+                    <span>Account not selected</span>
                   </div>
-                  <button type="button" id="connect-wallet-button" class="button primary-button">Connect Wallet</button>
+                  <button type="button" id="connect-wallet-button" class="button primary-button">Use Selected Account</button>
                 </div>
                 
-                <p class="text-small text-muted mt-2">Your vote transaction will be signed using this wallet, creating an immutable record on the blockchain.</p>
+                <p class="text-small text-muted mt-2">Your vote transaction will be signed using this account, creating an immutable record on the blockchain.</p>
               </div>
               
               <div class="form-group mt-4">
@@ -674,7 +691,26 @@
         });
       }
       
-      // Step 4: Wallet Connection
+      // Step 4: Hardhat Account Selection
+      const hardhatAccountSelect = document.getElementById('hardhat-account');
+      
+      if (hardhatAccountSelect) {
+        hardhatAccountSelect.addEventListener('change', function() {
+          const selectedAccount = this.value;
+          if (selectedAccount) {
+            walletStatus.className = 'wallet-status connecting';
+            walletStatus.innerHTML = `
+              <i class="icon-check-circle"></i>
+              <span>Account selected: ${selectedAccount.substring(0, 6)}...${selectedAccount.substring(selectedAccount.length - 4)}</span>
+            `;
+          } else {
+            walletStatus.className = 'wallet-status not-connected';
+            walletStatus.innerHTML = '<i class="icon-wallet"></i><span>Account not selected</span>';
+          }
+        });
+      }
+      
+      // Connect wallet button functionality
       if (connectWalletButton) {
         connectWalletButton.addEventListener('click', async function() {
           try {
@@ -683,77 +719,45 @@
               throw new Error("Biometric verification required before connecting wallet");
             }
             
+            // Get selected account
+            const selectedAccount = hardhatAccountSelect.value;
+            if (!selectedAccount) {
+              throw new Error("Please select a Hardhat account before proceeding");
+            }
+            
             // Show connecting status
             walletStatus.className = 'wallet-status connecting';
             walletStatus.innerHTML = '<i class="icon-loading"></i><span>Connecting to Hardhat node...</span>';
             this.disabled = true;
             
-            // Use the connectWallet function from app.js to connect to Hardhat
-            if (typeof window.connectWallet === 'function') {
-              await window.connectWallet();
-              
-              // Get user address from app.js
-              if (window.userAddress) {
-                // Update wallet status
-                walletStatus.className = 'wallet-status connected';
-                walletStatus.innerHTML = `
-                  <i class="icon-check-circle"></i>
-                  <span>Connected to Hardhat: ${window.userAddress.substring(0, 6)}...${window.userAddress.substring(window.userAddress.length - 4)}</span>
-                `;
-                
-                // Store wallet info in session
-                sessionStorage.setItem('walletConnected', 'true');
-                sessionStorage.setItem('walletAddress', window.userAddress);
-                
-                // Enable proceed button
-                proceedToVotingButton.disabled = false;
-                
-                // Update button
-                this.textContent = 'Hardhat Connected';
-                this.disabled = true;
-                
-                console.log("Hardhat node connected:", window.userAddress);
-              } else {
-                throw new Error("Connected to Hardhat but user address not available");
-              }
-            } else {
-              // If connectWallet function is not available, try to use the global variables from app.js
-              console.log("Trying alternative connection method...");
-              
-              // Check if the app.js has already connected automatically
-              if (window.isWalletConnected && window.userAddress) {
-                // Update wallet status
-                walletStatus.className = 'wallet-status connected';
-                walletStatus.innerHTML = `
-                  <i class="icon-check-circle"></i>
-                  <span>Connected to Hardhat: ${window.userAddress.substring(0, 6)}...${window.userAddress.substring(window.userAddress.length - 4)}</span>
-                `;
-                
-                // Store wallet info in session
-                sessionStorage.setItem('walletConnected', 'true');
-                sessionStorage.setItem('walletAddress', window.userAddress);
-                
-                // Enable proceed button
-                proceedToVotingButton.disabled = false;
-                
-                // Update button
-                this.textContent = 'Hardhat Connected';
-                this.disabled = true;
-                
-                console.log("Hardhat already connected:", window.userAddress);
-              } else {
-                throw new Error("Could not connect to Hardhat node - app.js not properly loaded");
-              }
-            }
+            // Store wallet info in session
+            sessionStorage.setItem('walletConnected', 'true');
+            sessionStorage.setItem('walletAddress', selectedAccount);
+            
+            // Update wallet status
+            walletStatus.className = 'wallet-status connected';
+            walletStatus.innerHTML = `
+              <i class="icon-check-circle"></i>
+              <span>Connected to Hardhat: ${selectedAccount.substring(0, 6)}...${selectedAccount.substring(selectedAccount.length - 4)}</span>
+            `;
+            
+            // Enable proceed button
+            proceedToVotingButton.disabled = false;
+            
+            // Update button
+            this.textContent = 'Account Selected';
+            this.disabled = true;
+            
+            console.log("Hardhat account selected:", selectedAccount);
           } catch (error) {
-            console.error("Failed to connect to Hardhat:", error);
+            console.error("Failed to select Hardhat account:", error);
             
             // Show error in wallet status
             walletStatus.className = 'wallet-status error';
             walletStatus.innerHTML = `<i class="icon-error"></i><span>${error.message}</span>`;
             
             // Reset button
-            this.textContent = 'Connect to Hardhat';
+            this.textContent = 'Use Selected Account';
             this.disabled = false;
           }
         });
@@ -1041,9 +1045,50 @@
       color: #f44336;
     }
     
+    /* Hardhat account selection styling */
+    .hardhat-account-selection {
+      margin-bottom: 1.5rem;
+    }
+    
+    .hardhat-account-selection label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    
+    .account-note {
+      display: flex;
+      align-items: flex-start;
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      background-color: #f1f8e9;
+      border-radius: 6px;
+    }
+    
+    .account-note i {
+      margin-right: 0.75rem;
+      color: #689f38;
+    }
+    
+    .account-note p {
+      margin: 0;
+      color: #33691e;
+    }
+    
+    .account-note code {
+      background-color: #e8f5e9;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: 'Source Code Pro', monospace;
+    }
+    
+    .mb-3 {
+      margin-bottom: 0.75rem;
+    }
+    
     .wallet-status.connecting {
-      background-color: #fff8e1;
-      color: #ff9800;
+      background-color: #e8f5e9;
+      color: #4caf50;
     }
     
     .wallet-status.connected {
