@@ -609,80 +609,8 @@
           // Hide the connect button
           this.style.display = 'none';
           
-          // Initialize contract with hardhatAccount
-          await initializeContract(hardhatAccount);
-              
-              // Store connected wallet in session storage
-              sessionStorage.setItem('walletAddress', userAddress);
-              sessionStorage.setItem('walletConnected', 'true');
-              
-              // Use stored wallet address if one was saved during login
-              const preAuthorizedWallet = sessionStorage.getItem('walletAddress');
-              
-              // If user previously authenticated with a different wallet, warn them
-              if (preAuthorizedWallet && preAuthorizedWallet.toLowerCase() !== userAddress.toLowerCase()) {
-                console.warn("Connected wallet differs from authenticated wallet");
-                // We'll allow it but show a warning
-                document.getElementById('submission-status').innerHTML = `
-                  <div class="status-message warning">
-                    <i class="icon-warning"></i>
-                    <p>Warning: The connected wallet is different from the one used during authentication.</p>
-                  </div>
-                `;
-              }
-              
-              // Update UI
-              walletStatus.innerHTML = `
-                <i class="icon-check-circle"></i>
-                <p>Connected to Hardhat</p>
-              `;
-              
-              accountAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-              connectedAccount.style.display = 'flex';
-              
-              // Show submit section and enable vote button
-              document.getElementById('submit-section').style.display = 'block';
-              castVoteBtn.disabled = false;
-              
-              // Hide the connect button
-              this.style.display = 'none';
-              
-              // Initialize contract after successful connection
-              await initializeContract();
-            } else {
-              throw new Error("Connected to Hardhat but user address not available");
-            }
-          } else {
-            // If connectWallet function is not available, check if already connected
-            if (window.isWalletConnected && window.userAddress) {
-              const userAddress = window.userAddress;
-              
-              // Store connected wallet in session storage
-              sessionStorage.setItem('walletAddress', userAddress);
-              sessionStorage.setItem('walletConnected', 'true');
-              
-              // Update UI
-              walletStatus.innerHTML = `
-                <i class="icon-check-circle"></i>
-                <p>Connected to Hardhat</p>
-              `;
-              
-              accountAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-              connectedAccount.style.display = 'flex';
-              
-              // Show submit section and enable vote button
-              document.getElementById('submit-section').style.display = 'block';
-              castVoteBtn.disabled = false;
-              
-              // Hide the connect button
-              this.style.display = 'none';
-              
-              // Initialize contract after successful connection
-              await initializeContract();
-            } else {
-              throw new Error("Could not connect to Hardhat node - app.js not properly loaded");
-            }
-          }
+          // Initialize contract
+          await initializeContract();
         } catch (error) {
           console.error("Error connecting to Hardhat:", error);
           const errorMessage = document.getElementById('submission-status') || document.createElement('div');
