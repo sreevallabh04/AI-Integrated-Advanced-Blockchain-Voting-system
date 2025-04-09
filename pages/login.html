@@ -313,9 +313,12 @@
       // Fetch accounts on page load
       fetchHardhatAccounts();
       
-      // Add refresh button event listener
+      // Add refresh button event listeners for both buttons
       if (refreshAccountsBtn) {
         refreshAccountsBtn.addEventListener('click', fetchHardhatAccounts);
+      }
+      if (walletRefreshBtn) {
+        walletRefreshBtn.addEventListener('click', fetchHardhatAccounts);
       }
     });
   </script>
