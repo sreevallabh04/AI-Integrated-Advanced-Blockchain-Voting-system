@@ -220,17 +220,28 @@
       const refreshAccountsBtn = document.getElementById('refresh-accounts');
       const hardhatStatusEl = document.getElementById('hardhat-status');
       
+      // Wallet section elements
+      const walletHardhatSelect = document.getElementById('wallet-hardhat-account');
+      const walletRefreshBtn = document.getElementById('wallet-refresh-accounts');
+      const walletHardhatStatusEl = document.getElementById('wallet-hardhat-status');
+      
       // Function to fetch accounts from running Hardhat node
       async function fetchHardhatAccounts() {
         try {
-          // Update status
+          // Update status for both dropdowns
           if (hardhatStatusEl) {
             hardhatStatusEl.innerHTML = '<span class="text-muted">Connecting to Hardhat node...</span>';
           }
+          if (walletHardhatStatusEl) {
+            walletHardhatStatusEl.innerHTML = '<span class="text-muted">Connecting to Hardhat node...</span>';
+          }
           
-          // Clear dropdown
+          // Clear both dropdowns
           if (credentialsHardhatSelect) {
             credentialsHardhatSelect.innerHTML = '<option value="">-- Connecting to Hardhat node... --</option>';
+          }
+          if (walletHardhatSelect) {
+            walletHardhatSelect.innerHTML = '<option value="">-- Connecting to Hardhat node... --</option>';
           }
           
           // Connect to the Hardhat node
@@ -242,7 +253,7 @@
           // Get accounts from the node
           const accounts = await provider.send("eth_accounts", []);
           
-          // Update dropdown
+          // Update credentials dropdown
           if (credentialsHardhatSelect) {
             credentialsHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
             
@@ -255,9 +266,26 @@
             });
           }
           
-          // Update status
+          // Update wallet dropdown
+          if (walletHardhatSelect) {
+            walletHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
+            
+            // Add each account to the dropdown
+            accounts.forEach((account, index) => {
+              const option = document.createElement('option');
+              option.value = account;
+              option.textContent = `Account #${index}: ${account}`;
+              walletHardhatSelect.appendChild(option);
+            });
+          }
+          
+          // Update status for both areas
+          const successMessage = `<span class="text-success">✓ Connected to Hardhat node - ${accounts.length} accounts found</span>`;
           if (hardhatStatusEl) {
-            hardhatStatusEl.innerHTML = `<span class="text-success">✓ Connected to Hardhat node - ${accounts.length} accounts found</span>`;
+            hardhatStatusEl.innerHTML = successMessage;
+          }
+          if (walletHardhatStatusEl) {
+            walletHardhatStatusEl.innerHTML = successMessage;
           }
         } catch (error) {
           console.error('Failed to fetch Hardhat accounts:', error);
