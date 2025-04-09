@@ -407,11 +407,172 @@
       });
       
       // Connect wallet button functionality
+      // Start Camera button functionality
+      document.getElementById('start-camera-btn').addEventListener('click', async function() {
+        try {
+          // Get values from input fields
+          const aadhar = document.getElementById('aadhar').value;
+          const voterId = document.getElementById('voterid').value;
+          const mobile = document.getElementById('mobile').value;
+          const hardhatAccount = document.getElementById('hardhatAccount').value;
+          
+          // Validate input
+          if (!aadhar || !voterId || !mobile || !hardhatAccount) {
+            document.getElementById('comparison-status').innerHTML = `
+              <div class="status-message error">
+                <i class="icon-error"></i>
+                <p>Please fill in all the required fields: Aadhar, Voter ID, Mobile Number, and Ethereum Account.</p>
+              </div>
+            `;
+            return;
+          }
+          
+          // Start biometric verification
+          document.getElementById('comparison-status').innerHTML = `
+            <div class="status-message loading">
+              <div class="spinner"></div>
+              <p>Starting camera for biometric verification...</p>
+            </div>
+          `;
+          
+          // Use facial-auth.js functionality if available
+          if (window.facialAuth) {
+            try {
+              // Initialize camera
+              await window.facialAuth.startCamera(
+                document.getElementById('live-video-feed'),
+                document.createElement('canvas')
+              );
+              
+              document.getElementById('comparison-status').innerHTML = `
+                <div class="status-message info">
+                  <i class="icon-info"></i>
+                  <p>Camera started. Please position your face in the frame.</p>
+                </div>
+              `;
+              
+              // Show verification buttons
+              document.getElementById('vote-decision-buttons').style.display = 'block';
+              
+            } catch (facialError) {
+              document.getElementById('comparison-status').innerHTML = `
+                <div class="status-message error">
+                  <i class="icon-error"></i>
+                  <p>Failed to start camera: ${facialError.message}</p>
+                </div>
+              `;
+            }
+          } else {
+            document.getElementById('comparison-status').innerHTML = `
+              <div class="status-message error">
+                <i class="icon-error"></i>
+                <p>Facial authentication module not found.</p>
+              </div>
+            `;
+          }
+        } catch (error) {
+          document.getElementById('comparison-status').innerHTML = `
+            <div class="status-message error">
+              <i class="icon-error"></i>
+              <p>Error: ${error.message}</p>
+            </div>
+          `;
+        }
+      });
+      
+      // Confirm match button functionality
+      document.getElementById('confirm-match-btn').addEventListener('click', async function() {
+        try {
+          // Get values from input fields
+          const aadhar = document.getElementById('aadhar').value;
+          const voterId = document.getElementById('voterid').value;
+          const mobile = document.getElementById('mobile').value;
+          const hardhatAccount = document.getElementById('hardhatAccount').value;
+          
+          document.getElementById('comparison-status').innerHTML = `
+            <div class="status-message loading">
+              <div class="spinner"></div>
+              <p>Verifying identity...</p>
+            </div>
+          `;
+          
+          // Use facial-auth.js verification
+          if (window.facialAuth) {
+            try {
+              const verificationResult = await window.facialAuth.captureAndVerify();
+              
+              if (verificationResult.success) {
+                document.getElementById('comparison-status').innerHTML = `
+                  <div class="status-message success">
+                    <i class="icon-check-circle"></i>
+                    <p>Identity verified successfully! You can now connect your wallet.</p>
+                  </div>
+                `;
+                
+                // Set biometric verification flag
+                sessionStorage.setItem('biometricVerified', 'true');
+                
+                // Stop camera
+                window.facialAuth.stopCamera();
+                
+                // Hide verification buttons
+                document.getElementById('vote-decision-buttons').style.display = 'none';
+                
+                // Enable wallet connection
+                document.getElementById('connect-wallet-btn').disabled = false;
+              } else {
+                document.getElementById('comparison-status').innerHTML = `
+                  <div class="status-message error">
+                    <i class="icon-error"></i>
+                    <p>Verification failed: ${verificationResult.message || 'Identity could not be verified'}</p>
+                  </div>
+                `;
+              }
+            } catch (facialError) {
+              document.getElementById('comparison-status').innerHTML = `
+                <div class="status-message error">
+                  <i class="icon-error"></i>
+                  <p>Verification error: ${facialError.message}</p>
+                </div>
+              `;
+            }
+          }
+        } catch (error) {
+          document.getElementById('comparison-status').innerHTML = `
+            <div class="status-message error">
+              <i class="icon-error"></i>
+              <p>Error: ${error.message}</p>
+            </div>
+          `;
+        }
+      });
+      
+      // Reject match button functionality
+      document.getElementById('reject-match-btn').addEventListener('click', function() {
+        // Stop camera
+        if (window.facialAuth) {
+          window.facialAuth.stopCamera();
+        }
+        
+        document.getElementById('comparison-status').innerHTML = `
+          <div class="status-message info">
+            <i class="icon-info"></i>
+            <p>Verification cancelled. You can try again when ready.</p>
+          </div>
+        `;
+        
+        // Hide verification buttons
+        document.getElementById('vote-decision-buttons').style.display = 'none';
+      });
+      
+      // Connect wallet button functionality
       document.getElementById('connect-wallet-btn').addEventListener('click', async function() {
         try {
-          // Check if biometric verification was completed
-          if (sessionStorage.getItem('biometricVerified') !== 'true') {
-            throw new Error("Biometric verification required before connecting wallet");
+          // Get hardhatAccount value
+          const hardhatAccount = document.getElementById('hardhatAccount').value;
+          
+          if (!hardhatAccount) {
+            throw new Error("Please enter a Hardhat Node Account before connecting wallet");
           }
           
           const walletStatus = document.getElementById('wallet-status');
@@ -425,13 +586,31 @@
             <p>Connecting to Hardhat node...</p>
           `;
           
-          // Use the connectWallet function from app.js to connect to Hardhat
-          if (typeof window.connectWallet === 'function') {
-            await window.connectWallet();
-            
-            // Get user address from app.js
-            if (window.userAddress) {
-              const userAddress = window.userAddress;
+          // Use hardhatAccount as the wallet address directly
+          const userAddress = hardhatAccount;
+          
+          // Store connected wallet in session storage
+          sessionStorage.setItem('walletAddress', userAddress);
+          sessionStorage.setItem('walletConnected', 'true');
+          
+          // Update UI
+          walletStatus.innerHTML = `
+            <i class="icon-check-circle"></i>
+            <p>Connected to Hardhat</p>
+          `;
+          
+          accountAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+          connectedAccount.style.display = 'flex';
+          
+          // Show submit section and enable vote button
+          document.getElementById('submit-section').style.display = 'block';
+          castVoteBtn.disabled = false;
+          
+          // Hide the connect button
+          this.style.display = 'none';
+          
+          // Initialize contract with hardhatAccount
+          await initializeContract(hardhatAccount);
               
               // Store connected wallet in session storage
               sessionStorage.setItem('walletAddress', userAddress);
