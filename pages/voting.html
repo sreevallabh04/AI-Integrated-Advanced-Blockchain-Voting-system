@@ -126,6 +126,22 @@
                 </div>
               </div>
             </div>
+            <div class="form-group">
+              <label for="aadhar">Aadhar Number</label>
+              <input type="text" id="aadhar" name="aadhar" class="form-control" placeholder="Enter Aadhar Number" required>
+            </div>
+            <div class="form-group">
+              <label for="voterid">Voter ID</label>
+              <input type="text" id="voterid" name="voterid" class="form-control" placeholder="Enter Voter ID" required>
+            </div>
+            <div class="form-group">
+              <label for="mobile">Mobile Number</label>
+              <input type="tel" id="mobile" name="mobile" class="form-control" placeholder="Enter Mobile Number" required>
+            </div>
+            <div class="form-group">
+              <label for="hardhatAccount">Hardhat Node Account</label>
+              <input type="text" id="hardhatAccount" name="hardhatAccount" class="form-control" placeholder="Enter Hardhat Node Account" required>
+            </div>
           </div>
           
           <!-- Candidate Selection -->
@@ -329,13 +345,7 @@
   <!-- Component Loader Script -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Check if user is authenticated
-      const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
-      if (!isAuthenticated) {
-        // Redirect to login if not authenticated
-        window.location.href = '/pages/login.html';
-        return;
-      }
+      // No login redirect - authentication happens directly in this page
       
       // Load header component
       fetch('/components/header.html')
