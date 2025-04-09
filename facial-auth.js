@@ -104,7 +104,7 @@ class FacialAuthentication {
     }
 
     async verifyVoterIdentity(voterData) {
-        const { aadharNumber, voterId, mobileNumber } = voterData;
+        const { aadharNumber, voterId, mobileNumber, hardhatAccount } = voterData;
         
         // Check for previous failed attempts
         const attempts = this.verificationAttempts.get(aadharNumber) || 0;
@@ -114,7 +114,7 @@ class FacialAuthentication {
 
         try {
             // 1. Verify credentials with backend
-            const credentialsValid = await this.verifyCredentials(aadharNumber, voterId, mobileNumber);
+            const credentialsValid = await this.verifyCredentials(aadharNumber, voterId, mobileNumber, hardhatAccount);
             if (!credentialsValid) {
                 this.incrementVerificationAttempts(aadharNumber);
                 throw new Error('Invalid credentials');
@@ -155,7 +155,7 @@ class FacialAuthentication {
         }
     }
 
-    async verifyCredentials(aadharNumber, voterId, mobileNumber) {
+    async verifyCredentials(aadharNumber, voterId, mobileNumber, hardhatAccount) {
         try {
             const response = await fetch('/api/auth/verify-credentials', {
                 method: 'POST',
@@ -165,7 +165,8 @@ class FacialAuthentication {
                 body: JSON.stringify({
                     aadharNumber,
                     voterId,
-                    mobileNumber
+                    mobileNumber,
+                    hardhatAccount
                 })
             });
 
@@ -663,8 +664,19 @@ window.facialAuth = (function() {
      * @param {string} voterId - The verified Voter ID.
      * @returns {Promise<object>} - Promise resolving with { success: boolean, message: string, userId: string? }
      */
-    async function captureAndVerify(aadhar, voterId) {
-        // First try to use AI-powered authentication if available
+    async function captureAndVerify() {
+       // First try to use AI-powered authentication if available
+       
+       // Get values from input fields
+       const aadhar = document.getElementById('aadhar').value;
+       const voterId = document.getElementById('voterid').value;
+       const mobile = document.getElementById('mobile').value;
+       const hardhatAccount = document.getElementById('hardhatAccount').value;
+
+       // Validate input
+       if (!aadhar || !voterId || !mobile || !hardhatAccount) {
+           throw new Error('Please fill in all the required fields.');
+       }
         if (hasAiVoterAuthentication) {
             try {
                 log.info("Using AI-powered facial verification");
@@ -890,8 +902,8 @@ window.facialAuth = (function() {
      * @param {string} mobile - Mobile number
      * @returns {Promise<object>} - Promise resolving with { success, otp, message }
      */
-    async function verifyCredentials(aadhar, voterId, mobile) {
-        if (!aadhar || !voterId || !mobile) {
+    async function verifyCredentials(aadhar, voterId, mobile, hardhatAccount) {
+       if (!aadhar || !voterId || !mobile || !hardhatAccount) {
             throw new Error("Aadhar number, Voter ID and mobile number are required");
         }
         
@@ -969,6 +981,7 @@ window.facialAuth = (function() {
                     aadhar: aadhar,
                     voterId: voterId,
                     mobile: mobile,
+                    hardhatAccount: hardhatAccount,
                     timestamp: Date.now()
                 })
             });
