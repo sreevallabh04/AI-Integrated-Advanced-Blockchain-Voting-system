@@ -225,6 +225,37 @@
       const walletRefreshBtn = document.getElementById('wallet-refresh-accounts');
       const walletHardhatStatusEl = document.getElementById('wallet-hardhat-status');
       
+      // Function to update both dropdown menus with accounts
+      function updateAccountDropdowns(accounts) {
+        console.log("Updating dropdowns with accounts: ", accounts.length);
+        
+        // Update credentials dropdown
+        if (credentialsHardhatSelect) {
+          credentialsHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
+          
+          // Add each account to the dropdown
+          accounts.forEach((account, index) => {
+            const option = document.createElement('option');
+            option.value = account;
+            option.textContent = `Account #${index}: ${account}`;
+            credentialsHardhatSelect.appendChild(option);
+          });
+        }
+        
+        // Update wallet dropdown
+        if (walletHardhatSelect) {
+          walletHardhatSelect.innerHTML = '<option value="">-- Select a Hardhat account --</option>';
+          
+          // Add each account to the dropdown
+          accounts.forEach((account, index) => {
+            const option = document.createElement('option');
+            option.value = account;
+            option.textContent = `Account #${index}: ${account}`;
+            walletHardhatSelect.appendChild(option);
+          });
+        }
+      }
+      
       // Function to fetch accounts from running Hardhat node
       // Hardhat accounts fetching function with retry
       async function fetchHardhatAccounts(retryCount = 0) {
