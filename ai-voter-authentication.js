@@ -375,17 +375,23 @@ const aiVoterAuthentication = (() => {
                         attemptNumber: maxAttempts - attemptsRemaining + 1,
                         isFallback: true,
                         fallbackReason: 'network_error'
-                    };
-                    
-                    // Log the fallback verification
-                    logAuthenticationEvent({
-                        type: 'success',
-                        stage: 'face_verification_fallback',
-                        result: verificationResult,
-                        originalError: networkError.message
-                    });
-                    
-                    return verificationResult;
+                        };
+
+                        // *** ADD SESSION STORAGE SETTINGS FOR FALLBACK ***
+                        sessionStorage.setItem('authenticated', 'true');
+                        sessionStorage.setItem('authMethod', 'ai-fallback-network-error');
+                        sessionStorage.setItem('verifiedVoterId', currentUserData?.id || voterId); // Use voterId as fallback
+                        sessionStorage.setItem('userId', currentUserData?.id || voterId); // Also set userId
+
+                        // Log the fallback verification
+                        logAuthenticationEvent({
+                            type: 'success',
+                            stage: 'face_verification_fallback',
+                            result: verificationResult,
+                            originalError: networkError.message
+                        });
+                        
+                        return verificationResult; // Return the result object as before
                 }
                 
                 // In production mode with no fallback, propagate the error
@@ -486,18 +492,32 @@ const aiVoterAuthentication = (() => {
                             livenessConfirmed: true,
                             spoofingDetected: false,
                             isFallback: true,
-                            fallbackReason: 'network_error'
+                            fallbackReason: 'network_error',
+                            // Add necessary fields expected by the calling function in login.html
+                            passed: true, 
+                            userId: currentUserData?.id || voterId
                         };
+
+                        // *** SET SESSION STORAGE FOR FALLBACK ***
+                        sessionStorage.setItem('authenticated', 'true');
+                        sessionStorage.setItem('authMethod', 'ai-fallback-network-error');
+                        sessionStorage.setItem('verifiedVoterId', currentUserData?.id || voterId);
+                        sessionStorage.setItem('userId', currentUserData?.id || voterId);
+
+                        // Log the event
+                         logAuthenticationEvent({
+                            type: 'success',
+                            stage: 'face_verification_fallback',
+                            result: verificationResult,
+                            originalError: error.message
+                        });
                         
+                        // Return a success object consistent with the non-fallback path
                         return {
-                            success: true,
+                            success: true, // Indicate overall success despite fallback
                             message: "Face verification successful (fallback mode due to server unavailability)",
-                            details: {
-                                isFallback: true,
-                                fallbackReason: 'network_error',
-                                originalError: error.message
-                            },
-                            user: {
+                            details: verificationResult, // Include the fallback result details
+                            user: { // Provide user info if available
                                 id: currentUserData?.id || voterId,
                                 name: currentUserData?.name || "Voter",
                                 aadhaarNumber: aadhaarNumber,

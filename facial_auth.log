@@ -21,3 +21,52 @@
 2025-04-09 12:04:57,029 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:04:57] "OPTIONS /api/face-match HTTP/1.1" 200 -
 2025-04-09 12:07:45,085 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:07:45] "OPTIONS /api/face-match HTTP/1.1" 200 -
 2025-04-09 12:16:56,896 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:16:56] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:24:43,966 - __main__ - INFO - Face++ API is configured. Local model/Groq will not be used for primary verification.
+2025-04-09 12:24:43,967 - __main__ - INFO - Loading sample data for development mode
+2025-04-09 12:24:44,335 - __main__ - INFO - Loading existing facial recognition model from models\facenet_model.h5
+2025-04-09 12:24:45,771 - absl - WARNING - No training configuration found in the save file, so the model was *not* compiled. Compile it manually.
+2025-04-09 12:24:46,743 - __main__ - INFO - Registered voter with key: 21523d3c...
+2025-04-09 12:24:46,744 - __main__ - WARNING - Sample image not found: images/users/WIN_20250408_19_12_02_Pro.jpg
+2025-04-09 12:24:46,744 - __main__ - INFO - Loaded 1 sample voters for development
+2025-04-09 12:24:46,745 - __main__ - WARNING - auth_handlers module or register_endpoints function not found. Skipping.
+2025-04-09 12:24:46,746 - __main__ - INFO - Starting Facial Auth Server on port 5000 (Debug: False)
+2025-04-09 12:24:46,778 - werkzeug - WARNING -  * Running on all addresses.
+   WARNING: This is a development server. Do not use it in a production deployment.
+2025-04-09 12:24:46,779 - werkzeug - INFO -  * Running on http://172.20.144.248:5000/ (Press CTRL+C to quit)
+2025-04-09 12:25:31,160 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:25:31] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:25:31,426 - __main__ - INFO - Found reference image path for ABC1234567/ABC1234567 in sample data: images/users/WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 12:25:31,427 - __main__ - INFO - Calling Face++ Compare API for user ABC1234567 against WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 12:25:35,780 - __main__ - ERROR - Face++ API request failed: 401 Client Error: Unauthorized for url: https://api-us.faceplusplus.com/facepp/v3/compare
+2025-04-09 12:25:35,785 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:25:35] "[35m[1mPOST /api/face-match HTTP/1.1[0m" 503 -
+2025-04-09 12:51:04,457 - __main__ - INFO - Face++ API is configured. Local model/Groq will not be used for primary verification.
+2025-04-09 12:51:04,458 - __main__ - INFO - Loading sample data for development mode
+2025-04-09 12:51:04,854 - __main__ - INFO - Loading existing facial recognition model from models\facenet_model.h5
+2025-04-09 12:51:06,189 - absl - WARNING - No training configuration found in the save file, so the model was *not* compiled. Compile it manually.
+2025-04-09 12:51:07,182 - __main__ - INFO - Registered voter with key: 21523d3c...
+2025-04-09 12:51:07,183 - __main__ - WARNING - Sample image not found: images/users/WIN_20250408_19_12_02_Pro.jpg
+2025-04-09 12:51:07,183 - __main__ - INFO - Loaded 1 sample voters for development
+2025-04-09 12:51:07,184 - __main__ - WARNING - auth_handlers module or register_endpoints function not found. Skipping.
+2025-04-09 12:51:07,185 - __main__ - INFO - Starting Facial Auth Server on port 5000 (Debug: False)
+2025-04-09 12:51:07,211 - werkzeug - WARNING -  * Running on all addresses.
+   WARNING: This is a development server. Do not use it in a production deployment.
+2025-04-09 12:51:07,212 - werkzeug - INFO -  * Running on http://172.20.144.248:5000/ (Press CTRL+C to quit)
+2025-04-09 12:51:17,332 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:51:17] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:51:17,597 - __main__ - INFO - Found reference image path for ABC1234567/ABC1234567 in sample data: images/users/WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 12:51:17,602 - __main__ - INFO - Calling Face++ Compare API for user ABC1234567 against WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 12:51:37,424 - __main__ - ERROR - Face++ API request failed: HTTPSConnectionPool(host='api-us.faceplusplus.com', port=443): Read timed out. (read timeout=15)
+2025-04-09 12:51:37,426 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:51:37] "[35m[1mPOST /api/face-match HTTP/1.1[0m" 503 -
+2025-04-09 12:51:56,127 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:51:56] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 12:51:56,445 - __main__ - INFO - Found reference image path for ABC1234567/ABC1234567 in sample data: images/users/WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 12:51:56,447 - __main__ - INFO - Calling Face++ Compare API for user ABC1234567 against WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 12:51:59,162 - __main__ - ERROR - Face++ API request failed: 401 Client Error: Unauthorized for url: https://api-us.faceplusplus.com/facepp/v3/compare
+2025-04-09 12:51:59,166 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 12:51:59] "[35m[1mPOST /api/face-match HTTP/1.1[0m" 503 -
+2025-04-09 13:03:57,602 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 13:03:57] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 13:03:57,866 - __main__ - INFO - Found reference image path for ABC1234567/ABC1234567 in sample data: images/users/WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 13:03:57,866 - __main__ - INFO - Calling Face++ Compare API for user ABC1234567 against WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 13:04:15,667 - __main__ - ERROR - Face++ API request failed: HTTPSConnectionPool(host='api-us.faceplusplus.com', port=443): Read timed out. (read timeout=15)
+2025-04-09 13:04:15,668 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 13:04:15] "[35m[1mPOST /api/face-match HTTP/1.1[0m" 503 -
+2025-04-09 13:17:02,053 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 13:17:02] "OPTIONS /api/face-match HTTP/1.1" 200 -
+2025-04-09 13:17:02,318 - __main__ - INFO - Found reference image path for ABC1234567/ABC1234567 in sample data: images/users/WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 13:17:02,319 - __main__ - INFO - Calling Face++ Compare API for user ABC1234567 against WIN_20250408_19_12_01_Pro.jpg
+2025-04-09 13:17:21,840 - __main__ - ERROR - Face++ API request failed: 401 Client Error: Unauthorized for url: https://api-us.faceplusplus.com/facepp/v3/compare
+2025-04-09 13:17:21,842 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 13:17:21] "[35m[1mPOST /api/face-match HTTP/1.1[0m" 503 -
