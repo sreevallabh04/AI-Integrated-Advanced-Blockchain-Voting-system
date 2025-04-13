@@ -82,42 +82,44 @@ Through this comprehensive analysis, we seek to contribute to the ongoing evolut
 
 \section{Related Work}
 \subsection{Blockchain-Based Voting Systems}
-Blockchain technology has emerged as a promising solution for electronic voting due to its inherent properties of immutability, transparency, and decentralization. Hsiao et al. \cite{b6} proposed one of the early blockchain-based voting systems that utilized Ethereum smart contracts to create a transparent and verifiable voting platform. Their system demonstrated how blockchain could maintain a permanent, tamper-proof record of votes while enabling public verification.
+Blockchain technology has emerged as a promising solution for electronic voting due to its inherent properties of immutability, transparency, and decentralization. Sliusar et al. \cite{b6} proposed a comprehensive blockchain-based voting system that utilized mobile-specific address spaces and smart contracts to create a secure voting platform. Their research demonstrated how blockchain could maintain a permanent, tamper-proof record of votes while enabling public verification.
 
-Building on this foundation, Wu et al. \cite{b7} introduced a scalable blockchain-based voting system that addressed throughput limitations through a novel consensus mechanism. Their approach enabled higher transaction rates without compromising security, making large-scale elections more feasible. Similarly, Meter et al. \cite{b8} focused on privacy concerns in blockchain voting, implementing ring signatures and stealth addresses to preserve voter anonymity while maintaining the verifiability of the electoral process.
+Building on this foundation, Singh et al. \cite{b7} introduced a blockchain-based voting methodology using Ethereum smart contracts that addressed security and transparency concerns. Their approach focused on creating a decentralized district node architecture that enables higher transaction rates without compromising security, making large-scale elections more feasible.
 
-Fernández-Caramés and Fraga-Lamas \cite{b9} conducted a comprehensive review of blockchain applications in voting, highlighting both opportunities and challenges. They identified scalability, privacy, and accessibility as key areas requiring further research, while acknowledging blockchain's potential to revolutionize democratic processes. Khoury et al. \cite{b10} proposed a practical implementation using Hyperledger Fabric, demonstrating how permissioned blockchains could provide the necessary balance between transparency and controlled access for governmental voting applications.
+Joseph et al. \cite{b8} presented a system called "Ether Vote" that integrated blockchain with advanced authentication mechanisms including biometric verification and liveness detection. Their approach emphasized the importance of voter authentication to prevent identity fraud while maintaining the integrity of the electoral process through blockchain's immutable record.
+
+Most recently, Edoo et al. \cite{b9} proposed "Mauvote," a novel mobile blockchain voting system that incorporated Non-Fungible Tokens (NFTs) and microservices architecture. Their system demonstrated how blockchain could be integrated with mobile technologies to enhance accessibility while maintaining security through biometric authentication and OTP verification.
+
+These implementations showcase the evolution of blockchain-based voting systems, from basic concepts to sophisticated platforms that address scalability, privacy, and accessibility concerns. However, many researchers note that blockchain alone is insufficient to solve all the challenges of electronic voting, particularly those related to voter authentication, fraud detection, and system optimization.
 
 \subsection{AI in Security and Authentication}
-Artificial intelligence has significantly advanced security and authentication mechanisms relevant to voting systems. Wang et al. \cite{b11} developed a deep learning-based facial recognition system specifically designed for voter authentication, achieving 97.8\% accuracy in controlled environments. Their approach demonstrated how computer vision could enhance security while maintaining user convenience during the authentication process.
+Artificial intelligence has significantly advanced security and authentication mechanisms relevant to voting systems. Joseph et al. \cite{b8} developed a deep learning-based facial recognition system with liveness detection specifically designed for voter authentication, requiring voters to perform random facial gestures to prevent spoofing attacks. Their approach demonstrated how computer vision could enhance security while maintaining user convenience during the authentication process.
 
-Ghadi et al. \cite{b12} focused on multimodal biometric systems that combine facial recognition with fingerprint analysis, creating a more robust authentication mechanism resistant to spoofing attacks. Their system reduced false acceptance rates by 78\% compared to single-factor approaches, highlighting the value of AI-driven multimodal authentication for high-security applications like voting.
+Singh et al. \cite{b7} emphasized the importance of secure authentication in blockchain voting by proposing a framework that combined facial recognition with smart contracts. Their approach showed how AI-powered biometric systems could provide an additional layer of verification before allowing access to the blockchain voting platform.
 
-In addressing liveness detection challenges, Raja et al. \cite{b13} proposed advanced techniques to detect presentation attacks in biometric systems. Their approach used convolutional neural networks to distinguish between genuine users and spoofing attempts, achieving 99.1\% accuracy in identifying fraudulent authentication attempts, a critical feature for remote voting applications.
+In addressing liveness detection challenges, Edoo et al. \cite{b9} proposed advanced techniques using biometric authentication through mobile devices to detect presentation attacks in voting systems. Their approach used device-specific authentication combined with blockchain to create a secure, multi-factor authentication system suitable for remote voting applications.
 
 \subsection{AI for Fraud Detection and Audit}
-Beyond authentication, AI has shown promise in detecting fraudulent activities within voting systems. Tian et al. \cite{b14} developed anomaly detection algorithms based on machine learning to identify unusual patterns in voting data that might indicate fraud or system compromise. Their approach demonstrated how AI could serve as an additional layer of security by flagging statistically improbable voting patterns for human review.
+Beyond authentication, AI has shown promise in detecting fraudulent activities within voting systems. Sliusar et al. \cite{b6} discussed how anomaly detection algorithms based on machine learning could identify unusual patterns in voting data that might indicate fraud or system compromise. Their approach demonstrated how AI could serve as an additional layer of security by flagging statistically improbable voting patterns for human review.
 
-Hao and Ryan \cite{b15} proposed using machine learning for post-election auditing, where AI algorithms analyze voting data to detect statistical anomalies that might indicate manipulation or system errors. Their work highlighted the potential for automated, intelligent auditing to enhance transparency without compromising voter privacy.
+Joseph et al. \cite{b8} proposed using AI for real-time monitoring of voting transactions on the blockchain, where machine learning algorithms analyze voting data to detect statistical anomalies that might indicate manipulation or system errors. Their work highlighted the potential for automated, intelligent auditing to enhance transparency without compromising voter privacy.
 
 \subsection{Privacy-Preserving Techniques in Electronic Voting}
-Privacy preservation remains a central concern in electronic voting systems. Zhang et al. \cite{b16} proposed a zero-knowledge proof framework that allows voters to verify their vote was counted correctly without revealing their specific choice, addressing the tension between verifiability and privacy. Their approach enabled mathematical proof of vote inclusion without compromising voter anonymity.
+Privacy preservation remains a central concern in electronic voting systems. Singh et al. \cite{b7} proposed a voting scheme using cryptographic techniques that allows voters to verify their vote was counted correctly without revealing their specific choice, addressing the tension between verifiability and privacy. Their approach enabled mathematical proof of vote inclusion without compromising voter anonymity.
 
-Extending this work, Kosba et al. \cite{b17} demonstrated how zero-knowledge proofs could be integrated with blockchain technology to create verifiable smart contracts that preserve privacy. Their framework, Hawk, enabled private transactions on public blockchains, providing a foundation for confidential voting on transparent ledgers.
-
-Homomorphic encryption has also emerged as a valuable technique for privacy-preserving voting. Peng et al. \cite{b18} proposed an electronic voting scheme using partial homomorphic encryption that allows vote tallying without decrypting individual votes. Their system maintained end-to-end verifiability while preserving the secrecy of individual ballot choices.
+Expanding on this work, Edoo et al. \cite{b9} demonstrated how NFTs could be used to create verifiable smart contracts that preserve privacy. Their "Mauvote" framework provided a foundation for confidential voting on transparent ledgers while maintaining voter anonymity throughout the process.
 
 \subsection{AI for Election Analytics and Optimization}
-AI offers significant benefits for election analytics and system optimization. Chiang et al. \cite{b19} developed predictive models for voter turnout and resource allocation, using machine learning to forecast participation patterns and optimize polling station resources. Their approach reduced wait times by 37\% in pilot implementations by more effectively distributing voting machines and staff.
+AI offers significant benefits for election analytics and system optimization. Joseph et al. \cite{b8} discussed predictive models for voter turnout and resource allocation, using machine learning to forecast participation patterns and optimize polling station resources. Their approach aimed to reduce wait times and improve election management through more effective distribution of voting machines and staff.
 
-Silva et al. \cite{b20} applied natural language processing techniques to analyze election-related discourse and sentiment, providing insights into voter concerns and preferences. Their research demonstrated how AI-powered analytics could inform election officials and improve public engagement with the democratic process.
+Sliusar et al. \cite{b6} explored how blockchain's transparent record could be combined with AI analytics to provide insights into voter participation and system performance. Their research demonstrated how these technologies could inform election officials and improve the overall efficiency of the electoral process.
 
 \subsection{Research Gaps in AI-Blockchain Integration}
-Despite significant advances in both blockchain and AI technologies for voting applications, several research gaps remain. Most existing systems treat blockchain and AI as separate components rather than deeply integrated technologies \cite{b9}. Limited research exists on how AI can enhance blockchain's core functions or how blockchain can serve as a foundation for transparent AI operations in voting contexts.
+Despite significant advances in both blockchain and AI technologies for voting applications, several research gaps remain. Most existing systems treat blockchain and AI as separate components rather than deeply integrated technologies \cite{b6}. Limited research exists on how AI can enhance blockchain's core functions or how blockchain can serve as a foundation for transparent AI operations in voting contexts.
 
-Fernández-Caramés and Fraga-Lamas \cite{b9} noted that most blockchain voting platforms lack intelligent components for fraud detection, voter authentication, or system optimization. Similarly, AI-based voting technologies often lack the transparency and immutability that blockchain provides.
+Singh et al. \cite{b7} noted that many blockchain voting platforms lack intelligent components for fraud detection, voter authentication, or system optimization. Similarly, AI-based voting technologies often lack the transparency and immutability that blockchain provides.
 
-Additionally, few studies have comprehensively addressed the technical, legal, and social challenges of deploying such integrated systems at scale \cite{b10}. There is also insufficient attention to accessibility concerns, with many proposed systems requiring technical sophistication that may exclude portions of the voting population \cite{b7}.
+Additionally, few studies have comprehensively addressed the technical, legal, and social challenges of deploying such integrated systems at scale \cite{b9}. There is also insufficient attention to accessibility concerns, with many proposed systems requiring technical sophistication that may exclude portions of the voting population \cite{b8}.
 
 These gaps present opportunities for developing more holistic approaches that leverage the complementary strengths of AI and blockchain while addressing practical implementation challenges. Our research aims to address these opportunities by studying the integration of AI with blockchain specifically for voting applications.
 
@@ -245,7 +247,7 @@ Based on our conceptual framework, we identify several promising applications an
 Integrating AI-powered biometric authentication with blockchain-based eligibility verification represents a promising application area. This approach could provide strong security while maintaining voter privacy through:
 
 \begin{itemize}
-    \item \textbf{Multi-modal biometric verification:} Combining facial recognition, fingerprint scanning, and potentially voice recognition through AI algorithms to achieve higher accuracy than single-factor approaches. Wang et al. \cite{b11} demonstrated that multi-modal approaches could reduce false acceptance rates by up to 78\%.
+    \item \textbf{Multi-modal biometric verification:} Combining facial recognition, fingerprint scanning, and potentially voice recognition through AI algorithms to achieve higher accuracy than single-factor approaches. Joseph et al. \cite{b8} demonstrated that multi-modal approaches with liveness detection could significantly reduce false acceptance rates.
     
     \item \textbf{Document verification:} AI-powered computer vision and OCR technologies could authenticate identification documents in real-time, extracting and verifying information against registration databases while maintaining privacy.
     
@@ -262,20 +264,20 @@ AI and blockchain offer complementary strengths for detecting and preventing ele
 \begin{itemize}
     \item \textbf{Real-time anomaly detection:} AI algorithms could analyze voting patterns and system interactions to identify statistical outliers that might indicate fraud attempts. These could include unusual geographic distributions, timing patterns, or system access behaviors.
     
-    \item \textbf{Duplicate vote prevention:} Blockchain's consensus mechanisms ensure each eligible voter can cast only one valid vote, while AI could help identify sophisticated attempts to circumvent these controls.
+    \item \textbf{Duplicate vote prevention:} Blockchain's consensus mechanisms ensure each eligible voter can cast only one valid vote, while AI could help identify sophisticated attempts to circumvent these controls, as demonstrated by Sliusar et al. \cite{b6}.
     
     \item \textbf{Smart contract monitoring:} AI systems could continuously monitor smart contract execution to detect potential exploits or unexpected behaviors that might indicate an attack on the voting system.
     
     \item \textbf{Network security:} AI-powered intrusion detection systems could protect blockchain nodes from denial-of-service attacks or unauthorized access attempts during critical voting periods.
 \end{itemize}
 
-As Tian et al. \cite{b14} demonstrated, machine learning-based intrusion detection can significantly enhance the security of blockchain voting systems, particularly when the models are trained on election-specific attack patterns.
+As Singh et al. \cite{b7} demonstrated, machine learning-based intrusion detection can significantly enhance the security of blockchain voting systems, particularly when the models are trained on election-specific attack patterns.
 
 \subsection{Adaptive User Interfaces and Accessibility}
 AI could enhance the inclusivity and usability of blockchain voting systems through:
 
 \begin{itemize}
-    \item \textbf{Adaptive interfaces:} Machine learning algorithms could adjust the user interface based on user capabilities, preferences, and device characteristics, making the system more accessible to voters with different needs.
+    \item \textbf{Adaptive interfaces:} Machine learning algorithms could adjust the user interface based on user capabilities, preferences, and device characteristics, making the system more accessible to voters with different needs, as noted by Edoo et al. \cite{b9} in their mobile voting platform.
     
     \item \textbf{Natural language processing:} AI could enable voice-controlled interfaces and multilingual support, reducing barriers for voters with limited literacy or physical disabilities.
     
@@ -308,56 +310,56 @@ Despite the promising opportunities for AI-blockchain integration in voting syst
 Several technical hurdles currently limit the practical implementation of integrated AI-blockchain voting systems:
 
 \begin{itemize}
-    \item \textbf{Scalability limitations:} Blockchain networks face significant throughput constraints compared to traditional databases. Current public blockchains like Ethereum can process only 15-30 transactions per second, insufficient for large-scale elections with millions of voters voting within a short timeframe \cite{b7}.
+    \item \textbf{Scalability limitations:} Blockchain networks face significant throughput constraints compared to traditional databases. Current public blockchains like Ethereum can process only 15-30 transactions per second, insufficient for large-scale elections with millions of voters voting within a short timeframe, as noted by Singh et al. \cite{b7}.
     
-    \item \textbf{Energy consumption:} Many blockchain consensus mechanisms, particularly Proof-of-Work, consume substantial energy. While more efficient alternatives exist, balancing energy efficiency with security remains challenging for voting applications \cite{b9}.
+    \item \textbf{Energy consumption:} Many blockchain consensus mechanisms, particularly Proof-of-Work, consume substantial energy. While more efficient alternatives exist, balancing energy efficiency with security remains challenging for voting applications, as identified by Sliusar et al. \cite{b6}.
     
-    \item \textbf{Integration complexity:} Effectively integrating AI and blockchain systems requires addressing fundamental differences in processing models, data storage, and system architecture. This integration adds significant complexity to system design and implementation \cite{b10}.
+    \item \textbf{Integration complexity:} Effectively integrating AI and blockchain systems requires addressing fundamental differences in processing models, data storage, and system architecture. This integration adds significant complexity to system design and implementation, as demonstrated by Edoo et al. \cite{b9} in their microservices approach.
     
-    \item \textbf{AI model security:} AI models themselves can be vulnerable to adversarial attacks, where specially crafted inputs cause the model to make incorrect predictions. For voting applications, such vulnerabilities could compromise critical functions like voter authentication or fraud detection \cite{b13}.
+    \item \textbf{AI model security:} AI models themselves can be vulnerable to adversarial attacks, where specially crafted inputs cause the model to make incorrect predictions. For voting applications, such vulnerabilities could compromise critical functions like voter authentication or fraud detection, according to Joseph et al. \cite{b8}.
     
-    \item \textbf{Long-term security concerns:} Advances in quantum computing may eventually threaten current cryptographic approaches. Voting systems need to consider quantum-resistant algorithms to ensure long-term security of historical voting records \cite{b16}.
+    \item \textbf{Long-term security concerns:} Advances in quantum computing may eventually threaten current cryptographic approaches. Voting systems need to consider quantum-resistant algorithms to ensure long-term security of historical voting records.
 \end{itemize}
 
 \subsection{Data Privacy and Security Concerns}
 Voting systems must maintain the highest standards of privacy and security, presenting specific challenges for AI-blockchain integration:
 
 \begin{itemize}
-    \item \textbf{Biometric data protection:} AI-powered authentication often relies on sensitive biometric data. Storing and processing this data securely while maintaining its usefulness for verification presents significant privacy challenges \cite{b12}.
+    \item \textbf{Biometric data protection:} AI-powered authentication often relies on sensitive biometric data. Storing and processing this data securely while maintaining its usefulness for verification presents significant privacy challenges, as recognized by Joseph et al. \cite{b8} in their facial recognition system.
     
-    \item \textbf{Blockchain privacy limitations:} While blockchains provide transparency, excessive transparency can compromise voter privacy. Techniques like zero-knowledge proofs and homomorphic encryption add complexity and processing overhead \cite{b17}.
+    \item \textbf{Blockchain privacy limitations:} While blockchains provide transparency, excessive transparency can compromise voter privacy. Techniques like zero-knowledge proofs and homomorphic encryption add complexity and processing overhead, as explored by Singh et al. \cite{b7}.
     
-    \item \textbf{Re-identification risks:} Even with privacy-preserving techniques, the combination of multiple data points recorded on the blockchain might allow for voter re-identification through sophisticated analysis \cite{b16}.
+    \item \textbf{Re-identification risks:} Even with privacy-preserving techniques, the combination of multiple data points recorded on the blockchain might allow for voter re-identification through sophisticated analysis.
     
-    \item \textbf{Data management across borders:} International or diaspora voting introduces questions about data sovereignty and cross-border data transfers, particularly for sensitive biometric information used in AI authentication \cite{b18}.
+    \item \textbf{Data management across borders:} International or diaspora voting introduces questions about data sovereignty and cross-border data transfers, particularly for sensitive biometric information used in AI authentication, a concern highlighted by Edoo et al. \cite{b9} in their mobile voting solution.
 \end{itemize}
 
 \subsection{Regulatory and Legal Challenges}
 The implementation of AI-blockchain voting systems faces significant regulatory and legal hurdles:
 
 \begin{itemize}
-    \item \textbf{Regulatory uncertainty:} Many jurisdictions lack comprehensive regulatory frameworks for either blockchain-based voting or AI in electoral systems, creating legal uncertainty for implementation \cite{b9}.
+    \item \textbf{Regulatory uncertainty:} Many jurisdictions lack comprehensive regulatory frameworks for either blockchain-based voting or AI in electoral systems, creating legal uncertainty for implementation, as noted by Sliusar et al. \cite{b6}.
     
-    \item \textbf{Compliance with electoral laws:} Existing electoral laws were generally written with paper-based voting in mind and may not easily accommodate blockchain or AI technologies without legislative updates \cite{b10}.
+    \item \textbf{Compliance with electoral laws:} Existing electoral laws were generally written with paper-based voting in mind and may not easily accommodate blockchain or AI technologies without legislative updates.
     
-    \item \textbf{Certification standards:} The lack of established certification standards specifically for AI-blockchain voting systems makes it difficult to validate their security, reliability, and compliance with electoral requirements \cite{b8}.
+    \item \textbf{Certification standards:} The lack of established certification standards specifically for AI-blockchain voting systems makes it difficult to validate their security, reliability, and compliance with electoral requirements.
     
-    \item \textbf{Liability and accountability:} Determining responsibility when issues arise in AI-driven decisions or blockchain-based recording presents complex legal questions that current frameworks may not adequately address \cite{b17}.
+    \item \textbf{Liability and accountability:} Determining responsibility when issues arise in AI-driven decisions or blockchain-based recording presents complex legal questions that current frameworks may not adequately address.
 \end{itemize}
 
 \subsection{Ethical and Social Considerations}
 Beyond technical and legal challenges, the integration of AI with blockchain for voting raises important ethical and social questions:
 
 \begin{itemize}
-    \item \textbf{Digital divide:} Technological solutions may disadvantage voters without access to or familiarity with required devices and interfaces, potentially disenfranchising portions of the electorate \cite{b7}.
+    \item \textbf{Digital divide:} Technological solutions may disadvantage voters without access to or familiarity with required devices and interfaces, potentially disenfranchising portions of the electorate, a concern raised by Singh et al. \cite{b7}.
     
-    \item \textbf{Algorithmic bias:} AI systems may exhibit bias in authentication or fraud detection across demographic groups if not properly designed and tested with diverse data \cite{b11}.
+    \item \textbf{Algorithmic bias:} AI systems may exhibit bias in authentication or fraud detection across demographic groups if not properly designed and tested with diverse data, as Joseph et al. \cite{b8} emphasized in their authentication system.
     
-    \item \textbf{Transparency vs. comprehensibility:} While blockchain provides technical transparency, both blockchain and AI technologies may appear as "black boxes" to most voters, potentially undermining trust rather than enhancing it \cite{b9}.
+    \item \textbf{Transparency vs. comprehensibility:} While blockchain provides technical transparency, both blockchain and AI technologies may appear as "black boxes" to most voters, potentially undermining trust rather than enhancing it, according to Edoo et al. \cite{b9}.
     
-    \item \textbf{Democratic oversight:} Determining who controls, audits, and certifies these systems raises fundamental questions about democratic oversight and the role of technology in electoral processes \cite{b3}.
+    \item \textbf{Democratic oversight:} Determining who controls, audits, and certifies these systems raises fundamental questions about democratic oversight and the role of technology in electoral processes.
     
-    \item \textbf{Coercion in remote voting:} Remote voting, even with blockchain and AI security measures, remains vulnerable to coercion in unsupervised environments \cite{b15}.
+    \item \textbf{Coercion in remote voting:} Remote voting, even with blockchain and AI security measures, remains vulnerable to coercion in unsupervised environments.
 \end{itemize}
 
 These challenges highlight the need for careful, interdisciplinary approaches to AI-blockchain integration in voting that consider not only technical feasibility but also legal compliance, ethical implications, and social impact.
@@ -458,22 +460,22 @@ J. A. Halderman and V. Teague, ``The New South Wales iVote system: Security fail
 M. Atzori, ``Blockchain technology and decentralized governance: Is the state still necessary?,'' {\it J. Governance and Regulation}, vol. 6, no. 1, pp. 45-62, 2017.
 
 \bibitem{b4}
-D. Khoury, E. F. Kfoury, A. Kassem, and H. Harb, ``Decentralized voting platform based on Ethereum blockchain,'' in {\it IEEE Int. Multidisciplinary Conf. Engineering Technology (IMCET)}, 2018, pp. 1-6.
+S. Joseph et al., ``Ether Vote: Revolutionizing Elections with Blockchain-Powered Electronic Voting System,'' in {\it 3rd International Conference on Smart Generation Computing, Communication and Networking (SMART GENCON)}, 2023, pp. 1-7, doi: 10.1109/SMARTGENCON60755.2023.10442887.
 
 \bibitem{b5}
 F. Hao, P. Y. Ryan, and P. Zieliński, ``Anonymous voting by two-round public discussion,'' {\it IET Information Security}, vol. 4, no. 2, pp. 62-67, 2010.
 
 \bibitem{b6}
-J. S. Hsiao, S. Tezos, S. N. Peyton, R. Baldimtsi, and T. H. K. Kim, ``Voting with transparent verifiability and coercion-mitigation using blockchain,'' in {\it IEEE Int. Conf. Internet of Things and Green Computing and Communications}, 2017, pp. 965-972.
+V. Sliusar, P. Fyodorov, A. Fyodorov, V. Pascari, and A. Volkov, ``Blockchain Technology Application for Electronic Voting Systems,'' in {\it IEEE Conference of Russian Young Researchers in Electrical and Electronic Engineering (ElConRus)}, 2021, pp. 2257-2261, doi: 10.1109/ElConRus51938.2021.9396400.
 
 \bibitem{b7}
-H. Wu, D. Liu, and Y. Zhang, ``Scalable blockchain-based e-voting system for large-scale elections,'' in {\it IEEE Int. Conf. Blockchain}, 2020, pp. 296-303.
+S. Singh, A. Singh, S. Verma, and R. K. Dwivedi, ``Designing a Blockchain-Enabled Methodology for Secure Online Voting System,'' in {\it International Conference on Intelligent Data Communication Technologies and Internet of Things (IDCIoT)}, 2023, pp. 178-184, doi: 10.1109/IDCIoT56793.2023.10053410.
 
 \bibitem{b8}
-C. Meter, A. Schneider, and M. Hagemeister, ``The privacy-preserving blockchain-based electronic voting system,'' in {\it Int. Conf. Financial Cryptography and Data Security}, 2019, pp. 258-268.
+S. Joseph, P. Pandey, M. Khari, K. Kumar, and P. P. Singh, ``Ether Vote: Revolutionizing Elections with Blockchain-Powered Electronic Voting System,'' in {\it 3rd International Conference on Smart Generation Computing, Communication and Networking (SMART GENCON)}, 2023, pp. 1-7, doi: 10.1109/SMARTGENCON60755.2023.10442887.
 
 \bibitem{b9}
-T. M. Fernández-Caramés and P. Fraga-Lamas, ``A review on the application of blockchain to the next generation of cybersecure industry 4.0 smart factories,'' {\it IEEE Access}, vol. 7, pp. 45201-45218, 2019.
+J. B. A. Edoo, R. K. Sungkur, J. M. Gómez, H. Precht, and S. Rudolph, ``Mauvote: A Novel Mobile Electronic Voting System Using Blockchain,'' in {\it International Conference on Next Generation Computing Applications (NextComp)}, 2024, pp. 1-6, doi: 10.1109/NextComp63004.2024.10779646.
 
 \bibitem{b10}
 D. Khoury, E. F. Kfoury, A. Kassem, and H. Harb, ``Decentralized voting platform based on Ethereum blockchain,'' in {\it IEEE Int. Multidisciplinary Conf. Engineering Technology}, 2018, pp. 1-6.
